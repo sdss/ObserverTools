@@ -1,30 +1,43 @@
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 import seaborn as sns
 from astropy.time import Time
-sns.set(style='dark')
+sns.set(style='darkgrid')
 
 ra = np.load('ra.npy')
 dec = np.load('dec.npy')
 rot = np.load('rot.npy')
 times = Time(np.load('times.npy'))
-print(times)
-filter = ra > -50000
+# print(times)
+good_exposures = ra > -50000
 
-fig, axs = plt.subplots(3, 1, sharex=True, figsize=(10, 6))
+fig, axs = plt.subplots(3, 1, sharex=True, figsize=(8, 5))
 raax, decax, rotax = axs
-raax.plot_date(times.plot_date[filter], ra[filter]*3600, alpha=0.8, c='b', markersize=3)
+raax.plot_date(times.plot_date[good_exposures], ra[good_exposures] * 3600,
+               alpha=0.85, c=(0.257, 0.451, 0.644), markersize=3)
+raax.set_ylim(-4, 4)
 raax.set_ylabel("Right Ascension\nError ('')")
-raax.axhline(-0.8, linewidth=0.5)
-raax.axhline(0.8, linewidth=0.5)
-raax.annotate('MaNGA Dither Envelope', (Time('2019-11-01 04:00').plot_date, 0.95))
-raax.axvline(Time('2019-11-01 02:04:00').plot_date, c='r', alpha=0.3, linewidth=15)
-decax.plot_date(times.plot_date[filter], dec[filter]*3600, alpha=0.8, c='g', markersize=3)
-decax.set_ylim(-2, 2)
-decax.set_ylabel("Declination\nError ('')'")
-decax.axvline(Time('2019-11-01 02:04:00').plot_date, c='r', alpha=0.3, linewidth=15)
-rotax.plot_date(times.plot_date[filter], rot[filter]*3600, alpha=0.8, c='r', markersize=3)
+# raax.axhline(-0.8, linewidth=0.5)
+# raax.axhline(0.8, linewidth=0.5)
+# raax.annotate('MaNGA Dither Envelope', (Time('2019-11-01 04:00').plot_date, 0.95))
+
+decax.plot_date(times.plot_date[good_exposures], dec[good_exposures] * 3600,
+                alpha=0.85, c=(0.386, 0.773, 0.238), markersize=3)
+decax.set_ylim(-4, 4)
+decax.set_ylabel("Declination\nError ('')")
+
+
+rotax.plot_date(times.plot_date[good_exposures], rot[good_exposures] * 3600,
+                alpha=0.85, c=(0.128, 0.515, 0.193), markersize=3)
+rotax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H:%M'))
+rotax.set_xlabel('t (UTC)')
 rotax.set_ylim(-5, 5)
 rotax.set_ylabel("Rotator\nError ('')")
-rotax.axvline(Time('2019-11-01 02:04:00').plot_date, c='r', alpha=0.3, linewidth=15)
+
+for time in ['2019-11-01 02:04:00', '2019-11-1 10:01:00', '2019-11-1 11:15:00']:
+    raax.axvline(Time(time).plot_date, c=(0.700, 0.322, 0.386), alpha=0.4, linewidth=10)
+    decax.axvline(Time(time).plot_date, c=(0.700, 0.322, 0.386), alpha=0.4, linewidth=10)
+    rotax.axvline(Time(time).plot_date, c=(0.700, 0.322, 0.386), alpha=0.4, linewidth=10)
+fig.suptitle('Guider Axis Errors')
 fig.savefig('axes_errors.png')
