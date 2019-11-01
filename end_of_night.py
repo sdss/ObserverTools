@@ -6,10 +6,12 @@ import apogee, eboss, manga, mjd
 import warnings
 warnings.filterwarnings('ignore')
 import argparse
-
+import sys
+print(sys.path)
+import sdss
 from sdss.internal.database.connections.APODatabaseAdminLocalConnection import db
 import sdss.internal.database.apo.platedb.ModelClasses as platedb
-
+print(sdss.__file__)
 session = db.Session()
 
 def prn_report(mjd1, plates,mangaPlates):
