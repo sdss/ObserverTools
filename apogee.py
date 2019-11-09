@@ -1,5 +1,4 @@
 import numpy as np
-import datetime
 import argparse
 from astropy.io import fits
 from astropy.time import Time
@@ -12,8 +11,8 @@ class APOGEERaw:
     raw data is to future-proof things that need these ouptuts in case
     things like sdss.autoscheduler changes, which many libraries depend on. This
     will hopefully help SDSS-V logging"""
-    def __init__(self, file, ext):
-        fil = fits.open(file)
+    def __init__(self, fil, ext):
+        fil = fits.open(fil)
         # layer = self.image[layer_ind]
         header = fil[ext].header
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
@@ -44,8 +43,7 @@ def main():
                         help='Show details, can be stacked')
     args = parser.parse_args()
     if args.today:
-        now = datetime.datetime.now()
-        mjd_today = int(Time(now).mjd)
+        mjd_today = int(Time().mjd)
         data_dir = '/data/apogee/archive/{}/'.format(mjd_today)
     elif args.mjd:
         data_dir = '/data/apogee/archive/{}/'.format(args.mjd)

@@ -40,4 +40,4 @@ for time in ['2019-11-01 02:04:00', '2019-11-1 10:01:00', '2019-11-1 11:15:00']:
     decax.axvline(Time(time).plot_date, c=(0.700, 0.322, 0.386), alpha=0.4, linewidth=10)
     rotax.axvline(Time(time).plot_date, c=(0.700, 0.322, 0.386), alpha=0.4, linewidth=10)
 fig.suptitle('Guider Axis Errors')
-fig.savefig('axes_errors.png')
+fig.savefig('axes_errors1.png')
