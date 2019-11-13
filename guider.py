@@ -1,13 +1,49 @@
+#!/usr/bin/env python
+"""A script to parse guider images and grab essential variables from it.
+While the rest of this repository is focused on logging, this is mostly
+piggybacking off of previous work in order to collect guider data to
+identify anomolous lurches in guiding, first identified around 2019-10-30.
+
+2019-10-31:     dgatlin     Init
+2019-11-11:     dgatlin     Moved outputs to a separate folder by mjd, made
+                                table to help find lurch events.
+"""
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
 import datetime
 import argparse
 import glob
-from astropy.io import fits
-from astropy.time import Time
+import os
+try:
+    from astropy.io import fits
+    from astropy.time import Time
+except ImportError:
+    print('Astropy not found')
+    import pyfits as fits
+    class Time:
+        """An awful workaround to avoid crashes when astropy is unavailable
+        """
+        def __init__(self, time):
+            if 'T' in time:
+                date, time = time.split('T')
+            else:
+                date, time = time.split()
+            self.yr, self.mo, self.da = date.split('-')
+            self.hr, self.mi, self.sec = time.split(':')
+            self.date = datetime.date(int(self.yr), int(self.mo),
+                    int(self.da))
+            self.time = datetime.time(int(self.hr), int(self.mi),
+                    int(self.sec.split('.')[0]))
+            self.mjd = str(self.date).split()
+    
 # from pathlib import Path
-mpl.use('Agg')
+# try:
+#     import starcoder42 as s
+# except ImportError:
+#     import sys
+#     sys.path.append('/home/dylangatlin/python/')
+#     sys.path.append('/home/gatlin/python/')
+#     import starcoder42 as s
+
 
 class GuiderRaw:
     '''A class to parse raw data from APOGEE. The purpose of collecting this
@@ -31,47 +67,111 @@ class GuiderRaw:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--today', action='store_true')
+    parser.add_argument('-m', '--mjd',
+                       help='If not today (-t), the mjd to search')
+    parser.add_argument('-l', '--lurches', nargs='+', default=[],
+                        help='The exposure ids of known lurches')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Whether or not you want to print a table')
+
     args = parser.parse_args()
     if args.today:
-        now = datetime.datetime.now()
-        mjd_today = int(Time(now).mjd)
+        now = datetime.datetime.now().isoformat()
+        mjd_today = Time(now).mjd
         data_dir = '/data/gcam/{}/'.format(mjd_today)
-        ts = []
-        rot = []
-        ra = []
-        dec = []
-        for fil in glob.glob(data_dir + 'proc-gimg*.fits.gz'):
-            try:
-                print(fil)
-                img = GuiderRaw(fil, 0)
-                rot.append(img.hdu.header['DROT'])
-                ra.append(img.hdu.header['DRA'])
-                dec.append(img.hdu.header['DDEC'])
-                ts.append(img.hdu.header['DATE-OBS'])
+        mjd = mjd_today
+    elif args.mjd:
+        data_dir = '/data/gcam/{}/'.format(args.mjd)
+        mjd = args.mjd
+    else:
+        raise Exception('Must provide -t or -m in arguments')
 
-            except KeyError:
-                pass
-        ts = np.array(ts)
-        rot = np.array(rot)
-        ra = np.array(ra)
-        dec = np.array(dec)
-        print(ts.shape, rot.shape, ra.shape, dec.shape)
-        np.save('times.npy', ts)
-        np.save('rotator.npy', rot)
-        np.save('ra.npy', ra)
-        np.save('dec.npy', dec)
-        # Hub matplotlib sucks, export instead
-        # plt.plot([0,0,0,], [1,1,1])
-        # fig, axs = plt.subplots(3, 1, sharex=True, figsize=(6,4))
-        # rotax, decax, raax = axs
-        # rotax.plot(ts, rot)
-        # rotax.set_title('Rotator Axis Error')
-        # decax.plot(ts, dec)
-        # decax.set_title('Declination Axis Error')
-        # raax.plot(ts, dec)
-        # raax.set_title('Right Ascension Axis Error')
-        # fig.savefig('~/dgatlin/plots/guider_errors.png')
-        
+    if args.lurches:
+        print('Looking for lurches at {}'.format(', '.join(args.lurches)))
+
+    eids = []
+    ts = []
+    rot = []
+    ra = []
+    dec = []
+    seeing = []
+    scale = []
+    lurches = []
+    files = glob.glob(data_dir + 'proc-gimg*.fits.gz')
+    for i, fil in enumerate(files):
+        try:
+            img = GuiderRaw(fil, 0)
+            rot.append(img.hdu.header['DROT'])  # Must be the first one in
+            # case there is no DROT, so that it fails before appending
+            ra.append(img.hdu.header['DRA'])
+            dec.append(img.hdu.header['DDEC'])
+            ts.append(Time(img.hdu.header['DATE-OBS']))
+            seeing.append(img.hdu.header['SEEING'])
+            scale.append(img.hdu.header['SCALE'])
+            eids.append(str(int(fil.split('-')[-1].split('.')[0])))
+            lurches.append(eids[-1] in args.lurches)
+            if i % 100 == 0:
+                print('{}/{}'.format(i, len(files)))
+        except KeyError:
+            pass
+
+    for i, lu in enumerate(lurches):  # in order to display well in the tab
+            if lu:
+                lurches[i] = 'Y'
+            else:
+                lurches[i] = ' '
+    # There are ridiculous errors on slews (-gazillion), so I need to filter
+    # those out. Also, glob.glob is infamously unsorted, so I need to sort
+    # what's left. I also need to filter eids before I sort them or I will
+    # have index errors
+    eids = np.array(eids).astype(int)
+    rot = np.array(rot) * 3600
+    filt = rot > -1e6
+    sorter = eids[filt].argsort()
+    eids = eids[filt][sorter]
+    ts = np.array(ts)[filt][sorter]
+    rot = rot[filt][sorter]
+    lurches = np.array(lurches)[filt][sorter]
+    ra = np.array(ra)[filt][sorter] * 3600
+    dec = np.array(dec)[filt][sorter] * 3600
+    seeing = np.array(seeing)[filt][sorter]
+    scale = (np.array(scale)[filt][sorter] - 1) * 1e5
+    # print(ts.shape, rot.shape, ra.shape, dec.shape)
+    
+    save_dir = os.path.dirname(os.path.realpath(
+        __file__)) + '/guider_issues/{}'.format(mjd)
+    # print(save_dir)
+    # os.system('rm -r {}'.format(save_dir))
+    os.system('mkdir {}'.format(save_dir))
+    np.save(save_dir + '/times.npy', ts)
+    np.save(save_dir + '/rotator.npy', rot)
+    np.save(save_dir + '/ra.npy', ra)
+    np.save(save_dir + '/dec.npy', dec)
+    np.save(save_dir + '/lurches.npy', np.array(args.lurches).astype(int))
+    
+    tab = open(save_dir + '/guiding_table.txt', 'w')
+    
+    tab.write('# {:<6}  {:<8}  {:<8}  {:<7}  {:<7}  {:<7}  {:<7}  {:<6}\n'.format(
+           'Time', 'Exp ID', "Rot ('')", "RA ('')", "Dec ('')", "See ('')",
+           'Scale-1 (e5)', 'Lurch?'))
+    if args.verbose:
+        print('# {:<6}  {:<8}  {:<8}  {:<8}  {:<7}  {:<7}  {:<7}'
+                  '  {:<6}'.format(
+           'Time', 'Exp ID', "Rot ('')", "RA ('')", "Dec ('')", "See ('')",
+           'Scale-1 (e5)', 'Lurch?'))
+
+    tab.write('#' + '-' * 79 + '\n')
+    if args.verbose:
+        print('#' + '-' * 79)
+    for t, i, r, a, d, s, sc, lu in zip(
+            ts, eids, rot, ra, dec, seeing, scale, lurches):
+        tab.write('{}  {:<8.0f}  {:<+8.2f}  {:<+8.2f}  {:<+8.2f}  {:<+8.1f}'
+                '  {:<+8.1f} {:<6}\n'.format(
+            t.time, i, r, a, d, s, sc, lu))
+        if args.verbose:
+            print('{}  {:<8.0f}  {:<+8.2f}  {:<+8.2f}  {:<+8.2f}  {:<+8.1f}'
+                '  {:<+8.1f} {:<6}'.format(
+            t.time, i, r, a, d, s, sc, lu))
 
 
 if __name__ == '__main__':

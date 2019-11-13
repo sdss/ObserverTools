@@ -3,6 +3,16 @@ import matplotlib as mpl
 import numpy as np
 import seaborn as sns
 from astropy.time import Time
+try:
+    import starcoder42 as s
+except:
+    import sys
+    sys.path.append('/home/dylangatlin/python/')
+    import starcoder42 as s
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-t')
 sns.set(style='darkgrid')
 
 ra = np.load('ra.npy')
@@ -20,7 +30,8 @@ raax.set_ylim(-4, 4)
 raax.set_ylabel("Right Ascension\nError ('')")
 # raax.axhline(-0.8, linewidth=0.5)
 # raax.axhline(0.8, linewidth=0.5)
-# raax.annotate('MaNGA Dither Envelope', (Time('2019-11-01 04:00').plot_date, 0.95))
+# raax.annotate('MaNGA Dither Envelope',
+# (Time('2019-11-01 04:00').plot_date, 0.95))
 
 decax.plot_date(times.plot_date[good_exposures], dec[good_exposures] * 3600,
                 alpha=0.85, c=(0.386, 0.773, 0.238), markersize=3)
@@ -36,8 +47,15 @@ rotax.set_ylim(-5, 5)
 rotax.set_ylabel("Rotator\nError ('')")
 
 for time in ['2019-11-01 02:04:00', '2019-11-1 10:01:00', '2019-11-1 11:15:00']:
-    raax.axvline(Time(time).plot_date, c=(0.700, 0.322, 0.386), alpha=0.4, linewidth=10)
-    decax.axvline(Time(time).plot_date, c=(0.700, 0.322, 0.386), alpha=0.4, linewidth=10)
-    rotax.axvline(Time(time).plot_date, c=(0.700, 0.322, 0.386), alpha=0.4, linewidth=10)
+    raax.axvline(Time(time).plot_date, c=(0.700, 0.322, 0.386), alpha=0.4,
+            linewidth=10)
+    decax.axvline(Time(time).plot_date, c=(0.700, 0.322, 0.386), alpha=0.4,
+            linewidth=10)
+    rotax.axvline(Time(time).plot_date, c=(0.700, 0.322, 0.386), alpha=0.4,
+            linewidth=10)
 fig.suptitle('Guider Axis Errors')
-fig.savefig('axes_errors1.png')
+
+except IndexError:
+    raise s.GatlinError('Please specify a filename to save to as an'
+            ' argument. I recommend axes_errors_<mo>_<day>.png')
+fig.savefig(fil_name)
