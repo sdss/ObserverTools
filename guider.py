@@ -19,6 +19,8 @@ try:
 except ImportError:
     print('Astropy not found')
     import pyfits as fits
+
+
     class Time:
         """An awful workaround to avoid crashes when astropy is unavailable
         """
@@ -30,9 +32,9 @@ except ImportError:
             self.yr, self.mo, self.da = date.split('-')
             self.hr, self.mi, self.sec = time.split(':')
             self.date = datetime.date(int(self.yr), int(self.mo),
-                    int(self.da))
+                                      int(self.da))
             self.time = datetime.time(int(self.hr), int(self.mi),
-                    int(self.sec.split('.')[0]))
+                                      int(self.sec.split('.')[0]))
             self.mjd = str(self.date).split()
     
 # from pathlib import Path
@@ -46,19 +48,19 @@ except ImportError:
 
 
 class GuiderRaw:
-    '''A class to parse raw data from APOGEE. The purpose of collecting this
+    """A class to parse raw data from APOGEE. The purpose of collecting this
     raw data is to future-proof things that need these ouptuts in case
     things like autoschedulers change, which many libraries depend on. This
-    will hopefully help SDSS-V logging'''
-    def __init__(self, file, ext):
-        fil = fits.open(file)
+    will hopefully help SDSS-V logging"""
+    def __init__(self, fits_file, ext):
+        fil = fits.open(fits_file)
         # layer = self.image[layer_ind]
         header = fil[ext].header
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
         self.hdu = fil[ext]
         self.exp_time = header['EXPTIME']
-        self.datetimet = Time(header['DATE-OBS']) # Local
-        self.exp_id = int(str(file).split('-')[-1].split('.')[0])
+        self.datetimet = Time(header['DATE-OBS'])  # Local
+        self.exp_id = int(str(fits_file).split('-')[-1].split('.')[0])
         # self.seeing = header['SEEING'] # Inconsistent
         self.img_type = header['IMAGETYP']
         self.n_read = len(fil)-1
@@ -68,7 +70,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--today', action='store_true')
     parser.add_argument('-m', '--mjd',
-                       help='If not today (-t), the mjd to search')
+                        help='If not today (-t), the mjd to search')
     parser.add_argument('-l', '--lurches', nargs='+', default=[],
                         help='The exposure ids of known lurches')
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -116,10 +118,10 @@ def main():
             pass
 
     for i, lu in enumerate(lurches):  # in order to display well in the tab
-            if lu:
-                lurches[i] = 'Y'
-            else:
-                lurches[i] = ' '
+        if lu:
+            lurches[i] = 'Y'
+        else:
+            lurches[i] = ' '
     # There are ridiculous errors on slews (-gazillion), so I need to filter
     # those out. Also, glob.glob is infamously unsorted, so I need to sort
     # what's left. I also need to filter eids before I sort them or I will
@@ -143,22 +145,24 @@ def main():
     # print(save_dir)
     # os.system('rm -r {}'.format(save_dir))
     os.system('mkdir {}'.format(save_dir))
-    np.save(save_dir + '/times.npy', ts)
+    np.save(save_dir + '/times.npy', ts.plot_date,)
     np.save(save_dir + '/rotator.npy', rot)
     np.save(save_dir + '/ra.npy', ra)
     np.save(save_dir + '/dec.npy', dec)
     np.save(save_dir + '/lurches.npy', np.array(args.lurches).astype(int))
+    np.save(save_dir + 'ids.npy', eids)
     
     tab = open(save_dir + '/guiding_table.txt', 'w')
     
-    tab.write('# {:<6}  {:<8}  {:<8}  {:<7}  {:<7}  {:<7}  {:<7}  {:<6}\n'.format(
-           'Time', 'Exp ID', "Rot ('')", "RA ('')", "Dec ('')", "See ('')",
-           'Scale-1 (e5)', 'Lurch?'))
+    tab.write('# {:<6}  {:<8}  {:<8}  {:<7}  {:<7}  {:<7}  {:<7}'
+              '  {:<6}\n'.format('Time', 'Exp ID', "Rot ('')", "RA ('')",
+                                 "Dec ('')", "See ('')", 'Scale-1 (e5)',
+                                 'Lurch?'))
     if args.verbose:
         print('# {:<6}  {:<8}  {:<8}  {:<8}  {:<7}  {:<7}  {:<7}'
-                  '  {:<6}'.format(
-           'Time', 'Exp ID', "Rot ('')", "RA ('')", "Dec ('')", "See ('')",
-           'Scale-1 (e5)', 'Lurch?'))
+              '  {:<6}'.format('Time', 'Exp ID', "Rot ('')", "RA ('')",
+                               "Dec ('')", "See ('')", 'Scale-1 (e5)',
+                               'Lurch?'))
 
     tab.write('#' + '-' * 79 + '\n')
     if args.verbose:
@@ -166,12 +170,10 @@ def main():
     for t, i, r, a, d, s, sc, lu in zip(
             ts, eids, rot, ra, dec, seeing, scale, lurches):
         tab.write('{}  {:<8.0f}  {:<+8.2f}  {:<+8.2f}  {:<+8.2f}  {:<+8.1f}'
-                '  {:<+8.1f} {:<6}\n'.format(
-            t.time, i, r, a, d, s, sc, lu))
+                  '  {:<+8.1f} {:<6}\n'.format(t.time, i, r, a, d, s, sc, lu))
         if args.verbose:
             print('{}  {:<8.0f}  {:<+8.2f}  {:<+8.2f}  {:<+8.2f}  {:<+8.1f}'
-                '  {:<+8.1f} {:<6}'.format(
-            t.time, i, r, a, d, s, sc, lu))
+                  '  {:<+8.1f} {:<6}'.format(t.time, i, r, a, d, s, sc, lu))
 
 
 if __name__ == '__main__':
