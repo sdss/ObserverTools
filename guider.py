@@ -13,6 +13,7 @@ import datetime
 import argparse
 import glob
 import os
+import mjd
 try:
     from astropy.io import fits
     from astropy.time import Time
@@ -25,6 +26,7 @@ except ImportError:
         """An awful workaround to avoid crashes when astropy is unavailable
         """
         def __init__(self, time):
+            self.in_time = time
             if 'T' in time:
                 date, time = time.split('T')
             else:
@@ -36,7 +38,7 @@ except ImportError:
             self.time = datetime.time(int(self.hr), int(self.mi),
                                       int(self.sec.split('.')[0]))
             self.mjd = str(self.date).split()
-    
+
 # from pathlib import Path
 # try:
 #     import starcoder42 as s
@@ -79,15 +81,15 @@ def main():
     args = parser.parse_args()
     if args.today:
         now = datetime.datetime.now().isoformat()
-        mjd_today = Time(now).mjd
+        mjd_today = mjd.curSjd()
         data_dir = '/data/gcam/{}/'.format(mjd_today)
-        mjd = mjd_today
+        mjd_target = mjd_today
     elif args.mjd:
         data_dir = '/data/gcam/{}/'.format(args.mjd)
-        mjd = args.mjd
+        mjd_target = args.mjd
     else:
         raise Exception('Must provide -t or -m in arguments')
-
+    print(data_dir)
     if args.lurches:
         print('Looking for lurches at {}'.format(', '.join(args.lurches)))
 
@@ -141,16 +143,17 @@ def main():
     # print(ts.shape, rot.shape, ra.shape, dec.shape)
     
     save_dir = os.path.dirname(os.path.realpath(
-        __file__)) + '/guider_issues/{}'.format(mjd)
+        __file__)) + '/guider_issues/{}'.format(mjd_target)
     # print(save_dir)
+    t_out = [t.in_time for t in ts]
     os.system('rm -r {}'.format(save_dir))
     os.system('mkdir {}'.format(save_dir))
-    np.save(save_dir + '/times.npy', ts,)
+    np.save(save_dir + '/times.npy', t_out)
     np.save(save_dir + '/rotator.npy', rot)
     np.save(save_dir + '/ra.npy', ra)
     np.save(save_dir + '/dec.npy', dec)
     np.save(save_dir + '/lurches.npy', np.array(args.lurches).astype(int))
-    np.save(save_dir + 'ids.npy', eids)
+    np.save(save_dir + '/ids.npy', eids)
     
     tab = open(save_dir + '/guiding_table.txt', 'w')
     
