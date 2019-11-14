@@ -107,7 +107,7 @@ def main():
             # case there is no DROT, so that it fails before appending
             ra.append(img.hdu.header['DRA'])
             dec.append(img.hdu.header['DDEC'])
-            ts.append(Time(img.hdu.header['DATE-OBS']))
+            ts.append(Time(img.hdu.header['DATE-OBS']).time)
             seeing.append(img.hdu.header['SEEING'])
             scale.append(img.hdu.header['SCALE'])
             eids.append(str(int(fil.split('-')[-1].split('.')[0])))
@@ -143,9 +143,9 @@ def main():
     save_dir = os.path.dirname(os.path.realpath(
         __file__)) + '/guider_issues/{}'.format(mjd)
     # print(save_dir)
-    # os.system('rm -r {}'.format(save_dir))
+    os.system('rm -r {}'.format(save_dir))
     os.system('mkdir {}'.format(save_dir))
-    np.save(save_dir + '/times.npy', ts.plot_date,)
+    np.save(save_dir + '/times.npy', ts,)
     np.save(save_dir + '/rotator.npy', rot)
     np.save(save_dir + '/ra.npy', ra)
     np.save(save_dir + '/dec.npy', dec)
@@ -170,10 +170,10 @@ def main():
     for t, i, r, a, d, s, sc, lu in zip(
             ts, eids, rot, ra, dec, seeing, scale, lurches):
         tab.write('{}  {:<8.0f}  {:<+8.2f}  {:<+8.2f}  {:<+8.2f}  {:<+8.1f}'
-                  '  {:<+8.1f} {:<6}\n'.format(t.time, i, r, a, d, s, sc, lu))
+                  '  {:<+8.1f} {:<6}\n'.format(t, i, r, a, d, s, sc, lu))
         if args.verbose:
             print('{}  {:<8.0f}  {:<+8.2f}  {:<+8.2f}  {:<+8.2f}  {:<+8.1f}'
-                  '  {:<+8.1f} {:<6}'.format(t.time, i, r, a, d, s, sc, lu))
+                  '  {:<+8.1f} {:<6}'.format(t, i, r, a, d, s, sc, lu))
 
 
 if __name__ == '__main__':
