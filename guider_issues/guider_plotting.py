@@ -11,9 +11,18 @@ except:
     import starcoder42 as s
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-t')
 sns.set(style='darkgrid')
+
+parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--today', action='store_true',
+                        help="Whether or not you want to search for today's"
+                             " data, whether or not the night is complete."
+                             " Note: must be run after 00:00Z")
+    parser.add_argument('-m', '--mjd',
+                       help='If not today (-t), the mjd to search')
+args = parser.parse_args()
+
+
 
 ra = np.load('ra.npy')
 dec = np.load('dec.npy')
@@ -59,3 +68,10 @@ except IndexError:
     raise s.GatlinError('Please specify a filename to save to as an'
             ' argument. I recommend axes_errors_<mo>_<day>.png')
 fig.savefig(fil_name)
+
+def main():
+
+
+
+if __name__ == '__main__':
+    main()
