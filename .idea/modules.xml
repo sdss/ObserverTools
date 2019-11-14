@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/TimeTracking.iml" filepath="$PROJECT_DIR$/.idea/TimeTracking.iml" />
+      <module fileurl="file://$USER_HOME$/python/.idea/python.iml" filepath="$USER_HOME$/python/.idea/python.iml" />
+      <module fileurl="file://$USER_HOME$/python/starcoder42/.idea/starcoder42.iml" filepath="$USER_HOME$/python/starcoder42/.idea/starcoder42.iml" />
     </modules>
   </component>
 </project>
