@@ -13,6 +13,7 @@ import datetime
 import argparse
 import glob
 import os
+import stat
 import mjd
 try:
     from astropy.io import fits
@@ -177,7 +178,13 @@ def main():
         if args.verbose:
             print('{}  {:<8.0f}  {:<+8.2f}  {:<+8.2f}  {:<+8.2f}  {:<+8.1f}'
                   '  {:<+8.1f} {:<6}'.format(t.time, i, r, a, d, s, sc, lu))
-
+    
+    os.chmod(save_dir, stat.S_IRWXO)  # If someone else runs this, I need to
+    # still have access or I can't use git on the repo. This makes sure I
+    # maintain access to every file
+    for fil in glob.glob(save_dir + '/*'):
+        os.chmod(fil, stat.S_IRWXO)
+        
 
 if __name__ == '__main__':
     main()
