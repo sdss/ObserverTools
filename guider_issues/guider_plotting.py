@@ -81,7 +81,7 @@ def main():
         rotax.axvline(lurch_time.plot_date, alpha=0.4, c=(0.700, 0.322, 0.386),
                       linewidth=1)
 
-    fig.suptitle('Guider Axis Errors')
+    fig.suptitle('Guider Axis Errors {}'.format(date))
     print(date_dir / 'guider_plot.png')
     fig.savefig(str(date_dir / 'guider_plot.png'))
 
