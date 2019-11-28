@@ -183,7 +183,7 @@ def main():
     # still have access or I can't use git on the repo. This makes sure I
     # maintain access to every file
     for fil in glob.glob(save_dir + '/*'):
-        os.chmod(fil, stat.S_IRWXO)
+        os.chmod(fil, stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO)
         
 
 if __name__ == '__main__':
