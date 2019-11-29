@@ -182,8 +182,10 @@ def main():
     os.chmod(save_dir, stat.S_IRWXO)  # If someone else runs this, I need to
     # still have access or I can't use git on the repo. This makes sure I
     # maintain access to every file
+    os.chmod(save_dir, 0o777)
     for fil in glob.glob(save_dir + '/*'):
-        os.chmod(fil, stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO)
+        os.chmod(fil, 0o777)
+
         
 
 if __name__ == '__main__':
