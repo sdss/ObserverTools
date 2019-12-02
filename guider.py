@@ -81,7 +81,6 @@ def main():
 
     args = parser.parse_args()
     if args.today:
-        now = datetime.datetime.now().isoformat()
         mjd_today = mjd.curSjd()
         data_dir = '/data/gcam/{}/'.format(mjd_today)
         mjd_target = mjd_today
