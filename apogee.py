@@ -1,9 +1,34 @@
+#!/usr/bin/env python
 import numpy as np
 import argparse
-from astropy.io import fits
-from astropy.time import Time
 from pathlib import Path
 import starcoder42 as s
+try:
+    print('test')
+    from astropy.io import fits
+    from astropy.time import Time
+except ImportError:
+    print('Astropy not found')
+    import pyfits as fits
+    
+
+    class Time:
+        """An awful workaround to avoid crashes when astropy is unavailable
+        """
+        def __init__(self, time):
+            self.in_time = time
+            if 'T' in time:
+                date, time = time.split('T')
+            else:
+                date, time = time.split()
+            self.yr, self.mo, self.da = date.split('-')
+            self.hr, self.mi, self.sec = time.split(':')
+            self.date = datetime.date(int(self.yr), int(self.mo),
+                                      int(self.da))
+            self.time = datetime.time(int(self.hr), int(self.mi),
+                                      int(self.sec.split('.')[0]))
+            self.mjd = str(self.date).split()
+
 
 
 class APOGEERaw:
