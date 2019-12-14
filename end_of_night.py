@@ -2,7 +2,7 @@
 
 
 #
-import apogee, eboss, manga, mjd
+import log_apogee, eboss, log_manga, mjd
 import warnings
 warnings.filterwarnings('ignore')
 import argparse
@@ -57,8 +57,8 @@ if __name__ == "__main__":
     mjd1=args.mjd1;  
    
     ebossPlates=eboss.getBoss(mjd1, mjd1, args.verbose)
-    apogeePlates=apogee.getApogee(mjd1, mjd1, args.verbose)
-    mangaPlates=manga.getManga(mjd1, mjd1, args.verbose)
+    apogeePlates=log_apogee.getApogee(mjd1, mjd1, args.verbose)
+    mangaPlates=log_manga.getManga(mjd1, mjd1, args.verbose)
 
     prn_report(mjd1, apogeePlates,mangaPlates)
     print ""
