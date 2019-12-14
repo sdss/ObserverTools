@@ -1,3 +1,4 @@
+#!(conda activate tui27; which python)
 import numpy as np
 import argparse
 from pathlib import Path
@@ -6,27 +7,30 @@ try:
     from astropy.io import fits
     from astropy.time import Time
 except ImportError:
-    print('Astropy not found')
-    import pyfits as fits
-    
+     raise s.GatlinError('Astropy is needed for this library')
 
-    class Time:
-        """An awful workaround to avoid crashes when astropy is unavailable
-        """
-        def __init__(self, time):
-            self.in_time = time
-            if 'T' in time:
-                date, time = time.split('T')
-            else:
-                date, time = time.split()
-            self.yr, self.mo, self.da = date.split('-')
-            self.hr, self.mi, self.sec = time.split(':')
-            self.date = datetime.date(int(self.yr), int(self.mo),
-                                      int(self.da))
-            self.time = datetime.time(int(self.hr), int(self.mi),
-                                      int(self.sec.split('.')[0]))
-            self.mjd = str(self.date).split()
-
+# except ImportError:
+#     print('Astropy not found')
+#     import pyfits as fits
+#     
+# 
+#     class Time:
+#         """An awful workaround to avoid crashes when astropy is unavailable
+#         """
+#         def __init__(self, time):
+#             self.in_time = time
+#             if 'T' in time:
+#                 date, time = time.split('T')
+#             else:
+#                 date, time = time.split()
+#             self.yr, self.mo, self.da = date.split('-')
+#             self.hr, self.mi, self.sec = time.split(':')
+#             self.date = datetime.date(int(self.yr), int(self.mo),
+#                                       int(self.da))
+#             self.time = datetime.time(int(self.hr), int(self.mi),
+#                                       int(self.sec.split('.')[0]))
+#             self.mjd = str(self.date).split()
+# 
 
 
 class MaNGARaw:
@@ -35,23 +39,18 @@ class MaNGARaw:
     things like autoschedulers change, which many libraries depend on. This
     will hopefully help SDSS-V logging"""
     def __init__(self, fil, ext):
-        fil = fits.open(fil)
+        header = fits.getheader(fil, ext)
         # ler = self.image[layer_ind]
-        header = fil[ext].header
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
-        if header['DITHPIX'] < 13.25:
-            self.dither = 'A'
-        else:
-            self.dither = 'B'
+        self.dither = header['MGDPOS']
         self.exp_time = header['EXPTIME']
         self.flavor = header['FLAVOR']
         self.datetimet = Time(header['DATE-OBS'])  # Local
         self.plate_id = header['PLATEID']
         self.cart_id = header['CARTID']
-        self.exp_id = int(str(file).split('-')[-1].split('.')[0])
-        self.seeing = header['SEEING']
-        self.img_type = header['IMAGETYP']
-        self.n_read = len(fil)-1
+        self.exp_id = int(str(fil).split('-')[-1].split('.')[0])
+        # self.seeing = header['SEEING']
+        # self.img_type = header['IMAGETYP']
         
 
 def main():
