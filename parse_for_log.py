@@ -43,8 +43,8 @@ except ImportError:
 from pathlib import Path
 from tqdm import tqdm
 
-import apogee
-import manga
+import log_apogee
+import log_manga
 
 import starcoder42 as s
 
@@ -94,7 +94,7 @@ class Schedule:
         print('Reading APOGEE Data')
         for image in list(self.ap_images):
             # print(image)
-            img = apogee.APOGEERaw(image, 1)
+            img = log_apogee.APOGEERaw(image, 1)
             # img.parse_layer(1)
             if img.cart_id not in self.data['cCart']:
                 self.data['cCart'].append(img.cart_id)
@@ -147,7 +147,7 @@ class Schedule:
 
         print('Reading MaNGA Data')
         for image in tqdm(list(self.m_images)):
-            img = manga.MaNGARaw(image, 0)
+            img = log_manga.MaNGARaw(image, 0)
             if img.cart_id not in self.data['cCart']:
                 self.data['cCart'].append(img.cart_id)
                 self.data['cTime'].append(img.datetimet)
