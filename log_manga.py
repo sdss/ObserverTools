@@ -4,10 +4,10 @@ import argparse
 from pathlib import Path
 import starcoder42 as s
 try:
-    from astropy.io import fits
     from astropy.time import Time
 except ImportError:
      raise s.GatlinError('Astropy is needed for this library')
+import fitsio
 
 # except ImportError:
 #     print('Astropy not found')
@@ -38,8 +38,8 @@ class MaNGARaw:
     raw data is to future-proof things that need these ouptuts in case
     things like autoschedulers change, which many libraries depend on. This
     will hopefully help SDSS-V logging"""
-    def __init__(self, fil, ext):
-        header = fits.getheader(fil, ext)
+    def __init__(self, fil):
+        header = fitsio.read_header(fil)
         # ler = self.image[layer_ind]
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
         self.dither = header['MGDPOS']
@@ -49,6 +49,10 @@ class MaNGARaw:
         self.plate_id = header['PLATEID']
         self.cart_id = header['CARTID']
         self.exp_id = int(str(fil).split('-')[-1].split('.')[0])
+        if 'Closed' in header['HARTMANN']:
+            self.hartmann = 'Closed'
+        else:
+            self.hartmann = header['HARTMANN']
         # self.seeing = header['SEEING']
         # self.img_type = header['IMAGETYP']
         

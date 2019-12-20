@@ -4,10 +4,10 @@ import argparse
 from pathlib import Path
 import starcoder42 as s
 try:
-    from astropy.io import fits
     from astropy.time import Time
 except ImportError:
-     raise s.GatlinError('Astropy is needed for this library')
+    raise s.GatlinError('Astropy is needed for this library')
+import fitsio
 #     print('Astropy not found')
 #     import pyfits as fits
 #     
@@ -37,7 +37,7 @@ class APOGEERaw:
     things like sdss.autoscheduler changes, which many libraries depend on. This
     will hopefully help SDSS-V logging"""
     def __init__(self, fil, ext):
-        header = fits.getheader(fil, ext)
+        header = fitsio.read_header(fil, ext=ext)
         # layer = self.image[layer_ind]
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
         if header['DITHPIX'] < 13.25:
@@ -52,8 +52,8 @@ class APOGEERaw:
         self.seeing = header['SEEING']
         self.img_type = header['IMAGETYP']
         self.n_read = header['NREAD']
-        self.exp_type = header['EXPTYPE']  # TODO Check if this is a correct key
-        
+        self.exp_type = header['EXPTYPE']
+        self.lead = header['PLATETYP']
 
 def main():
     parser = argparse.ArgumentParser()
