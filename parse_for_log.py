@@ -79,13 +79,13 @@ class Schedule:
         n_missing = 0
         n_faint = 0
         for miss in missing:
-            if isinstance(miss, bytes):
+            if isinstance(miss, bytes) or isinstance(miss, str):
                 n_missing += abs(eval(miss))
             else:
                 n_missing += 1
         for fain in faint:
-            if isinstance(fain, bytes):
-                n_faint += abs(eval(fain))
+            if isinstance(fain, bytes) or isinstance(fain, str):
+                n_faint += np.abs(eval(fain))
             else:
                 n_faint += 1
         # return (n_missing, n_faint, missing, faint, img.cart_id,
@@ -236,7 +236,7 @@ class Schedule:
             else:
                 self.data[key] = np.array(item)
         for key, item in self.data.items():
-            print(key, item)
+            # print(key, item)
             self.data[key] = item[data_sort]
         # print(self.test_procs)
         # print(self.dome_data['dTime'], self.dome_data['dNMissing'])
@@ -304,9 +304,9 @@ class Schedule:
 
     def print_data(self):
         if self.args.summary:
-            print('-'*80)
+            print('='*80)
             print('{:^80}'.format('Observing Summary'))
-            print('-'*80)
+            print('='*80)
             for i, cart in enumerate(self.data['cCart']):
                 print('')
                 print('Cart {}, plate {}, {}'
@@ -323,9 +323,9 @@ class Schedule:
             print('')
             print('')
         if self.args.data:
-            print('-'*80)
+            print('='*80)
             print('{:^80}'.format('Data Log'))
-            print('-'*80)
+            print('='*80)
             for i, cart in enumerate(self.data['cCart']):
                 print('')
                 print('')
@@ -337,7 +337,7 @@ class Schedule:
                       ' {:<4}'.format('MJD', 'UTC', 'Exposure', 'Type',
                                       'Dith', 'nReads', 'Detectors',
                                       'Seeing'))
-                print('-'*80)
+                print('='*80)
                 try:
                     window = ((self.ap_data['iTime']
                               >= self.data['cTime'][i])
@@ -379,7 +379,7 @@ class Schedule:
                     print('{:<5} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
                           ''.format('MJD', 'UTC', 'Exposure', 'Type',
                                     'Dith', 'Detectors', 'ETime', 'Hart'))
-                    print('-'*80)
+                    print('='*80)
                     try:
                         window = ((self.m_data['iTime']
                                    >= self.data['cTime'][i])
