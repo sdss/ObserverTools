@@ -49,6 +49,7 @@ class MaNGARaw:
         self.plate_id = header['PLATEID']
         self.cart_id = header['CARTID']
         self.exp_id = int(str(fil).split('-')[-1].split('.')[0])
+        self.lead = header['PLATETYP']
         if 'Closed' in header['HARTMANN']:
             self.hartmann = 'Closed'
         else:

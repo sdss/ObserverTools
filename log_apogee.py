@@ -40,10 +40,12 @@ class APOGEERaw:
         header = fitsio.read_header(fil, ext=ext)
         # layer = self.image[layer_ind]
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
-        if header['DITHPIX'] < 13.25:
+        if (header['DITHPIX'] > 12.95) and (header['DITHPIX'] < 13.05):
             self.dither = 'A'
-        else:
+        elif (header['DITHPIX'] > 13.45) and (header['DITHPIX'] < 13.55):
             self.dither = 'B'
+        else:
+            self.dither = ''.format(header['DITHPIX'])
         self.exp_time = header['EXPTIME']
         self.datetimet = Time(header['DATE-OBS'])  # Local
         self.plate_id = header['PLATEID']

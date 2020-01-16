@@ -165,6 +165,8 @@ class Schedule:
             img = log_manga.MaNGARaw(image)
             if img.cart_id not in self.data['cCart']:
                 self.data['cCart'].append(img.cart_id)
+                self.data['cPlate'].append(img.plate_id)
+                self.data['cLead'].append(img.lead)
                 self.data['cTime'].append(img.datetimet)
             else:
                 i = self.data['cCart'].index(img.cart_id)
@@ -241,7 +243,7 @@ class Schedule:
             else:
                 self.data[key] = np.array(item)
         for key, item in self.data.items():
-            print(key, item)
+            # print(key, item)
             self.data[key] = item[data_sort]
         # print(self.test_procs)
         # print(self.dome_data['dTime'], self.dome_data['dNMissing'])
