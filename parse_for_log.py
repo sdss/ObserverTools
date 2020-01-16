@@ -19,6 +19,12 @@ import subprocess as sub
 import sys
 import numpy as np
 try:
+    import starcoder42 as s
+except ImportError:
+    sys.path.append('/Users/dylangatlin/python/')
+    sys.path.append('/home/gatlin/python/')
+    import starcoder42 as s
+try:
     from astropy.time import Time
 except ImportError:
     raise s.GatlinError('Astropy not found for interpreter\n'
@@ -35,7 +41,6 @@ from tqdm import tqdm
 import log_apogee
 import log_manga
 
-import starcoder42 as s
 
 # For astropy
 warnings.filterwarnings('ignore', category=UserWarning, append=True)
@@ -160,6 +165,8 @@ class Schedule:
             img = log_manga.MaNGARaw(image)
             if img.cart_id not in self.data['cCart']:
                 self.data['cCart'].append(img.cart_id)
+                self.data['cPlate'].append(img.plate_id)
+                self.data['cLead'].append(img.lead)
                 self.data['cTime'].append(img.datetimet)
             else:
                 i = self.data['cCart'].index(img.cart_id)
