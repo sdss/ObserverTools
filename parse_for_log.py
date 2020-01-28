@@ -437,8 +437,8 @@ def main():
         args.data = True
         args.summary = True
     if args.today:
-        now = datetime.datetime.now()
-        mjd = int(Time(now).mjd)
+        now = Time.now()
+        mjd = int(now.mjd)
     elif args.mjd:
         mjd = args.mjd
     else:
