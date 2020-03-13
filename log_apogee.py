@@ -2,33 +2,13 @@
 import numpy as np
 import argparse
 from pathlib import Path
+from channelarchiver import Archiver
 import starcoder42 as s
 try:
     from astropy.time import Time
 except ImportError:
     raise s.GatlinError('Astropy is needed for this library')
 import fitsio
-#     print('Astropy not found')
-#     import pyfits as fits
-#     
-# 
-#     class Time:
-#         """An awful workaround to avoid crashes when astropy is unavailable
-#         """
-#         def __init__(self, time):
-#             self.in_time = time
-#             if 'T' in time:
-#                 date, time = time.split('T')
-#             else:
-#                 date, time = time.split()
-#             self.yr, self.mo, self.da = date.split('-')
-#             self.hr, self.mi, self.sec = time.split(':')
-#             self.date = datetime.date(int(self.yr), int(self.mo),
-#                                       int(self.da))
-#             self.time = datetime.time(int(self.hr), int(self.mi),
-#                                       int(self.sec.split('.')[0]))
-#             self.mjd = str(self.date).split()
-
 
 
 class APOGEERaw:
@@ -38,24 +18,33 @@ class APOGEERaw:
     will hopefully help SDSS-V logging"""
     def __init__(self, fil, ext):
         header = fitsio.read_header(fil, ext=ext)
+        self.telemetry = Archiver('http://sdss-telemetry.apo.nmsu.edu/'
+                                  'telemetry/cgi/ArchiveDataServer.cgi')
+        self.telemetry.scan_archives()
+        dithers = self.telemetry.get('25m:apogee:ditherNamedPositions',
+                start=(Time.now()-1/24/60*5).isot, end=Time.now().isot,
+                scan_archives=False, interpolation='raw')
         # layer = self.image[layer_ind]
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
-        if (header['DITHPIX'] > 12.95) and (header['DITHPIX'] < 13.05):
+        if (header['DITHPIX'] - dithers.values[-1][0]) < 0.05:
             self.dither = 'A'
-        elif (header['DITHPIX'] > 13.45) and (header['DITHPIX'] < 13.55):
+        elif (header['DITHPIX'] - dithers.values[-1][1]) < 0.05:
             self.dither = 'B'
         else:
-            self.dither = ''.format(header['DITHPIX'])
+            self.dither = header['DITHPIX']
         self.exp_time = header['EXPTIME']
-        self.datetimet = Time(header['DATE-OBS'])  # Local
+        self.isot = Time(header['DATE-OBS'])  # Local
         self.plate_id = header['PLATEID']
         self.cart_id = header['CARTID']
         self.exp_id = int(str(fil).split('-')[-1].split('.')[0])
-        self.seeing = header['SEEING']
-        self.img_type = header['IMAGETYP']
+        self.img_type = header['IMAGETYP'].capitalize()
         self.n_read = header['NREAD']
-        self.exp_type = header['EXPTYPE']
         self.lead = header['PLATETYP']
+        self.exp_type = header['EXPTYPE'].capitalize()
+        if header['EXPTYPE'] == 'OBJECT':
+            self.seeing = header['SEEING']
+        else:
+            self.seeing = 0.0
 
 def main():
     parser = argparse.ArgumentParser()
@@ -82,3 +71,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

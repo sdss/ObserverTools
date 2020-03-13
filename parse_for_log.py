@@ -17,6 +17,7 @@ import datetime
 import warnings
 import subprocess as sub
 import sys
+import datetime
 import numpy as np
 try:
     import starcoder42 as s
@@ -36,10 +37,11 @@ except ImportError:
                         '{}'.format(sys.executable))
 from pathlib import Path
 from tqdm import tqdm
+from channelarchiver import Archiver
 # from multiprocessing import Process
 
 import log_apogee
-import log_manga
+import log_boss
 
 
 # For astropy
@@ -62,17 +64,22 @@ class Schedule:
         self.ap_data = {'cCart': [], 'cTime': [],
                         'iTime': [], 'iID': [],
                         'iSeeing': [], 'iDetector': [], 'iDither': [],
-                        'iNRead': [], 'iEType': [], 'iCart': []}
-        self.m_data = {'cCart': [], 'cTime': [],
+                        'iNRead': [], 'iEType': [], 'iCart': [], 'iPlate': []}
+        self.b_data = {'cCart': [], 'cTime': [],
                        'iTime': [], 'iID': [],
                        'iDetector': [], 'iDither': [],
-                       'iEType': [], 'iExdt': [], 'iCart': [], 'iHart': []}
+                       'iEType': [], 'iExdt': [], 'iCart': [], 'iHart': [],
+                       'iPlate': [], 'hHart':[], 'hTime': []}
         # These values are not known from the header and must be created
         # after self.sort.
         self.cart_data = {'cNAPA': [], 'cNAPB': [], 'cNMN': [], 'cNMS': [],
                           'cNME': [], 'cNMC': [], 'cAPSummary': [],
                           'cMSummary': []}
         self.test_procs = []
+        
+        self.telemetry = Archiver('http://sdss-telemetry.apo.nmsu.edu/'
+                                  'telemetry/cgi/ArchiveDataServer.cgi')
+        self.telemetry.scan_archives()
 
     def ap_test(self, img):
         test = sub.Popen('ssh observer@sdss-hub "~/bin/aptest {} {}"'
@@ -94,13 +101,13 @@ class Schedule:
             else:
                 n_faint += 1
         # return (n_missing, n_faint, missing, faint, img.cart_id,
-        #         img.datetimet)
+        #         img.isot)
         self.dome_data['dNMissing'].append(n_missing)
         self.dome_data['dNFaint'].append(n_faint)
         self.dome_data['dMissing'].append(missing)
         self.dome_data['dFaint'].append(faint)
         self.dome_data['dCart'].append(img.cart_id)
-        self.dome_data['dTime'].append(img.datetimet)
+        self.dome_data['dTime'].append(img.isot)
 
     def parse_images(self):
         """Goes through every image in ap_images and m_images to put them in
@@ -123,35 +130,37 @@ class Schedule:
                 
                 self.data['cPlate'].append(img.plate_id)
                 self.data['cCart'].append(img.cart_id)
-                self.data['cTime'].append(img.datetimet)
+                self.data['cTime'].append(img.isot)
                 self.data['cLead'].append(img.lead)
             else:
                 i = self.data['cCart'].index(img.cart_id)
-                if img.datetimet < self.data['cTime'][i]:
+                if img.isot < self.data['cTime'][i]:
                     self.data['cTime'].pop(i)
-                    self.data['cTime'].insert(i, img.datetimet)
+                    self.data['cTime'].insert(i, img.isot)
             if img.cart_id not in self.ap_data['cCart']:
                 self.ap_data['cCart'].append(img.cart_id)
-                self.ap_data['cTime'].append(img.datetimet)
+                self.ap_data['cTime'].append(img.isot)
             else:
                 i = self.ap_data['cCart'].index(img.cart_id)
-                if img.datetimet < self.ap_data['cTime'][i]:
+                if img.isot < self.ap_data['cTime'][i]:
                     self.ap_data['cTime'].pop(i)
-                    self.ap_data['cTime'].insert(i, img.datetimet)
+                    self.ap_data['cTime'].insert(i, img.isot)
             detectors = []
-            if image.exists():
+            red_dir = Path('/data/apogee/quickred/{}/'.format(self.mjd))
+            red_fil = red_dir / 'ap2D-a-{}.fits.fz'.format(img.exp_id)
+            if (red_fil).exists():
                 detectors.append('a')
             else:
                 detectors.append('x')
-            if (image.parent / image.name.replace('-a-', '-b-')).exists():
+            if (red_fil.parent / red_fil.name.replace('-a-', '-b-')).exists():
                 detectors.append('b')
             else:
                 detectors.append('x')
-            if (image.parent / image.name.replace('-a-', '-c-')).exists():
+            if (red_fil.parent / red_fil.name.replace('-a-', '-c-')).exists():
                 detectors.append('c')
             else:
                 detectors.append('x')
-            self.ap_data['iTime'].append(img.datetimet)
+            self.ap_data['iTime'].append(img.isot)
             self.ap_data['iID'].append(img.exp_id)
             self.ap_data['iSeeing'].append(img.seeing)
             self.ap_data['iDetector'].append('-'.join(detectors))
@@ -159,55 +168,88 @@ class Schedule:
             self.ap_data['iNRead'].append(img.n_read)
             self.ap_data['iEType'].append(img.exp_type)
             self.ap_data['iCart'].append(img.cart_id)
+            self.ap_data['iPlate'].append(img.plate_id)
         
-        print('Reading MaNGA Data')
+        print('Reading BOSS Data')
         for image in tqdm(list(self.m_images)):
-            img = log_manga.MaNGARaw(image)
+            img = log_boss.BOSSRaw(image)
             if img.cart_id not in self.data['cCart']:
                 self.data['cCart'].append(img.cart_id)
                 self.data['cPlate'].append(img.plate_id)
                 self.data['cLead'].append(img.lead)
-                self.data['cTime'].append(img.datetimet)
+                self.data['cTime'].append(img.isot)
             else:
                 i = self.data['cCart'].index(img.cart_id)
-                if img.datetimet < self.data['cTime'][i]:
+                if img.isot < self.data['cTime'][i]:
                     self.data['cTime'].pop(i)
-                    self.data['cTime'].insert(i, img.datetimet)
-            if img.cart_id not in self.m_data['cCart']:
-                self.m_data['cCart'].append(img.cart_id)
-                self.m_data['cTime'].append(img.datetimet)
+                    self.data['cTime'].insert(i, img.isot)
+            if img.cart_id not in self.b_data['cCart']:
+                self.b_data['cCart'].append(img.cart_id)
+                self.b_data['cTime'].append(img.isot)
             else:
-                i = self.m_data['cCart'].index(img.cart_id)
-                if img.datetimet < self.m_data['cTime'][i]:
-                    self.m_data['cTime'].pop(i)
-                    self.m_data['cTime'].insert(i, img.datetimet)
-            self.m_data['iTime'].append(img.datetimet)
-            self.m_data['iID'].append(img.exp_id)
-            # self.m_data['iSeeing'].append(img.seeing)
-            self.m_data['iDither'].append(img.dither)
-            self.m_data['iEType'].append(img.flavor)
-            self.m_data['iExdt'].append(img.exp_time)
-            self.m_data['iCart'].append(img.cart_id)
-            self.m_data['iHart'].append(img.hartmann)
-
+                i = self.b_data['cCart'].index(img.cart_id)
+                if img.isot < self.b_data['cTime'][i]:
+                    self.b_data['cTime'].pop(i)
+                    self.b_data['cTime'].insert(i, img.isot)
+            self.b_data['iTime'].append(img.isot)
+            self.b_data['iID'].append(img.exp_id)
+            # self.b_data['iSeeing'].append(img.seeing)
+            self.b_data['iDither'].append(img.dither)
+            self.b_data['iEType'].append(img.flavor)
+            self.b_data['iExdt'].append(img.exp_time)
+            self.b_data['iCart'].append(img.cart_id)
+            self.b_data['iHart'].append(img.hartmann)
+            self.b_data['iPlate'].append(img.plate_id)
+            
+            if img.hartmann == 'Left':
+                # Note that times are sent in UTC and received in local, yet
+                # those times are marked as UTC
+                tstart = Time(img.isot).isot
+                tend = (Time(img.isot)+1/24/60*5).isot
+                hart = self.telemetry.get([
+                    '25m:hartmann:r1PistonMove',
+                    '25m:hartmann:r2PistonMove',
+                    '25m:hartmann:b1RingMove',
+                    '25m:hartmann:b2RingMove',
+                    '25m:hartmann:sp1AverageMove',
+                    '25m:hartmann:sp2AverageMove',
+                    '25m:hartmann:sp1Residuals:deg',
+                    '25m:hartmann:sp2Residuals:deg',
+                    '25m:boss:sp1Temp:median', '25m:boss:sp2Temp:median'],
+                start=tstart,
+                end=tend,
+                interpolation='raw', scan_archives=False)
+                
+                self.b_data['hHart'].append(hart)
+                self.b_data['hTime'].append(img.isot)
             m_detectors = []
-            if image.exists():
+            # img_mjd = int(Time(img.isot).mjd)
+            flav = 't' if img.flavor == 'flat' else 'w'
+            if img.lead == 'eBOSS':
+                red_dir = Path('/data/boss/sos/{}/'.format(self.mjd))
+                red_fil = red_dir / 'splog-r1-{3:0>8}.log'.format(
+                        flav, self.mjd, img.plate_id, img.exp_id)
+            else:
+                red_dir = Path('/data/manga/dos/{}/'.format(self.mjd))
+                red_fil = red_dir / 'mg{}set-{}-{}-{:0>8}-r1.fits'.format(
+                        flav, self.mjd, img.plate_id, img.exp_id)
+            if red_fil.exists():
                 m_detectors.append('r1')
             else:
                 m_detectors.append('xx')
-            if (image.parent / image.name.replace('r1', 'b1')).exists():
+            if (red_fil.parent / red_fil.name.replace('r1', 'b1')).exists():
                 m_detectors.append('b1')
             else:
                 m_detectors.append('xx')
-            if (image.parent / image.name.replace('r1', 'r2')).exists():
+            if (red_fil.parent / red_fil.name.replace('r1', 'r2')).exists():
                 m_detectors.append('r2')
             else:
                 m_detectors.append('xx')
-            if (image.parent / image.name.replace('r1', 'b2')).exists():
+            if (red_fil.parent / red_fil.name.replace('r1', 'b2')).exists():
                 m_detectors.append('b2')
             else:
                 m_detectors.append('xx')
-            self.m_data['iDetector'].append('-'.join(m_detectors))
+            self.b_data['iDetector'].append('-'.join(m_detectors))
     
     def sort(self):
         """Sorts self.ap_data by cart time and by image time and converts to
@@ -217,25 +259,14 @@ class Schedule:
                 self.ap_data[key] = Time(item)
             else:
                 self.ap_data[key] = np.array(item)
-        for key, item in self.m_data.items():
-            if 'Time' in key:
-                self.m_data[key] = Time(item)
-            else:
-                self.m_data[key] = np.array(item)
         ap_cart_sorter = self.ap_data['cTime'].argsort()
         ap_img_sorter = self.ap_data['iTime'].argsort()
-        m_cart_sorter = self.m_data['cTime'].argsort()
-        m_img_sorter = self.m_data['iTime'].argsort()
         for key, item in self.ap_data.items():
             if key[0] == 'c':
                 self.ap_data[key] = item[ap_cart_sorter]
             elif key[0] == 'i':
                 self.ap_data[key] = item[ap_img_sorter]
-        for key, item in self.m_data.items():
-            if key[0] == 'c':
-                self.m_data[key] = item[m_cart_sorter]
-            elif key[0] == 'i':
-                self.m_data[key] = item[m_img_sorter]
+        
         for key, item in self.data.items():
             if 'Time' in key:
                 self.data[key] = Time(item)
@@ -243,10 +274,7 @@ class Schedule:
             else:
                 self.data[key] = np.array(item)
         for key, item in self.data.items():
-            # print(key, item)
             self.data[key] = item[data_sort]
-        # print(self.test_procs)
-        # print(self.dome_data['dTime'], self.dome_data['dNMissing'])
         if self.dome_data['dTime']:
             for key, item in self.dome_data.items():
                 if 'Time' in key:
@@ -254,13 +282,28 @@ class Schedule:
                     data_sort = self.dome_data[key].argsort()
                 else:
                     self.dome_data[key] = np.array(item)
+        if len(self.b_data['cCart']) != 0:
+            for key, item in self.b_data.items():
+                if 'Time' in key:
+                    if len(item) != 0:
+                        self.b_data[key] = Time(item)
+                    else:
+                        self.b_data[key] = np.array(item)
+                else:
+                    self.b_data[key] = np.array(item)
+            m_cart_sorter = self.b_data['cTime'].argsort()
+            m_img_sorter = self.b_data['iTime'].argsort()
+            m_h_sorter = self.b_data['hTime'].argsort()
+            for key, item in self.b_data.items():
+                if key[0] == 'c':
+                    self.b_data[key] = item[m_cart_sorter]
+                elif key[0] == 'i':
+                    self.b_data[key] = item[m_img_sorter]
+                elif key[0] == 'h':
+                    self.b_data[key] = item[m_h_sorter]
 
     def count_dithers(self):
         for i, cart in enumerate(self.data['cCart']):
-            # print(self.ap_data['iCart'], cart)
-            # print(self.ap_data['iCart'] == cart)
-            # print(self.ap_data['iDither'])
-            # print(self.ap_data['iDither'] == 'A')
             self.cart_data['cNAPA'].append(np.sum((
                 (self.ap_data['iCart'] == cart)
                 & (self.ap_data['iDither'] == 'A'))
@@ -270,21 +313,21 @@ class Schedule:
                 & (self.ap_data['iDither'] == 'B')
                 & (self.ap_data['iEType'] == 'OBJECT')))
             self.cart_data['cNMN'].append(np.sum(
-                (self.m_data['iCart'] == cart)
-                & (self.m_data['iDither'] == 'N')
-                & (self.m_data['iEType'] == 'science')))
+                (self.b_data['iCart'] == cart)
+                & (self.b_data['iDither'] == 'N')
+                & (self.b_data['iEType'] == 'science')))
             self.cart_data['cNMS'].append(np.sum(
-                (self.m_data['iCart'] == cart)
-                & (self.m_data['iDither'] == 'S')
-                & (self.m_data['iEType'] == 'science')))
+                (self.b_data['iCart'] == cart)
+                & (self.b_data['iDither'] == 'S')
+                & (self.b_data['iEType'] == 'science')))
             self.cart_data['cNME'].append(np.sum(
-                (self.m_data['iCart'] == cart)
-                & (self.m_data['iDither'] == 'E')
-                & (self.m_data['iEType'] == 'science')))
+                (self.b_data['iCart'] == cart)
+                & (self.b_data['iDither'] == 'E')
+                & (self.b_data['iEType'] == 'science')))
             self.cart_data['cNMC'].append(np.sum(
-                (self.m_data['iCart'] == cart)
-                & (self.m_data['iDither'] == 'C')
-                & (self.m_data['iEType'] == 'science')))
+                (self.b_data['iCart'] == cart)
+                & (self.b_data['iDither'] == 'C')
+                & (self.b_data['iEType'] == 'science')))
         for i, cart in enumerate(self.data['cCart']):
             if self.cart_data['cNAPA'][i] == self.cart_data['cNAPB'][i]:
                 self.cart_data['cAPSummary'].append(
@@ -308,114 +351,209 @@ class Schedule:
                 self.cart_data['cMSummary'].append(
                     '{}xC'.format(self.cart_data['cNMC'][i]))
 
+    def hartmann_parse(self, hart):
+        output = ''  #.format((Time(hart[0].times[-1])).isot)
+        output += 'r1: {:>6.2f}, b1: {:>6.2f}\n'.format(
+                hart[0].values[-1], hart[2].values[-1])
+        output += 'r2: {:>6.2f}, b2: {:>6.2f}\n'.format(
+                hart[1].values[-1], hart[3].values[-1])
+        output += 'Average Moves:\n'
+        output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
+                hart[4].values[-1], hart[5].values[-1])
+        output += 'Residuals:\n'
+        output += 'SP1: {:>6.2f}, SP2: {:>6.2f}\n'.format(
+                hart[6].values[-1], hart[7].values[-1])
+        output += 'Spectrograph Temperatures:\n'
+        output += 'SP1: {:>6.1f}, SP2: {:>6.1f}\n'.format(
+                hart[8].values[-1], hart[9].values[-1])
+        return output
 
-    def print_data(self):
-        if self.args.summary:
+    def psummary(self):
+        rint('='*80)
+        print('{:^80}'.format('Observing Summary'))
+        print('='*80)
+        for i, cart in enumerate(self.data['cCart']):
+            print('')
+            print('Cart {}, plate {}, {}'
+                  ', {},'.format(cart, self.data['cPlate'][i],
+                                self.cart_data['cAPSummary'][i],
+                                self.cart_data['cMSummary'][i]))
+            try:
+                j = np.where(self.dome_data['dCart'] == cart)[0][0]
+                print('Missing Fibers: {}, Faint fibers: {}'.format(
+                    self.dome_data['dNMissing'][j],
+                    self.dome_data['dNFaint'][j]))
+            except IndexError:
+                pass
+
+    def pdata(self):
+        print('='*80)
+        print('{:^80}'.format('Data Log'))
+        print('='*80)
+        for i, cart in enumerate(self.data['cCart']):
+            print('')
+            print('')
+            print('# Cart {}, Plate {}, {}'.format(cart,
+                self.data['cPlate'][i], self.data['cLead'][i]))
+            print('# GSOGTF, ===INSERT WEATHER CONDITIONS===')
+            print('# APOGEE')
+            print('{:<5} {:<8} {:<8} {:<12} {:<4} {:<6} {:<9}'
+                  ' {:<4}'.format('MJD', 'UTC', 'Exposure', 'Type',
+                                  'Dith', 'nReads', 'Pipeline',
+                                  'Seeing'))
             print('='*80)
-            print('{:^80}'.format('Observing Summary'))
-            print('='*80)
-            for i, cart in enumerate(self.data['cCart']):
-                print('')
-                print('Cart {}, plate {}, {}'
-                      ', {},'.format(cart, self.data['cPlate'][i],
-                                    self.cart_data['cAPSummary'][i],
-                                    self.cart_data['cMSummary'][i]))
+            try:
+                window = ((self.ap_data['iTime']
+                          >= self.data['cTime'][i])
+                          & (self.ap_data['iTime']
+                             < self.data['cTime'][i+1])
+                          )
+            
+            except IndexError:
+                window = ((self.ap_data['iTime']
+                          >= self.data['cTime'][i])
+                          & (self.ap_data['iTime'] < Time.now()))
+            for (mjd, iso, exp_id, exp_type, dith, nread,
+                 detectors, see) in zip(
+                self.ap_data['iTime'][window].mjd,
+                self.ap_data['iTime'][window].iso,
+                self.ap_data['iID'][window],
+                self.ap_data['iEType'][window],
+                self.ap_data['iDither'][window],
+                self.ap_data['iNRead'][window],
+                self.ap_data['iDetector'][window],
+                self.ap_data['iSeeing'][window]
+            ):
+                print('{:<5.0f} {:0>8} {:<8.0f} {:<12} {:<4} {:<6} {:<9}'
+                      ' {:<4.1f}'.format(mjd, iso[12:19], exp_id,
+                                         exp_type,
+                                         dith, nread, detectors, see))
+            if self.data['cCart'][i] in self.dome_data['dCart']:
                 try:
                     j = np.where(self.dome_data['dCart'] == cart)[0][0]
-                    print('Missing Fibers: {}, Faint fibers: {}'.format(
-                        self.dome_data['dNMissing'][j],
-                        self.dome_data['dNFaint'][j]))
                 except IndexError:
                     pass
-            print('')
-            print('')
-        if self.args.data:
-            print('='*80)
-            print('{:^80}'.format('Data Log'))
-            print('='*80)
-            for i, cart in enumerate(self.data['cCart']):
+                print('Missing fibers:'
+                      '{}'.format(self.dome_data['dMissing'][j]))
+                print('Faint fibers:'
+                      '{}'.format(self.dome_data['dFaint'][j]))
+            if cart <= 6:
                 print('')
-                print('')
-                print('# Cart {}, Plate {}, {}'.format(cart,
-                    self.data['cPlate'][i], self.data['cLead'][i]))
-                print('# GSOGTF, ===INSERT WEATHER CONDITIONS===')
-                print('# APOGEE')
-                print('{:<5} {:<8} {:<8} {:<12} {:<4} {:<6} {:<9}'
-                      ' {:<4}'.format('MJD', 'UTC', 'Exposure', 'Type',
-                                      'Dith', 'nReads', 'Detectors',
-                                      'Seeing'))
+                print('# BOSS')
+                print('{:<5} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
+                      ''.format('MJD', 'UTC', 'Exposure', 'Type',
+                                'Dith', 'Pipeline', 'ETime', 'Hart'))
                 print('='*80)
                 try:
-                    window = ((self.ap_data['iTime']
-                              >= self.data['cTime'][i])
-                              & (self.ap_data['iTime']
+                    window = ((self.b_data['iTime']
+                               >= self.data['cTime'][i])
+                              & (self.b_data['iTime']
                                  < self.data['cTime'][i+1])
                               )
                 
                 except IndexError:
-                    window = ((self.ap_data['iTime']
-                              >= self.data['cTime'][i])
-                              & (self.ap_data['iTime'] < Time.now()))
-                for (mjd, iso, exp_id, exp_type, dith, nread,
-                     detectors, see) in zip(
-                    self.ap_data['iTime'][window].mjd,
-                    self.ap_data['iTime'][window].iso,
-                    self.ap_data['iID'][window],
-                    self.ap_data['iEType'][window],
-                    self.ap_data['iDither'][window],
-                    self.ap_data['iNRead'][window],
-                    self.ap_data['iDetector'][window],
-                    self.ap_data['iSeeing'][window]
+                    window = ((self.b_data['iTime']
+                               >= self.data['cTime'][i])
+                              & (self.b_data['iTime'] < Time.now()))
+                for (mjd, iso, exp_id, exp_type, dith,
+                     detectors, etime, hart) in zip(
+                    self.b_data['iTime'][window].mjd,
+                    self.b_data['iTime'][window].iso,
+                    self.b_data['iID'][window],
+                    self.b_data['iEType'][window],
+                    self.b_data['iDither'][window],
+                    self.b_data['iDetector'][window],
+                    self.b_data['iExdt'][window],
+                    self.b_data['iHart'][window],
                 ):
-                    print('{:<5.0f} {:<8} {:<8.0f} {:<12} {:<4} {:<6} {:<9}'
-                          ' {:<4.1f}'.format(mjd, iso[12:19], exp_id,
-                                             exp_type,
-                                             dith, nread, detectors, see))
-                if self.data['cCart'][i] in self.dome_data['dCart']:
-                    try:
-                        j = np.where(self.dome_data['dCart'] == cart)[0][0]
-                    except IndexError:
-                        pass
-                    print('Missing fibers:'
-                          '{}'.format(self.dome_data['dMissing'][j]))
-                    print('Faint fibers:'
-                          '{}'.format(self.dome_data['dFaint'][j]))
-                if cart <= 6:
-                    print('')
-                    print('# MaNGA')
-                    print('{:<5} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
-                          ''.format('MJD', 'UTC', 'Exposure', 'Type',
-                                    'Dith', 'Detectors', 'ETime', 'Hart'))
-                    print('='*80)
-                    try:
-                        window = ((self.m_data['iTime']
-                                   >= self.data['cTime'][i])
-                                  & (self.m_data['iTime']
-                                     < self.data['cTime'][i+1])
-                                  )
-                    
-                    except IndexError:
-                        window = ((self.m_data['iTime']
-                                   >= self.data['cTime'][i])
-                                  & (self.m_data['iTime'] < Time.now()))
-                    for (mjd, iso, exp_id, exp_type, dith,
-                         detectors, etime, hart) in zip(
-                        self.m_data['iTime'][window].mjd,
-                        self.m_data['iTime'][window].iso,
-                        self.m_data['iID'][window],
-                        self.m_data['iEType'][window],
-                        self.m_data['iDither'][window],
-                        self.m_data['iDetector'][window],
-                        self.m_data['iExdt'][window],
-                        self.m_data['iHart'][window],
-                    ):
-                        print('{:<5.0f} {:<8} {:<8.0f} {:<7} {:<4} {:<11}'
-                               ' {:<5.0f} {:<5}'
-                               ''.format(mjd, iso[12:19], exp_id,
-                                         exp_type.strip(),
-                                         dith.strip(), detectors, etime,
-                                         hart))
-                    print('====HARTMANN====')
+                    print('{:<5.0f} {:0>8} {:<8.0f} {:<7} {:<4} {:<11}'
+                           ' {:<5.0f} {:<5}'
+                           ''.format(mjd, iso[12:19], exp_id,
+                                     exp_type.strip(),
+                                     dith.strip(), detectors, etime,
+                                     hart))
+                try:
+                    window = ((self.b_data['hTime']
+                               >= self.data['cTime'][i])
+                              & (self.b_data['hTime']
+                                 < self.data['cTime'][i+1])
+                              )
+                
+                except IndexError:
+                    window = ((self.b_data['hTime']
+                               >= self.data['cTime'][i])
+                              & (self.b_data['hTime'] < Time.now()))
+                for t, hart in zip(self.b_data['hTime'][window],
+                                   self.b_data['hHart'][window]):
+                    print()
+                    print(self.hartmann_parse(hart))
+                
+
+
+    def pboss(self):
+        print('='*80)
+        print('{:^80}'.format('BOSS Data Summary'))
+        print('='*80)
+        print('{:<5} {:<8} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
+              ''.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type', 'Dith',
+                        'Pipeline', 'ETime', 'Hart'))
+        print('='*80)
+
+        for (mjd, iso, cart, plate, exp_id, exp_type, dith, detectors, etime,
+             hart) in zip(
+            self.b_data['iTime'].mjd,
+            self.b_data['iTime'].iso,
+            self.b_data['iCart'],
+            self.b_data['iPlate'],
+            self.b_data['iID'],
+            self.b_data['iEType'],
+            self.b_data['iDither'],
+            self.b_data['iDetector'],
+            self.b_data['iExdt'],
+            self.b_data['iHart']):
+            print('{:<5.0f} {:<8} {:0>2.0f}-{:<5.0f} {:<8.0f} {:<7} {:<4}'
+                  ' {:<11}'
+                  ' {:<5.0f} {:<5}'
+               ''.format(mjd, iso[12:19], cart, plate, exp_id, exp_type.strip(),
+                         dith.strip(), detectors, etime, hart))
+
+    def papogee(self):
+        print('='*80)
+        print('{:^80}'.format('APOGEE Data Summary'))
+        print('='*80)
+        print('{:<5} {:<8} {:<8} {:<8} {:<12} {:<4} {:<6} {:<9}'
+              ' {:<4}'.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type',
+                              'Dith', 'nReads', 'Pipeline',
+                              'Seeing'))
+        print('='*80)
+        for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
+             detectors, see) in zip(
+            self.ap_data['iTime'].mjd,
+            self.ap_data['iTime'].iso,
+            self.ap_data['iCart'],
+            self.ap_data['iPlate'],
+            self.ap_data['iID'],
+            self.ap_data['iEType'],
+            self.ap_data['iDither'],
+            self.ap_data['iNRead'],
+            self.ap_data['iDetector'],
+            self.ap_data['iSeeing']
+        ):
+            print('{:<5.0f} {:<8} {:0>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
+                  ' {:<6}'
+                  ' {:<9}'
+                  ' {:<4.1f}'.format(mjd, iso[12:19], cart, plate, exp_id,
+                                     exp_type,
+                                     dith, nread, detectors, see))
+
+    def print_data(self):
+        self.psummary()
+        print('\n')
+        self.pdata()
+        print('\n')
+        self.pboss()
+        print('\n')
+        self.papogee()
 
 
 def main():
@@ -432,10 +570,11 @@ def main():
             help='Print the data log')
     parser.add_argument('-p', '--print', action='store_true',
             help='Print all possible outputs')
+    parser.add_argument('--boss', action='store_true',
+            help='Print MaANGA Summary')
+    parser.add_argument('--apogee', action='store_true',
+            help='Print APOGEE Summary')
     args = parser.parse_args()
-    if args.print:
-        args.data = True
-        args.summary = True
     if args.today:
         now = Time.now()
         mjd = int(now.mjd)
@@ -454,9 +593,20 @@ def main():
     schedule.parse_images()
     schedule.sort()
     schedule.count_dithers()
-    if not args.summary or args.data:
+
+    if args.print:
         schedule.print_data()
+    else:
+        if args.summary:
+            schedule.psummary()
+        if args.data:
+            schedule.pdata()
+        if args.boss:
+            schedule.pboss()
+        if args.apogee:
+            schedule.papogee()
 
 
 if __name__ == '__main__':
     main()
+

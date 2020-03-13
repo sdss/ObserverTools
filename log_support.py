@@ -42,13 +42,11 @@ class Telemetry:
         for key in ['25m:sop:doMangaSequence_ditherSeq:index',
                     '25m:sop:doApogeeMangaSequence_ditherSeq:index']:
             self.query(key)
-            for time in self.data[key].times:
-                if (self.tstart < time) & (time < self.tend):
-                    self.call_times.append(time)
-        self.call_times = np.array(self.call_times)
+            self.call_times.extend(self.data[key].times)
+        self.call_times = Time(self.call_times)
         callback_sorter = self.call_times.argsort()
         self.call_times = self.call_times[callback_sorter]
-        # print(self.call_times)
+        print(self.call_times)
 
     def tel_offsets(self):
         offsets_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
@@ -69,7 +67,7 @@ class Telemetry:
                 t_cutoff = time > self.data[key].times
                 item.append(self.data[key].values[t_cutoff][-1])
             offset_data.append(item)
-        
+        print(self.data['25m:tcc:axePos:az'].times)
         self.offsets = ''
         self.offsets += '--- Telescope Offsets and Scale (arcsec)---\n'
         self.offsets += ('{:<5} {:<9} {:<6} {:<4} {:<6} {:<13} {:<8} {:<10}'
@@ -79,7 +77,6 @@ class Telemetry:
         self.offsets += '=' * 80 +'\n'
         for (t, c, p, s, az, alt, rot, obj_az, obj_alt, guide_rot, calib_az,
                 calib_alt, calib_rot, rms) in zip(*offset_data):
-            print('{:<9}'.format(guide_rot[0]*3600))
             self.offsets += ('{:<5} {:>2}-{:0>5}{:<1} {:<+6.1f} {:<4.1f}'
                              ' {:<+6.1f}'
                              ' ({:<5.1f},{:<5.1f}) {:<+8.1f} ({:2.0f},'
@@ -127,7 +124,7 @@ def main():
         end = Time(int(mjd) + 1, format='mjd').iso.split('.')[0]
     else:
         raise s.GatlinError('Must provide -t or -m in arguments')
-
+    print(start, end)
     if args.keys:
         tel = Telemetry(start, end)
         for k in args.keys:
