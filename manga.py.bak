@@ -11,14 +11,14 @@ timetrack.py -m  -m1 58625 -m2 58625 -v  #  Manga, Mastar, Apogee
 import glob
 import re
 import grepfitsLib
-import configparser
+import ConfigParser
 
 from sdss.internal.database.connections.APODatabaseAdminLocalConnection import db
 import sdss.internal.database.apo.platedb.ModelClasses as platedb
 
 
 # create a config parser object
-config = configparser.RawConfigParser()
+config = ConfigParser.RawConfigParser()
 config.read('config.cfg')
 pref = config.get('path_prefix', 'pref')
 
@@ -36,8 +36,8 @@ def getManga(mjd1, mjd2, verbose):
         path="%s%s%s/%s"  % (pref, path_red, mjd, red)
         files=getFiles(path)
         if verbose: 
-            print("      -------", mjd, "nFiles=", len(files))
-            print("mjd   expNum   flavor   ct  plate  exp   dith Plate_type      Lead")
+            print  "      -------", mjd, "nFiles=", len(files)
+            print "mjd   expNum   flavor   ct  plate  exp   dith Plate_type      Lead"
         nexp=0;  
         for i,f in enumerate(files):
             ind=re.search(reg, f); expNum=f[ind.start():ind.end()]
@@ -57,8 +57,8 @@ def getManga(mjd1, mjd2, verbose):
             #if  (EXPTIME < 25) : continue
                                  
             if verbose:    
-                print("%5s %8s %-7s  %2s  %5s  %5.1f  %2s  %-14s  %-15s " % \
-                 (mjd,expNum,flavor, CARTID,PLATEID,EXPTIME,MGDPOS,PLATETYP, lead))
+                print "%5s %8s %-7s  %2s  %5s  %5.1f  %2s  %-14s  %-15s " % \
+                 (mjd,expNum,flavor, CARTID,PLATEID,EXPTIME,MGDPOS,PLATETYP, lead)
             
             nexp=nexp+1
             if plate in plates:
@@ -71,8 +71,8 @@ def getManga(mjd1, mjd2, verbose):
 
 
 def manga_str(plates, verbose):
-    print("")
-    print("**** MANGA summary ****")    
+    print ""
+    print "**** MANGA summary ****"    
 
     session = db.Session()
     nExp=0;   nCompleted=0
@@ -83,7 +83,7 @@ def manga_str(plates, verbose):
         donness=plateObj.calculatedCompletionStatus()  
         if donness == "Complete":
             nCompleted=nCompleted+1
-    print(nExp, nCompleted)
+    print nExp, nCompleted
 
     #nExp=0
     #for plate in sorted(plates.keys()):
@@ -119,55 +119,55 @@ def manga_str(plates, verbose):
             other_plates.append(plate)
 		    
     a=0
-    print("")
-    print("MaNGA: completed %s plates", "among %s observed." % (len(mPlates)))
-    print("  - %3s manga-dither exposures  (%d x'N', %d x'S', %s x'E') " % (mExp, nd,sd, ed))
-    print("          %3s 'NSE' triplets  and %s  orphan exposures" % (tripl, orphan))
-    print("  - %3s manga 'C' exposures obtained on APOGEE-led co-obs plates" % (apExp))
-    print("  - addition %s exposures on %s other lead plates:" % (other_exposures, other_lead))
-    print("")
+    print ""
+    print "MaNGA: completed %s plates", "among %s observed." % (len(mPlates))
+    print "  - %3s manga-dither exposures  (%d x'N', %d x'S', %s x'E') " % (mExp, nd,sd, ed)
+    print "          %3s 'NSE' triplets  and %s  orphan exposures" % (tripl, orphan)
+    print "  - %3s manga 'C' exposures obtained on APOGEE-led co-obs plates" % (apExp)
+    print "  - addition %s exposures on %s other lead plates:" % (other_exposures, other_lead)
+    print ""
     
-    print("List of observed MaNGA_dither plates:")
-    print(mPlates)  
-    print("List of observed other MaNGA plates:")
-    print(other_plates)
+    print "List of observed MaNGA_dither plates:"
+    print mPlates  
+    print "List of observed other MaNGA plates:"
+    print other_plates
     
 
-    print("")    
-    print("  -MaNGA dither-")
-    print("Ct   Plate  Nexp Texp  Plate_Name   Plate_Type      Lead            Observations")
+    print ""    
+    print "  -MaNGA dither-"
+    print  "Ct   Plate  Nexp Texp  Plate_Name   Plate_Type      Lead            Observations"
     for plate in sorted(plates.keys()):
         if "MaNGA dither"  in plates[plate][2]: 
-            print("%2s   %5s   %2d   %3d               %s  %-14s  %s  " % \
-                (plates[plate][4], plate, plates[plate][0],plates[plate][1],plates[plate][5] ,plates[plate][2],plates[plate][3], ))   
-    print("")
-    print("   -Other lead-") 
-    print("Ct   Plate  Nexp Texp  Plate_Name   Plate_Type      Lead            Observations")
+            print "%2s   %5s   %2d   %3d               %s  %-14s  %s  " % \
+                (plates[plate][4], plate, plates[plate][0],plates[plate][1],plates[plate][5] ,plates[plate][2],plates[plate][3], )   
+    print ""
+    print "   -Other lead-" 
+    print  "Ct   Plate  Nexp Texp  Plate_Name   Plate_Type      Lead            Observations"
     for plate in sorted(plates.keys()):
         if ("MaNGA dither" not in plates[plate][2]) and "APOGEE lead" not in plates[plate][2]: 
-            print("%2s   %5s   %2d   %3d               %s  %-14s  %s  " % \
-                (plates[plate][4], plate, plates[plate][0],plates[plate][1],plates[plate][5] ,plates[plate][2],plates[plate][3], ))   
+            print "%2s   %5s   %2d   %3d               %s  %-14s  %s  " % \
+                (plates[plate][4], plate, plates[plate][0],plates[plate][1],plates[plate][5] ,plates[plate][2],plates[plate][3], )   
 
-    print("")
-    print("  -APOGEE lead-")
-    print("Ct   Plate  Nexp Texp  Plate_Name   Plate_Type      Lead            Observations")
+    print ""
+    print "  -APOGEE lead-"
+    print  "Ct   Plate  Nexp Texp  Plate_Name   Plate_Type      Lead            Observations"
     for plate in sorted(plates.keys()):
         if "APOGEE lead" in plates[plate][2]: 
-            print("%2s   %5s   %2d   %3d               %s  %-14s  %s  " % \
-                (plates[plate][4], plate, plates[plate][0],plates[plate][1],plates[plate][5] ,plates[plate][2],plates[plate][3], ))   
+            print "%2s   %5s   %2d   %3d               %s  %-14s  %s  " % \
+                (plates[plate][4], plate, plates[plate][0],plates[plate][1],plates[plate][5] ,plates[plate][2],plates[plate][3], )   
 
 
     return None
 
 
 def manga(mjd1, mjd2, verbose):
-    print("------------------------------------------------------------------") 
-    print("MANGA plates searching: %s -- %s,  wait ..  " % (mjd1, mjd2))
-    print("------------------------------------------------------------------") 
+    print "------------------------------------------------------------------" 
+    print "MANGA plates searching: %s -- %s,  wait ..  " % (mjd1, mjd2)
+    print "------------------------------------------------------------------" 
     plates=None 
     plates=getManga(mjd1, mjd2, verbose) 
     if plates == None:
-        print("  ...  did not find anything ")     
+        print  "  ...  did not find anything "     
     else:
         manga_str(plates,verbose)
     return None

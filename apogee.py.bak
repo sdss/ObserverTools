@@ -21,12 +21,12 @@ Updates:
 import glob
 import re
 import grepfitsLib
-import configparser
+import ConfigParser
 
 from sdss.internal.database.connections.APODatabaseAdminLocalConnection import db
 import sdss.internal.database.apo.platedb.ModelClasses as platedb
 
-config =configparser.RawConfigParser()
+config =ConfigParser.RawConfigParser()
 config.read('config.cfg')
 pref = config.get('path_prefix', 'pref')
 
@@ -44,8 +44,8 @@ def getApogee(mjd1, mjd2, verbose):
         path="%s%s%s/%s"  % (pref, path_red, mjd, red)
         files=getFiles(path)
         if verbose:
-            print("      -------", mjd, "nFiles=", len(files))
-            print("mjd   expNum    imtype  ct plate  Nrd   Dith  Plate_type      Lead")
+            print  "      -------", mjd, "nFiles=", len(files)
+            print "mjd   expNum    imtype  ct plate  Nrd   Dith  Plate_type      Lead"
 
         nexp=0; 
         for i,f in enumerate(files):
@@ -76,8 +76,8 @@ def getApogee(mjd1, mjd2, verbose):
             else: "?"
   
             if verbose:
-                print("%5s %8s  %-7s %2s %5s   %2d   %1s     %-14s  %s" % \
-                   (mjd,  expNum, exptype, CARTID, plate, nframes, dith, PLATETYP, lead))
+                print "%5s %8s  %-7s %2s %5s   %2d   %1s     %-14s  %s" % \
+                   (mjd,  expNum, exptype, CARTID, plate, nframes, dith, PLATETYP, lead)
 
             nexp=nexp+1
             if plate in plates:
@@ -89,7 +89,7 @@ def getApogee(mjd1, mjd2, verbose):
      
    
 def ap_str(plates, mjd1, mjd2):
-    print("")
+    print ""
     
     session = db.Session()
 
@@ -133,7 +133,7 @@ def ap_str(plates, mjd1, mjd2):
     from autoscheduler.plateDBtools.apogee import get_apogee_plates
     
     apDone=[];   apNotDone=[] 
-    print("Autosheduler query:") 
+    print "Autosheduler query:" 
     platesD = get_apogee_plates.get_plates(plateList=apPlates)
     for p in platesD:
         if p.pct() >= 1.0:
@@ -147,32 +147,32 @@ def ap_str(plates, mjd1, mjd2):
             apNotDone.append(p.plateid)
     
     bold='\033[01m' ;  reset='\033[0m'
-    print("")
-    print(bold, "**** Apogee summary ****", reset)    
-    print("")
+    print ""
+    print bold, "**** Apogee summary ****", reset    
+    print ""
     
     red='\033[31m'
     black='\033[30m'
-    print(red, "APOGEE-2: completed %s plates among %s observed." % (len(apDone), len(apPlates)))
-    print("  - %3d apogee-led exposures  (%d x'A', %d x'B')" % (apExp, ad,bd))
-    print("  - %3d AB-exposure pairs obtained on APOGEE-led plates + %s single A or B"  % \
-        (pairs, orphan))
-    print("         including %s x double DAB-exposure pairs and %s unpaired"  % \
-        (dblPairs, dblOrp))
-    print("  - %3s short SAB-exposures  pairs obtained on MaNGA-led co-obs plates" % (mExp/2), black)
+    print red, "APOGEE-2: completed %s plates among %s observed." % (len(apDone), len(apPlates))
+    print "  - %3d apogee-led exposures  (%d x'A', %d x'B')" % (apExp, ad,bd)
+    print "  - %3d AB-exposure pairs obtained on APOGEE-led plates + %s single A or B"  % \
+        (pairs, orphan)
+    print "         including %s x double DAB-exposure pairs and %s unpaired"  % \
+        (dblPairs, dblOrp)
+    print "  - %3s short SAB-exposures  pairs obtained on MaNGA-led co-obs plates" % (mExp/2), black
     
-    print("")
-    print("Observed APOGEE-lead plates: %s " % (len(apPlates)))
-    print("   ", apPlates)
+    print ""
+    print "Observed APOGEE-lead plates: %s " % (len(apPlates))
+    print "   ", apPlates
     
-    print("Completed  APOGEE-lead plates:  %s" % (len(apDone)))
-    print("   ", apDone)
+    print "Completed  APOGEE-lead plates:  %s" % (len(apDone))
+    print "   ", apDone
 
-    print("Not completed APOGEE-lead plates:  %s" % (len(apNotDone)))
-    print("   ", apNotDone)
+    print "Not completed APOGEE-lead plates:  %s" % (len(apNotDone))
+    print "   ", apNotDone
 
-    print("Observed Non-APOGEE plates:  %s " % (len(mPlates)))
-    print("   ", mPlates)
+    print "Observed Non-APOGEE plates:  %s " % (len(mPlates))
+    print "   ", mPlates
 
 
     # plates[plate][4]   Plate_type
@@ -183,9 +183,9 @@ def ap_str(plates, mjd1, mjd2):
     # APOGEE-2&MaNGA    MaNGA Globular
     # APOGEE-2&MaNGA    MaStar
     
-    print("")
-    print(bold,"APOGEE-2&MaNGA  and APOGEE lead", reset)  
-    print("Plate   Nexp Nread Plate_name           Plate_type        Lead          Done? Observations ")
+    print ""
+    print bold,"APOGEE-2&MaNGA  and APOGEE lead", reset  
+    print  "Plate   Nexp Nread Plate_name           Plate_type        Lead          Done? Observations "
     for plate in sorted(plates.keys()):
         tp=plates[plate][4]; ld=plates[plate][2]
         if tp=="APOGEE-2&MaNGA" and ld=="APOGEE lead":
@@ -195,12 +195,12 @@ def ap_str(plates, mjd1, mjd2):
                  dd="Done"
             else:
                  dd="No  " 
-            print("%5s   %2d    %2d   %-18s   %-15s   %-10s   %s  %s" % \
-                (plate, plates[plate][0], plates[plate][1],  plateObj.name,  plates[plate][4], plates[plate][2],dd, plates[plate][3] ))  
+            print "%5s   %2d    %2d   %-18s   %-15s   %-10s   %s  %s" % \
+                (plate, plates[plate][0], plates[plate][1],  plateObj.name,  plates[plate][4], plates[plate][2],dd, plates[plate][3] )  
 
-    print("") 
-    print(bold,"APOGEE-2", reset)  
-    print("Plate   Nexp Nread Plate_name           Plate_type        Lead          Done?  Observations ")
+    print "" 
+    print bold,"APOGEE-2", reset  
+    print  "Plate   Nexp Nread Plate_name           Plate_type        Lead          Done?  Observations "
     for plate in sorted(plates.keys()):
         tp=plates[plate][4]; ld=plates[plate][2]
         if tp=="APOGEE-2":
@@ -210,33 +210,33 @@ def ap_str(plates, mjd1, mjd2):
                  dd="Done"
             else:
                  dd="No  " 
-            print("%5s   %2d    %2d   %-18s   %-15s   %-12s  %s   %s" % \
-                (plate, plates[plate][0], plates[plate][1],  plateObj.name,  plates[plate][4], plates[plate][2],dd, plates[plate][3] ))  
+            print "%5s   %2d    %2d   %-18s   %-15s   %-12s  %s   %s" % \
+                (plate, plates[plate][0], plates[plate][1],  plateObj.name,  plates[plate][4], plates[plate][2],dd, plates[plate][3] )  
 
-    print("")
-    print(bold,"APOGEE-2&MaNGA but not APOGEE lead", reset)  
-    print("Plate   Nexp Nread Plate_name           Plate_type        Lead          Done?  Observations ")
+    print ""
+    print bold,"APOGEE-2&MaNGA but not APOGEE lead", reset  
+    print  "Plate   Nexp Nread Plate_name           Plate_type        Lead          Done?  Observations "
     for plate in sorted(plates.keys()):
         tp=plates[plate][4]; ld=plates[plate][2]
         if tp=="APOGEE-2&MaNGA" and ld !="APOGEE lead":
             plateObj=session.query(platedb.Plate).filter(platedb.Plate.plate_id==plate).one() 
             # donness=plateObj.calculatedCompletionStatus() - not valid for apogee
-            print("%5s   %2d    %2d   %-19s  %-15s   %-12s  -      %s" % \
-                (plate, plates[plate][0], plates[plate][1],  plateObj.name.strip(),  plates[plate][4], plates[plate][2],plates[plate][3] ))  
+            print "%5s   %2d    %2d   %-19s  %-15s   %-12s  -      %s" % \
+                (plate, plates[plate][0], plates[plate][1],  plateObj.name.strip(),  plates[plate][4], plates[plate][2],plates[plate][3] )  
 
-    print('')
+    print ''
     return None
     
     
 def apogee (mjd1, mjd2, verbose):
-    print("-------------------------------------------------------------") 
-    print("Apogee plates searching: %s -- %s,  wait ..  " % (mjd1, mjd2))
-    print("-------------------------------------------------------------") 
+    print "-------------------------------------------------------------" 
+    print "Apogee plates searching: %s -- %s,  wait ..  " % (mjd1, mjd2)
+    print "-------------------------------------------------------------" 
 
     #plates=None 
     plates=getApogee(mjd1, mjd2, verbose)
     if None in plates:
-        print("  ...  did not find anything ")     
+        print  "  ...  did not find anything "     
     else:
         ap_str(plates, mjd1, mjd2)
 

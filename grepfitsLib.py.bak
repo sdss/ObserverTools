@@ -64,9 +64,9 @@ Usage: grepfits keywords filename ...
 """)
         exit()
     
-    print("")    
-    print("sys=", sys.argv)
-    print("")
+    print ""    
+    print "sys=", sys.argv
+    print ""
         
         
     output=grepfitsPro(sys.argv)

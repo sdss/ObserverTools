@@ -24,45 +24,45 @@ def getPlateInfo(plateID):
     plate=session.query(platedb.Plate).filter(platedb.Plate.plate_id==plateID).one()
     pluggings =session.query(platedb.Plugging).join(platedb.Plate).filter(platedb.Plate.plate_id==plateID).all() 
     for i, plugging in enumerate(pluggings): 
-        print(i, plugging.fscan_mjd, plateID, plugging.percentDone(), plugging)
-        print("    ",plugging.plplugmapm)
+        print i, plugging.fscan_mjd, plateID, plugging.percentDone(), plugging
+        print "    ",plugging.plplugmapm
         
         exposures=plugging.scienceExposures()
         if len(exposures)>0:
             mjd=0
             for exposure in exposures:
-                print(exposure.exposure_no, exposure.mjd(), exposure.flavor.label, \
-                exposure.survey.label)
+                print exposure.exposure_no, exposure.mjd(), exposure.flavor.label, \
+                exposure.survey.label
                 if exposure.mjd() > mjd: mjd=exposure.mjd()
             if "Complete" == plate.calculatedCompletionStatus():
-                print("Complete on ", mjd)
+                print "Complete on ", mjd
         else:
-            print("     no_exposures")
+            print "     no_exposures"
             
             
 def test1(plateID):  # Brian
     # get a plate 7917
     plate=session.query(platedb.Plate).filter(platedb.Plate.plate_id==plateID).one()
-    print("----")
-    print("plate_ID=",plate.plate_id)
-    print("plate.name=", plate.name)
-    print("plate.completionStatus.label=", plate.completionStatus.label)   #  Automatic ? 
-    print("plate.calculatedCompletionStatus()=", plate.calculatedCompletionStatus())
-    print(plate.surveys)
+    print "----"
+    print "plate_ID=",plate.plate_id
+    print "plate.name=", plate.name
+    print "plate.completionStatus.label=", plate.completionStatus.label   #  Automatic ? 
+    print "plate.calculatedCompletionStatus()=", plate.calculatedCompletionStatus()
+    print plate.surveys
 
-    print("    pluggings:")
+    print "    pluggings:"
     mjd=0
     for  pl in plate.pluggings:
         nexp=len(pl.scienceExposures())
-        print("   ", "Nexp=", nexp, ",   pl.status.label=", pl.status.label,\
-              ",   fscan=",pl.fscan_mjd, ",  percentDone=", pl.percentDone())
+        print "   ", "Nexp=", nexp, ",   pl.status.label=", pl.status.label,\
+              ",   fscan=",pl.fscan_mjd, ",  percentDone=", pl.percentDone()
                # if any of it Good or         
         for exp in pl.scienceExposures():
-            print("        ", exp.exposure_no, exp.mjd())
+            print "        ", exp.exposure_no, exp.mjd()
             if exp.mjd() > mjd:
                 mjd=exp.mjd()
                 
-    print("plate=", plate.plate_id, "status=", plate.calculatedCompletionStatus(), "mjd_of_last_exposure=",  mjd)
+    print "plate=", plate.plate_id, "status=", plate.calculatedCompletionStatus(), "mjd_of_last_exposure=",  mjd
  
     #print "---dir(plate)"    
     #print dir(plate)

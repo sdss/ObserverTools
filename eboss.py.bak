@@ -26,13 +26,13 @@ if  (EXPTIME < 850) : continue
 import glob
 import re
 import grepfitsLib
-import configparser
+import ConfigParser
 
 from sdss.internal.database.connections.APODatabaseAdminLocalConnection import db
 import sdss.internal.database.apo.platedb.ModelClasses as platedb
 
 # create a config parser object
-config = configparser.RawConfigParser()
+config = ConfigParser.RawConfigParser()
 config.read('config.cfg')
 pref = config.get('path_prefix', 'pref')
 
@@ -50,7 +50,7 @@ def getBoss(mjd1, mjd2, verbose):
         path="%s%s%s/%s"  % (pref, path_red, mjd, red)
         files=getFiles(path)
         if verbose: 
-            print("      -------", mjd, "---------")  # "nFiles=", len(files)
+            print  "      -------", mjd, "---------"  # "nFiles=", len(files)
             #print "mjd   expNum   flavor   ct  plate  exp   dith Plate_type  Lead"
         nexp=0;  
         for i,f in enumerate(files):
@@ -71,10 +71,10 @@ def getBoss(mjd1, mjd2, verbose):
             if  (EXPTIME < 850) : continue
 
             if verbose and nexp==0:    
-                print("mjd   expNum   flavor   ct  plate  exp   dith Plate_type  Lead")           
+                print "mjd   expNum   flavor   ct  plate  exp   dith Plate_type  Lead"           
             if verbose:    
-                print("%5s %8s %-7s  %2s  %5s  %5.1f  %2s  %-10s  %-s " % \
-                 (mjd,expNum,flavor, CARTID,PLATEID,EXPTIME,MGDPOS,PLATETYP, SRVYMODE))
+                print "%5s %8s %-7s  %2s  %5s  %5.1f  %2s  %-10s  %-s " % \
+                 (mjd,expNum,flavor, CARTID,PLATEID,EXPTIME,MGDPOS,PLATETYP, SRVYMODE)
                 
             nexp=nexp+1
             if plate in plates:
@@ -88,13 +88,13 @@ def getBoss(mjd1, mjd2, verbose):
     return plates
 
 def boss_str(plates, mjd1, mjd2, verbose):
-    print("")
-    print("**** eBOSS summary ****")    
+    print ""
+    print "**** eBOSS summary ****"    
 
     session = db.Session()
     
-    print("   ")
-    print("ct   Plate  Nexp   Status       MJD ")
+    print "   "
+    print  "ct   Plate  Nexp   Status       MJD "
     
     mjdCompleted=None;  nCompleted=0; nIncompl=0; nExp=0;  
     platesCompl=[];  platesIncompl=[]
@@ -124,33 +124,33 @@ def boss_str(plates, mjd1, mjd2, verbose):
              nIncompl=nIncompl+1
              platesIncompl.append(plate)
             
-        print("%2s   %5s   %2d    %-10s  %5s   %-5s " % \
-               (plates[plate][1], plate, plates[plate][0], donness, mjdCompleted,  plates[plate][3]))  
+        print "%2s   %5s   %2d    %-10s  %5s   %-5s " % \
+               (plates[plate][1], plate, plates[plate][0], donness, mjdCompleted,  plates[plate][3])  
   
-    print("")  
-    print("eBOSS: completed %s plates among %s observed." % (nCompleted, len(plates)))
-    print("   - %s science exposures (900 sec each)"  % (nExp))
-    print("")
-    print("List of observed eBOSS plates:")
-    print(sorted(plates.keys()))
+    print ""  
+    print "eBOSS: completed %s plates among %s observed." % (nCompleted, len(plates))
+    print "   - %s science exposures (900 sec each)"  % (nExp)
+    print ""
+    print "List of observed eBOSS plates:"
+    print sorted(plates.keys())
 
-    print("")
-    print("Completed %s plates:" %  nCompleted)
-    print(platesCompl)
-    print("")
-    print("Observed but not completed %s plates:" %  nIncompl)
-    print(platesIncompl)
+    print ""
+    print "Completed %s plates:" %  nCompleted
+    print  platesCompl
+    print ""
+    print "Observed but not completed %s plates:" %  nIncompl
+    print platesIncompl
     
     return None
 
 def eboss(mjd1, mjd2, verbose):
-    print("------------------------------------------------------------------") 
-    print("eBoss plates searching: %s -- %s,  wait ..  " % (mjd1, mjd2))
-    print("------------------------------------------------------------------") 
+    print "------------------------------------------------------------------" 
+    print "eBoss plates searching: %s -- %s,  wait ..  " % (mjd1, mjd2)
+    print "------------------------------------------------------------------" 
     plates=None 
     plates=getBoss(mjd1, mjd2, verbose)
     if plates == None:
-        print("  ...  did not find anything ")     
+        print  "  ...  did not find anything "     
     else:
         boss_str(plates,mjd1, mjd2, verbose)
     return None
