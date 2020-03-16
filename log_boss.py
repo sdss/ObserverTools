@@ -30,14 +30,14 @@ class BOSSRaw:
         self.lead = header['PLATETYP']
         if 'Closed' in header['HARTMANN']:
             self.hartmann = 'Closed'
-            self.flavor = header['FLAVOR']
+            self.flavor = header['FLAVOR'].capitalize()
         elif 'Out' in header['HARTMANN']:
             self.hartmann = 'Open'
-            self.flavor = header['FLAVOR']
+            self.flavor = header['FLAVOR'].capitalize()
             self.hart_resids = []
         else:
             self.hartmann = header['HARTMANN']
-            self.flavor = 'hart'
+            self.flavor = 'Hart'
                         
         # self.seeing = header['SEEING']
         # self.img_type = header['IMAGETYP']

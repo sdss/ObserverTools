@@ -32,17 +32,19 @@ class Telemetry:
     def query(self, key, tstart, tend, tel_dict):
         data = self.telemetry.get(key, tstart, tend,
                                   interpolation='raw', scan_archives=False)
-        time = Time(data.times[0])
-        value = data.values[0]
-        tel_dict[key].append(value)
+        if isinstance(key, list):
+            for k, d in zip(key, data):
+                tel_dict[k].append(d.values[0])
+        else:
+            value = data.values[0]
+            tel_dict[key].append(value)
         return data
 
     def set_callbacks(self):
-        for key in ['25m:sop:doMangaSequence_ditherSeq:index',
-                    '25m:sop:doApogeeMangaSequence_ditherSeq:index']:
-            data = self.telemetry.get(key, self.tstart, self.tend,
-                                  interpolation='raw', scan_archives=False)
-            self.call_times.extend(data.times)
+        data = self.telemetry.get(['25m:sop:doMangaSequence_ditherSeq:index',
+                '25m:sop:doApogeeMangaSequence_ditherSeq:index'], self.tstart,
+                self.tend, interpolation='raw', scan_archives=False)
+        self.call_times = data[0].times + data[1].times
         self.call_times = Time(self.call_times)
         callback_sorter = self.call_times.argsort()
         self.call_times = self.call_times[callback_sorter]
@@ -62,8 +64,7 @@ class Telemetry:
         for key in offsets_keys:
             off_data[key] = []
         for time in self.call_times:
-            for key in offsets_keys:
-                self.query(key, time.isot, time.isot, off_data)
+            self.query(offsets_keys, time.isot, time.isot, off_data)
 
         self.offsets = '=' * 80 + '\n'
         self.offsets += '{:^80}\n'.format(
@@ -75,10 +76,10 @@ class Telemetry:
                                            'guideRMS'))
         self.offsets += '=' * 80 +'\n'
         for i, time in enumerate(self.call_times):
-            self.offsets += ('{:<5} {:>2}-{:0>5}{:<1} {:<+6.1f} {:<4.1f}'
-                              ' {:<+6.1f} ({:<5.1f},{:<5.1f}) {:<+8.1f}'
+            self.offsets += ('{:>5} {:>2}-{:0>5}{:>1} {:>+6.1f} {:>4.1f}'
+                              ' {:>+6.1f} ({:>5.1f},{:>5.1f}) {:>+8.1f}'
                               ' ({:2.0f},{:2.0f},{:2.0f})'
-                              ' {:<8.3f}\n'.format(
+                              ' {:>8.3f}\n'.format(
                                  time.isot[11:16],
                                  off_data[offsets_keys[0]][i],
                                  off_data[offsets_keys[1]][i],
@@ -107,8 +108,7 @@ class Telemetry:
         for key in focus_keys:
             foc_data[key] = []
         for time in self.call_times:
-            for key in focus_keys:
-                self.query(key, time.isot, time.isot, foc_data)
+            self.query(focus_keys, time.isot, time.isot, foc_data)
 
         self.focus = '=' * 80 + '\n'
         self.focus += '{:^80}\n'.format('Telescope Focus')
@@ -120,11 +120,11 @@ class Telemetry:
                                        'Wind', 'Dir', 'FWHM'))
         self.focus += '=' * 80 +'\n'
         for i, time in enumerate(self.call_times):
-            self.focus += ('{:<5} {:>2}-{:0>5}{:<1} {:<+6.1f} {:<+5.0f}'
-                            ' {:<+5.0f}'
-                            ' {:<+5.0f} {:<+6.1f} {:<5.1f} {:<+5.1f} {:<4.0f}'
-                            ' {:<3.0f}'
-                            ' {:<4.1f}\n'.format(
+            self.focus += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>5.0f}'
+                            ' {:>5.0f}'
+                            ' {:>5.0f} {:>6.1f} {:>5.1f} {:>5.1f} {:>4.0f}'
+                            ' {:>3.0f}'
+                            ' {:>4.1f}\n'.format(
                                  time.isot[11:16],
                                  foc_data[focus_keys[0]][i],
                                  foc_data[focus_keys[1]][i],
@@ -141,7 +141,106 @@ class Telemetry:
                                  foc_data[focus_keys[12]][i]))
 
 
+    def tel_weather(self):
+        weather_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
+                      '25m:guider:cartridgeLoaded:plateID',
+                      '25m:guider:survey:plateType',
+                      '25m:apo:airTempPT', '25m:apo:dpTempPT',
+                      '25m:apo:humidPT', '25m:apo:winds',
+                      '25m:apo:windd', '25m:apo:dustb',
+                      '25m:apo:irscsd', '25m:apo:irscmean']
+        weath_data = {}
+        for key in weather_keys:
+            weath_data[key] = []
+        for time in self.call_times:
+            self.query(weather_keys, time.isot, time.isot, weath_data)
 
+        self.weather = '=' * 80 + '\n'
+        self.weather += '{:^80}\n'.format('Weather Log')
+        self.weather += '=' * 80 +'\n'
+        self.weather += ('{:<5} {:<9} {:<5} {:<5} {:<4} {:<5} {:<4} {:<3}'
+                         ' {:<6} {:<7} {:<5}'
+                         '\n'.format('Time', 'Cart', 'Temp', 'DP', 'Diff',
+                                   'Humid', 'Wind', 'Dir', '1\u03BCmDst',
+                                   'IRSC\u03C3', 'IRSC\u03BC'))
+        self.weather += '=' * 80 +'\n'
+        for i, time in enumerate(self.call_times):
+            self.weather += ('{:>5} {:>2}-{:0>5}{:>1} {:>+5.1f} {:>+5.1f}'
+                             ' {:>4.1f} {:>5}'
+                             ' {:>4.0f} {:>3.0f} {:>6.0f} {:>7.1f} {:>5.1f}'
+                             '\n'.format(
+                                 time.isot[11:16],
+                                 weath_data[weather_keys[0]][i],
+                                 weath_data[weather_keys[1]][i],
+                                 weath_data[weather_keys[2]][i][0],
+                                 weath_data[weather_keys[3]][i],
+                                 weath_data[weather_keys[4]][i],
+                                 weath_data[weather_keys[3]][i]
+                                 - weath_data[weather_keys[4]][i],
+                                 '{:>.0f}%'.format(
+                                     weath_data[weather_keys[5]][i]),
+                                 weath_data[weather_keys[6]][i],
+                                 weath_data[weather_keys[7]][i],
+                                 weath_data[weather_keys[8]][i],
+                                 weath_data[weather_keys[9]][i],
+                                 weath_data[weather_keys[10]][i]))
+
+    def tel_hartmann(self):
+        data = self.telemetry.get('25m:hartmann:sp1Residuals:deg', self.tstart,
+                self.tend, interpolation='raw', scan_archives=False)
+        self.hart_times = data.times
+        self.hart_times = Time(self.hart_times)
+        hart_sorter = self.hart_times.argsort()
+        self.hart_times = self.hart_times[hart_sorter]
+        filt = self.tstart < self.hart_times
+        self.hart_times = self.hart_times[filt]
+        hartmann_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
+                      '25m:guider:cartridgeLoaded:plateID',
+                      '25m:guider:survey:plateType',
+                      '25m:hartmann:r1PistonMove', '25m:hartmann:b1RingMove',
+                      '25m:hartmann:sp1AverageMove',
+                      '25m:hartmann:sp1Residuals:deg',
+                      '25m:boss:sp1Temp:median',
+                      '25m:hartmann:r2PistonMove', '25m:hartmann:b2RingMove',
+                      '25m:hartmann:sp2AverageMove',
+                      '25m:hartmann:sp2Residuals:deg',
+                      '25m:boss:sp2Temp:median']
+        hart_data = {}
+        for key in hartmann_keys:
+            hart_data[key] = []
+        for time in self.hart_times:
+            self.query(hartmann_keys, (time+3/24/60).isot, (time+3/24/60).isot,
+                    hart_data)
+
+        self.hartmann = '=' * 80 + '\n'
+        self.hartmann += '{:^80}\n'.format('Hartmann Log')
+        self.hartmann += '=' * 80 +'\n'
+        self.hartmann += ('{:<5} {:<9} {:<5} {:<5} {:<5} {:<7} {:<4} {:<5}'
+                          ' {:<5} {:<5} {:<7} {:<4}'
+                          '\n'.format('Time', 'Cart', 'R1', 'B1', 'Move1',
+                                      'B1Resid', 'TSP1', 'R2', 'B2', 'Move2',
+                                      'B2Resid', 'TSP2'))
+        self.hartmann += '=' * 80 +'\n'
+        for i, time in enumerate(self.hart_times):
+            self.hartmann += ('{:>5} {:>2}-{:0>5}{:<1} {:>5.0f} {:>5.1f}'
+                              ' {:>5.0f} {:>7.1f} {:>4.1f} {:>5.0f}'
+                             ' {:>5.1f} {:>5.0f} {:>7.1f} {:>4.1f}'
+                             '\n'.format(
+                                 time.isot[11:16],
+                                 hart_data[hartmann_keys[0]][i],
+                                 hart_data[hartmann_keys[1]][i],
+                                 hart_data[hartmann_keys[2]][i][0],
+                                 hart_data[hartmann_keys[3]][i],
+                                 hart_data[hartmann_keys[4]][i],
+                                 hart_data[hartmann_keys[5]][i],
+                                 hart_data[hartmann_keys[6]][i],
+                                 hart_data[hartmann_keys[7]][i],
+                                 hart_data[hartmann_keys[8]][i],
+                                 hart_data[hartmann_keys[9]][i],
+                                 hart_data[hartmann_keys[10]][i],
+                                 hart_data[hartmann_keys[11]][i],
+                                 hart_data[hartmann_keys[12]][i],
+                                 ))
         
 
 def main():
@@ -161,6 +260,10 @@ def main():
             help='Whether or not to print the offsets log')
     parser.add_argument('-f', '--focus', action='store_true',
             help='Whether or not to print the focus log')
+    parser.add_argument('-w', '--weather', action='store_true',
+            help='Whether or not to print the weather log')
+    parser.add_argument('--hartmann', action='store_true',
+            help='Whether or not to print the hartmann log')
     args = parser.parse_args()
     
     if args.today:
@@ -191,18 +294,24 @@ def main():
             
         print('Units: {}'.format(data.units))
 
+    tel = Telemetry(start, end)
+    tel.set_callbacks()
+
     if args.offsets:
-        tel = Telemetry(start, end)
-        tel.set_callbacks()
         tel.tel_offsets()
         print(tel.offsets)
     
     if args.focus:
-        tel = Telemetry(start, end)
-        tel.set_callbacks()
         tel.tel_focus()
         print(tel.focus)
+    
+    if args.weather:
+        tel.tel_weather()
+        print(tel.weather)
 
+    if args.hartmann:
+        tel.tel_hartmann()
+        print(tel.hartmann)
 
 if __name__ == '__main__':
     main()
