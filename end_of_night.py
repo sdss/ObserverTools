@@ -2,7 +2,7 @@
 
 
 #
-import log_apogee, eboss, log_manga, mjd
+import apogee, eboss, manga, mjd
 import warnings
 warnings.filterwarnings('ignore')
 import argparse

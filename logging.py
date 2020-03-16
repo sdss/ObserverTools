@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """A script to automate the bulk of logging and to replace log-function with
  a callback-free structure. This code is entirely dependent on raw images
  and their headers, unlike Log Function which is dependent on callbacks it
@@ -263,7 +264,6 @@ class Schedule:
         """Sorts self.ap_data by cart time and by image time and converts to
         arrays"""
         # Data
-        data_sort = np.array([], dtype=bool)
         for key, item in self.data.items():
             if 'Time' in key:
                 try:
@@ -567,18 +567,17 @@ class Schedule:
     def log_support(self):
         start = Time(self.mjd, format='mjd').isot
         end = Time(self.mjd + 1, format='mjd').isot
-        tel = log_support.Telemetry(start, end)
+        tel = log_support.LogSupport(start, end)
         tel.set_callbacks()
-        tel.tel_offsets()
-        tel.tel_focus()
-        tel.tel_weather()
+        tel.get_offsets()
+        tel.get_focus()
+        tel.get_weather()
         print(tel.offsets)
         print()
         print(tel.focus)
         print()
         print(tel.weather)
         print()
-
 
 
 def main():
@@ -665,4 +664,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

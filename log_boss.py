@@ -1,12 +1,12 @@
 #!(conda activate tui27; which python)
-import numpy as np
 import argparse
 from pathlib import Path
 import starcoder42 as s
+
 try:
     from astropy.time import Time
 except ImportError:
-     raise s.GatlinError('Astropy is needed for this library')
+    raise s.GatlinError('Astropy is needed for this library')
 import fitsio
 
 
@@ -15,6 +15,7 @@ class BOSSRaw:
     raw data is to future-proof things that need these ouptuts in case
     things like autoschedulers change, which many libraries depend on. This
     will hopefully help SDSS-V logging"""
+
     def __init__(self, fil):
         self.fil = fil
         header = fitsio.read_header(fil)
@@ -38,10 +39,10 @@ class BOSSRaw:
         else:
             self.hartmann = header['HARTMANN']
             self.flavor = 'Hart'
-                        
+
         # self.seeing = header['SEEING']
         # self.img_type = header['IMAGETYP']
-        
+
 
 def main():
     parser = argparse.ArgumentParser()

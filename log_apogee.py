@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-import numpy as np
 import argparse
 from pathlib import Path
 from channelarchiver import Archiver
 import starcoder42 as s
+
 try:
     from astropy.time import Time
 except ImportError:
@@ -16,14 +16,16 @@ class APOGEERaw:
     raw data is to future-proof things that need these ouptuts in case
     things like sdss.autoscheduler changes, which many libraries depend on. This
     will hopefully help SDSS-V logging"""
+
     def __init__(self, fil, ext):
         header = fitsio.read_header(fil, ext=ext)
         self.telemetry = Archiver('http://sdss-telemetry.apo.nmsu.edu/'
                                   'telemetry/cgi/ArchiveDataServer.cgi')
         self.telemetry.scan_archives()
         dithers = self.telemetry.get('25m:apogee:ditherNamedPositions',
-                start=(Time.now()-1/24/60*5).isot, end=Time.now().isot,
-                scan_archives=False, interpolation='raw')
+                                     start=(Time.now() - 1 / 24 / 60 * 5).isot,
+                                     end=Time.now().isot,
+                                     scan_archives=False, interpolation='raw')
         # layer = self.image[layer_ind]
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
         if (header['DITHPIX'] - dithers.values[-1][0]) < 0.05:
@@ -45,6 +47,7 @@ class APOGEERaw:
             self.seeing = header['SEEING']
         else:
             self.seeing = 0.0
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -71,4 +74,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
