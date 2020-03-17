@@ -84,8 +84,8 @@ class LogSupport:
                                            'guideRMS'))
         self.offsets += '=' * 80 + '\n'
         for i, time in enumerate(self.call_times):
-            self.offsets += ('{:>5} {:>2}-{:0>5}{:>1} {:>+6.1f} {:>4.1f}'
-                             ' {:>+6.1f} ({:>5.1f},{:>5.1f}) {:>+8.1f}'
+            self.offsets += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>4.1f}'
+                             ' {:>6.1f} ({:>5.1f},{:>5.1f}) {:>8.1f}'
                              ' ({:2.0f},{:2.0f},{:2.0f}) {:>8.3f}'
                              '\n'.format(time.isot[11:16],
                                          off_data[offsets_keys[0]][i],
@@ -174,7 +174,7 @@ class LogSupport:
                                      'IRSC\u03C3', 'IRSC\u03BC'))
         self.weather += '=' * 80 + '\n'
         for i, time in enumerate(self.call_times):
-            self.weather += ('{:>5} {:>2}-{:0>5}{:>1} {:>+5.1f} {:>+5.1f}'
+            self.weather += ('{:>5} {:>2}-{:0>5}{:>1} {:>5.1f} {:>5.1f}'
                              ' {:>4.1f} {:>5}'
                              ' {:>4.0f} {:>3.0f} {:>6.0f} {:>7.1f} {:>5.1f}'
                              '\n'.format(time.isot[11:16],

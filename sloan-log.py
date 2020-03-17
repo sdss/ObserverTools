@@ -231,17 +231,28 @@ class Schedule:
                     self.b_data['hTime'].append(img.isot)
                 m_detectors = []
                 # img_mjd = int(Time(img.isot).mjd)
-                flav = 't' if img.flavor == 'Flat' else 'w'
                 if img.lead == 'eBOSS':
                     red_dir = Path('/data/boss/sos/{}/'.format(self.mjd))
-                    red_fil = red_dir / 'splog-r1-{3:0>8}.log'.format(
-                        flav, self.mjd, img.plate_id, img.exp_id)
-                else:
-                    red_dir = Path('/data/manga/dos/{}/logs/'.format(self.mjd))
-                    red_fil = red_dir / 'splog-r1-{3:0>8}.log'.format(
-                        # red_fil = red_dir / 'mg{}set-{}-{}-{:0>8}-r1.fits'
-                        # .format(
-                        flav, self.mjd, img.plate_id, img.exp_id)
+                    red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
+                        img.exp_id)
+                else:  # MaNGA
+                    if img.flavor == 'Science':
+                        red_dir = Path('/data/manga/dos/{}/'.format(self.mjd))
+                        red_fil = red_dir / 'mgscisky-{}-r1-{:0>8}.fits'.format(
+                                img.plate_id, img.exp_id)
+                    elif img.flavor == 'Flat':
+                        red_dir = Path('/data/manga/dos/{}/'.format(self.mjd))
+                        red_fil = red_dir /'mgtset-{}-{}-{:0>8}-r1.fits'.format(
+                                self.mjd, img.plate_id, img.exp_id)
+                    elif img.flavor == 'Arc':
+                        red_dir = Path('/data/manga/dos/{}/'.format(self.mjd))
+                        red_fil = red_dir /'mgwset-{}-{}-{:0>8}-r1.fits'.format(
+                                self.mjd, img.plate_id, img.exp_id)
+                    else:  # Harts and Bias, no file written there
+                        red_dir = Path('/data/manga/dos/{}/logs/'.format(
+                            self.mjd))
+                        red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
+                            img.exp_id)
                 if red_fil.exists():
                     m_detectors.append('r1')
                 else:
@@ -295,6 +306,9 @@ class Schedule:
                     self.ap_data[key] = item[ap_img_sorter]
                 elif key[0] == 'd':
                     self.ap_data[key] = item[ap_dome_sorter]
+            if self.args.morning:
+                # TODO Redefine apogee values to within morning range
+                morning = self.ap_data['iTime'] > Time()
 
         if self.args.boss:
             for key, item in self.b_data.items():
@@ -370,7 +384,7 @@ class Schedule:
 
     def hartmann_parse(self, hart):
         output = ''  # .format((Time(hart[0].times[-1])).isot)
-        output += 'r1: {:>7.0f}, b1: {:>7.1f}\n'.format(
+        output += 'r1: {:>6.0f}, b1: {:>6.1f}\n'.format(
             hart[0].values[-1], hart[2].values[-1])
         output += 'r2: {:>6.0f}, b2: {:>6.1f}\n'.format(
             hart[1].values[-1], hart[3].values[-1])
@@ -449,8 +463,8 @@ class Schedule:
                 self.ap_data['iDetector'][window],
                 self.ap_data['iSeeing'][window]
             ):
-                print('{:<5.0f} {:0>8} {:<8.0f} {:<12} {:<4} {:<6} {:<9}'
-                      ' {:<4.1f}'.format(int(mjd), iso[12:19], exp_id,
+                print('{:<5.0f} {:0>8} {:<8.0f} {:<12} {:<4} {:>6} {:<9}'
+                      ' {:>4.1f}'.format(int(mjd), iso[12:19], exp_id,
                                          exp_type,
                                          dith, nread, detectors, see))
             print()
@@ -485,8 +499,8 @@ class Schedule:
                     self.b_data['iExdt'][window],
                     self.b_data['iHart'][window],
                 ):
-                    print('{:<5.0f} {:0>8} {:<8.0f} {:<7} {:<4} {:<11}'
-                          ' {:<5.0f} {:<5}'
+                    print('{:<5.0f} {:0>8} {:0>8.0f} {:<7} {:<4} {:<11}'
+                          ' {:>5.0f} {:<5}'
                           ''.format(int(mjd), iso[12:19], exp_id,
                                     exp_type.strip(),
                                     dith.strip(), detectors, etime,
@@ -528,9 +542,9 @@ class Schedule:
                           self.b_data['iDetector'],
                           self.b_data['iExdt'],
                           self.b_data['iHart']):
-            print('{:<5.0f} {:<8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<7} {:<4}'
+            print('{:<5.0f} {:<8} {:>2.0f}-{:<5.0f} {:0>8.0f} {:<7} {:<4}'
                   ' {:<11}'
-                  ' {:<5.0f} {:<5}'
+                  ' {:>5.0f} {:<5}'
                   ''.format(int(mjd), iso[12:19], cart, plate, exp_id,
                             exp_type.strip(),
                             dith.strip(), detectors, etime, hart))
@@ -557,9 +571,9 @@ class Schedule:
             self.ap_data['iSeeing']
         ):
             print('{:<5.0f} {:<8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
-                  ' {:<6}'
+                  ' {:>6}'
                   ' {:<9}'
-                  ' {:<4.1f}'.format(int(mjd), iso[12:19], cart, plate, exp_id,
+                  ' {:>4.1f}'.format(int(mjd), iso[12:19], cart, plate, exp_id,
                                      exp_type,
                                      dith, nread, detectors, see))
         print('\n')
@@ -572,12 +586,14 @@ class Schedule:
         tel.get_offsets()
         tel.get_focus()
         tel.get_weather()
+        tel.get_hartmann()
         print(tel.offsets)
         print()
         print(tel.focus)
         print()
         print(tel.weather)
         print()
+        print(tel.hartmann)
 
 
 def main():
@@ -600,9 +616,11 @@ def main():
                         help='Print APOGEE Summary')
     parser.add_argument('-l', '--log-support', action='store_true',
                         help='Print 4 log support sections')
-    parser.add_argument('--noprogress', action='store_true',
+    parser.add_argument('-n', '--noprogress', action='store_true',
                         help='Show no progress in processing images. WARNING:'
                              ' Might be slower, but it could go either way.')
+    parser.add_argument('--morning', action='store_true',
+                        help='Only output apogee morning cals')
     args = parser.parse_args()
     if args.today:
         now = Time.now()
@@ -635,6 +653,9 @@ def main():
 
     if args.summary:
         args.boss = True
+        args.apogee = True
+
+    if args.morning:
         args.apogee = True
 
     if args.data:
