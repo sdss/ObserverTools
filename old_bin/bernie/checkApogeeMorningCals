@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+# this script chooses for ds9 display the most recent of each exposure
+# type in the FLAVORS list, from the previous MJD's APOGEE data.
+
+# for use during afternoon checks, to make sure morning APOGEE
+# calibrations went alright.
+
+# bernie Wed. 18 Oct. '18
+
+FLAVORS="DomeFlat Dark InteFlat Arc-Thar Arc-Une QuarFlat"
+
+trap "/bin/rm -f `basename $0`$$" EXIT
+
+[[ $# -gt 0 ]] && { echo Script \"`basename $0`\" takes no command-line arguments. It is used to display from yesterday\'s MJD data the most recent of each of these types of file: $FLAVORS. | fmt > /dev/stderr ; exit 1 ; }
+
+[[ -f `basename $0`$$ ]] && \
+   { echo "`basename $0`: Scratch file \"`basename $0`$$\" already exists!  Quitting." \
+ 		> /dev/stderr ;
+ 	exit 1 ; }
+
+tempfile=`basename $0`$$
+
+list_ap -m $((`sjd.py`-1)) \
+   | tee /dev/stderr \
+   | grep a-b-c \
+   > $tempfile
+
+let fileindex=0
+# for flavor in DomeFlat Dark InteFlat Arc-Thar Arc-Une QuarFlat
+for flavor in $FLAVORS
+do
+	displaylist[$fileindex]="`grep $flavor $tempfile | tail -1 | awk '{ printf("/data/apogee/utr_cdr/%s/apRaw-%s.fits", $1, $4) }'` $flavor"
+	let fileindex+=1
+done
+
+filecount=${#displaylist[@]}
+
+echo "`basename $0`:  Sending to ds9 the most recent of each type of APOGEE calibration recorded with yesterday's MJD (presumably, the morning calibrations):" | fmt -50 > /dev/stderr
+echo "" > /dev/stderr
+ds9command="ds9 -tile -histequ -zoom to fit"
+( echo -n $ds9command
+  let j=0 ; while ((j < filecount))
+  do
+	echo ${displaylist[$j]}
+	let j+=1
+  done \
+    | sort \
+	| tee /dev/stderr \
+	| awk '{ printf(" %s", $1) }' ) \
+ | bash

@@ -1,0 +1,7 @@
+# fitshead - command line to dump header of a FITS file
+# bernie 20 Jul. '07
+
+[ $# -ne 1 ] && { echo $0: usage: $0 fitsfile > /dev/stderr ; exit 1 ; }
+
+[[ $1 =~ \.gz$ ]] && COMMAND=zcat || COMMAND=cat
+$COMMAND $1 | dd cbs=80 conv=unblock | sed -e '/^END/q'

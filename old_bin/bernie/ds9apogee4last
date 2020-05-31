@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# arbitrarily get the most recent four APOGEE files in /data/apogee/utr_cdr
+# and show them in ds9
+
+echo APOGEE observation numbers being sent to ds9: > /dev/stderr
+list_ap \
+  | grep a-b-c \
+  | tail -4 \
+  | awk '{ print $4, $5 }' \
+  | tee /dev/stderr \
+  | awk '{ print $1 }' \
+  | sort \
+  | sed s=^.\*$=/data/apogee/utr_cdr/`sjd.py`/apRaw-\&.fits= \
+  | tr \\n \  \
+  | sed 's/^.*$/ds9 -tile -histequ -zoom to fit &/' \
+  | bash

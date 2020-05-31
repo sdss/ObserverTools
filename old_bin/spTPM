@@ -1,0 +1,22 @@
+#!/usr/bin/env python 
+
+"""spTPM  -  read TPM temperature of the primary and spectro dewar weights"""
+
+import os
+
+if __name__ =="__main__":
+    #setHost="source /linuxp/etc/setups.sh; setup tpm;"
+    setHost='ssh observer@sdss4-host2 ~/getdewars.sh'
+    (sp2W, sp1W, sp2P, sp1P)=dewWeight=os.popen(setHost).read().split()
+
+    print "-180L LN2 dewar scales:"
+    print "     SP1  %s lbs, %s psi" % (str(sp1W).rstrip(),str(sp1P).rstrip())
+    print "     SP2  %s lbs, %s psi" % (str(sp2W).rstrip(),str(sp2P).rstrip())   
+
+    setHost='ssh observer@sdss4-host2 ~/gettemp.sh'
+    (PMSSAvg,Telair)=telTemp=os.popen(setHost).read().split()
+
+    print "-Temperatures:"
+    print "     PMSSAvg   = %s (avg temp. of Pri)" % (str(PMSSAvg).rstrip())
+    print "     TelairAvg = %s (avg temp. in enclosure)" % (str(Telair).rstrip())
+

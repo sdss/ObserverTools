@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# a wrapper to idlspec2d idl program to fix flavour of  BOSS exposure
+# in FITS headers   
+# idl> apofix, <exp>,/<>flav>
+# idl> apofix, 125349, /bad
+#
+# EM
+
+if [ $# != 2 ]
+then
+
+  echo "******************************"
+  echo  "Syntax:"  spFix 1111 /bad
+  echo  where 11111 is exposure number, 
+  echo   "/bad" - flavor, might be "/test" 
+  echo "******************************"
+fi                
+
+if [ $# == 2 ]
+then
+
+#source /home/sdss3/products/eups/bin/setups.sh
+#- /home/sdss3/products/eups/bin/setups.sh idlspec2d
+setup idlspec2d
+
+#ssh eboss@sdss-eboss idl<<EOF
+idl<<EOF
+apofix, $1, $2, /force
+EOF
+
+fi
+
+

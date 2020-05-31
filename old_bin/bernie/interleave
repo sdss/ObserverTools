@@ -1,0 +1,158 @@
+#!/usr/bin/env ksh
+
+# Interleave two or more 2-column tab-separated files that are sorted
+# on column 1 into a single tab-separated multicolumn output, where
+#	- the first column of the output is the sorted total of column 1 from all input files;
+#	- output columns 2 through N+1, respectively, contain the column-2 data from input files 1 through N.
+
+# "-f" option on the command line causes filling of any blank field with
+# the value of the corresponding field in the previous line.
+
+# Input comment lines that begin with "#" are ignored, EXCEPT for line 1, if it exists (see below)
+
+# Line 1 of the output table serves as column titles to identify the input files:
+#	- if line 1 of an input file is a comment preceded by "#", that line becomes the column head;
+#	- otherwise, the name of the file becomes the column head.
+
+# If the first column in the input files represents
+# time, then we are portraying a state machine from telemetry.
+
+# bernie Sun. 25 Nov. '18
+
+# clean up scratch files when we are done:
+trap "/bin/rm -f data$(basename $0)_*.$$ interleave_stage*.$$ columnheads_$(basename $0).$$ $(basename $0)_fieldcount.$$ $(basename $0)_fieldcount.$$" EXIT
+
+# test whether we can write scratch files:
+print "" > data$(basename $0)_test.$$ \
+  || { print -u2 $(basename $0):  error:  you must run this from a directory into which you can write scratch files.  Exiting. ; \
+       exit 1 ; }
+
+usage_message="$(basename $0):  usage:  $(basename $0) [-f] sorted_file1 sorted_file2 [ sorted_file3,  [ ... ] ]"
+
+integer errorcount=0
+
+# search command-line arguments for legal file names or options:
+inputfiles=""
+let fill_flag=0
+for file in $*
+do
+	[[ $file == "-h" ]] && { print -u2 $usage_message ; exit ; }
+	[[ $file == "-f" ]] && { let fill_flag+=1 ; continue ; }
+	[[ $file =~ ^- ]] && { print -u2 $(basename $0): bad option \"$file\" ; let errorcount+=1 ; continue ; }
+	[[ -f $file ]] || { print -u2 $(basename $0):  error:  \"$file\" is not a file. ; let errorcount+=1 ; continue ; }
+	[[ -z $inputfiles ]] || inputfiles="$inputfiles "
+	inputfiles=$inputfiles$file	# build list of files to interleave
+done
+
+set -A filelist $inputfiles
+
+(( ${#filelist[@]} < 2 )) && { let errorcount+=1 ; print -u2 $(basename $0):  error:  Two or more files must be named as arguments. ; print -u2 $usage_message ; }
+
+(( errorcount )) && \
+	{ print -u2 Quitting. ; \
+	  exit 2 ; }
+
+set -A column_titles ${filelist[@]}	# for now, each column head will be the file name
+
+let j=0 ; while (( j < ${#filelist[@]} ))
+do
+	# find any line-1 "#" comment; if so, substitute it as the output column head:
+
+	line1=$(head -1 ${filelist[$j]} | sed -e 's/^[	 ]*$//' -e 's/[	 ]*$//' | tr -s \\r\\n \\n)
+	COMMAND=cat
+	echo $line1 \
+		| grep -q ^# && \
+			{ column_titles[$j]=$line1 ; \
+			  COMMAND="sed 1d" ; }
+
+	# make a temporary file after removing any comment lines or blank lines, adding extra tabs for files 2 through N:
+
+	$COMMAND ${filelist[$j]} \
+		| tr -s \\r\\n \\n \
+		| sed -e 's/[	 ]*$//' -e 's/^[	 ]*//' \
+		| sed -e '/^[	 ]*$/d' -e '/^#/d' \
+		| awk -F"\t" -v TABS=$j '{ printf("%s", $1) ; for (k = 0 ; k <= TABS ; k++) printf("\t"); print $2 }' \
+		> data$(basename $0)_${filelist[$j]}.$$
+	let j+=1
+done
+
+# be sure the argument files are sorted [ on column 1 only ] (after taking off any column headers):
+
+integer errorcount=0
+let j=0 ; while (( j < ${#filelist[@]} ))
+do
+	cut -f 1 data$(basename $0)_${filelist[$j]}.$$ 2>/dev/null | sort -c \
+		|| { print -u2 $(basename $0):  error:  file \"${filelist[$j]}\" is not sorted! \(initial \"\#\" comment line okay\) ; \
+		     let errorcount+=1 ; }
+	let j+=1
+done
+(( errorcount )) && \
+	{ print -u2 Quitting. ; \
+	  exit 3 ; }
+
+( print -n \#Col.1
+  let j=0 ; while (( j < ${#filelist[@]} ))
+  do
+  	[[ ${column_titles[$j]} =~ ^\# ]] || column_titles[$j]=\#${column_titles[$j]}
+  	print -n "\t${column_titles[$j]}"
+	let j+=1
+  done
+  # print "" # Why isn't this necessary, given that the loop above this line always commands "print -n" ?
+  sort data$(basename $0)_*.$$) \
+> $(basename $0)_stage_i.$$	# okay things are sorted
+
+# next flesh out the number of tabs to uniform lengths:
+# use awk to find out the maximum number of tab-separated fields
+# and feed THAT number into another awk (!)
+
+awk -F"\t" -v fieldcount=$(awk -F"\t" '{ print NF }' $(basename $0)_stage_i.$$ | sort -nr | head -1) \
+	'{ printf("%s", $0) ; for (j = NF ; j < fieldcount ; j++) printf("\t") ; print "" }' \
+	$(basename $0)_stage_i.$$ \
+	> $(basename $0)_stage_ii.$$	# here we have an interleaved file
+
+(( fill_flag )) || { cat $(basename $0)_stage_ii.$$ ; exit ; }
+
+# If the "-f" (fill) option did not appear on command-line, this script finishes.
+
+# Everything below is the "fill" drill, replacing every blank field in our new  multicolumn
+# output with the nonblank entry, if there is one, from the corresponding field in the previous line.
+
+# infill $(basename $0)_stage_ii.$$
+
+(( $(awk -F"\t" '{ print NF }' $(basename $0)_stage_ii.$$ | uniq | tee $(basename $0)_fieldcount.$$ | wc -l) == 1 )) \
+	|| { print -u2 "$(basename $0):  internal error:  number of tab-separated fields at final stage is not unique.  Exiting." ; exit 5 ; }
+read fieldcount < $(basename $0)_fieldcount.$$
+
+integer field=0 ; while (( field < fieldcount ))
+do
+	prev[$field]=""
+	let field+=1
+done
+
+OLDIFS=$IFS && IFS="		"	# TWO tabs in that new IFS, which means each tab delimits a field
+while read line
+do
+	set -A fields $line
+
+	# handle "#" comment lines by sending them through:
+
+	[[ $line =~ ^[ 	]*# ]] && { printf "%s" $fields ;
+				    let field=1 ; while (( field < fieldcount )) \
+				    do \
+				    	printf "\t%s" ${fields[$field]} ;
+					let field+=1 ; \
+				    done ; \
+				    print "" ; \
+				    continue ; }
+
+	printf "%s" $fields	# first field is unchanged
+	let field=1 ; while (( field < fieldcount ))
+	do
+		[[ ${fields[$field]} == "" ]] \
+			&& fields[$field]=${prev[$field]} \
+			|| prev[$field]=${fields[$field]}
+		printf "\t%s" ${fields[$field]}
+		let field+=1
+	done
+	print ""
+done < $(basename $0)_stage_ii.$$

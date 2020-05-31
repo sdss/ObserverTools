@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+
+""" Print list of apogee files in <mjd> directory (or current). 
+
+list_gcam 
+
+list_gcam  (for current mjd)
+list_gcam  -m  <mjd>  (for other mjd)
+
+"""
+
+from optparse import OptionParser, OptionGroup
+import sys, os
+import time
+import glob
+import pyfits
+
+#...
+def curSjd():  # current mjd
+  TAI_UTC =34; sjd1=(time.time() + TAI_UTC) / 86400.0 + 40587.3;  
+  sjd= int (sjd1)
+  return sjd
+
+#...
+def  do_one_im(i,fname):        
+    hdr = pyfits.getheader(fname)
+    #-- UT=hdr.get('DATE-OBS')[10:16]
+    UT=hdr.get('DATE-OBS')[10:19]
+    nExp=fname[17:26]
+    ss="%4i %s  %s " % (i, UT, nExp)
+    imtype=hdr.get('IMAGETYP')
+    ss="%s %6s " % (ss, imtype.strip())
+    ss="%s %4.1f " % (ss, hdr.get('EXPTIME'))
+ 
+    if imtype.strip()=="dark":   darkFile="  - "
+    else:  darkFile=hdr.get('DARKFILE')[22:26]
+    ss="%s %s " % (ss, darkFile)
+ 
+    if (imtype.strip()=="dark") or  (imtype.strip()=="flat"):  
+        flatFile="  - "
+        flatCart="-"
+    else:  
+        flatFile=hdr.get('FLATFILE')[22:26]
+        flatCart=hdr.get('FLATCART')
+    ss="%s %s  %2s" % (ss, flatFile, flatCart)
+   
+    ss="%s %6.1f " % (ss, hdr.get('FOCUS'))
+   
+    procName="%s/proc-%s" % (os.path.dirname(fname), os.path.basename(fname))
+    if os.path.exists(procName): q="y"
+    else:  q="-"
+    ss="%s %s " % (ss, q)     
+
+    print ss
+ 
+#...
+def main(argv=None):
+    cur_mjd=curSjd()
+    if argv is None: argv = sys.argv[1:]
+    usage = '%prog [-m 55555  -n 100  -k  120 ]' 
+#    usage += '\n\nDIR example: /data/gcam/5623*'
+    parser = OptionParser(usage)
+    parser.add_option('-m','--mjd', dest='mjd',default=cur_mjd, help='select mjd,  \
+             default mjd is current (%default)',type=int)
+    parser.add_option( '--n1', dest='n1', default=0,  \
+           help='first file to list, default is  (%default)',type=int)
+    parser.add_option('--n2', dest='n2',default=1000000, \
+             help='last file to list, default is the last file ',type=int)
+    (opts,args) = parser.parse_args(args=argv)
+
+    mjd=opts.mjd
+    fNames = '/data/gcam/%s/gimg-%s.fits.gz' % (mjd, "*")
+
+    title="GUIDER images:  %s" % fNames
+    header="   i   UT       File/Exp   Imtype  expT  dark  flat cart foc   proc"
+    line="-"*68
+    print title, "\n",  line, "\n", header, "\n", line     
+
+    files =sorted( glob.glob(fNames))
+    nfiles=len(files)     
+    kStart=opts.n1
+    nEnd=opts.n2
+    if nEnd > nfiles: nEnd=nfiles
+    for i in range(kStart, nEnd+1): 
+        do_one_im(i,files[i-1])        
+    print line, "\n"
+
+#...
+if __name__ == "__main__":
+    sys.exit(main())

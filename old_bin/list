@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# a wrapper to Elena's idl program to quick list BOSS FITS headers
+#
+# ask dmbiz
+# EM: 02/03/2013 added calculation of current mjd and send to idl and if no parameters. 
+
+if [ $# == 0 ]
+then
+  dd=$(sjd.py)
+else
+  dd=$1
+fi                
+
+#-source /home/sdss3/products/eups/bin/setups.sh
+source /home/sdss4/products/eups/bin/setups.sh
+setup idlspec2d
+
+idl<<EOF
+!path=!path+':/home/observer/'
+;;#  -- print, !path
+.compile /home/observer/bin/list.pro
+.compile headfits,fxposit,mrd_hread,fxpar,gettok,valid_num
+list,${dd}
+EOF
+
+
+

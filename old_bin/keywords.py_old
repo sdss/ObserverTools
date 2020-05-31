@@ -1,0 +1,153 @@
+#!/usr/bin/env python
+
+from actorkeys import keyDictionaries
+from opscore.protocols.keys import KeysDictionary
+import optparse
+
+#-----
+class configKey:
+    def __init__(self, actor, keyword, prefix, opt="jb1"):
+        self.actor=actor
+        self.keyword=keyword
+        self.prefix=prefix
+        self.kdict = KeysDictionary.load(self.actor)
+        self.key=self.kdict[self.keyword]
+        self.n_values=len(self.key.typedValues.vtypes)
+        self.opt=opt
+        self.names=self.getNames()
+        self.minVals=self.key.typedValues.minVals
+        self.maxVals=self.key.typedValues.maxVals
+    
+    def getType(self, i):
+        vtype=self.key.typedValues.vtypes[i]
+        return type(vtype).__name__ 
+    
+    def getEnumNumber(self, i,ss):
+        vtype=self.key.typedValues.vtypes[i]
+        for item, k  in vtype.enumValues.items():
+            if item.lower()==ss.lower():
+                return k
+
+    def getName(self, i):
+        return self.names[i]
+        
+    def getType(self, i):
+        return type(self.key.typedValues.vtypes[i]).__name__
+    
+    def getRepMin(self, i):
+        return self.key.typedValues.vtypes[i].minRepeat
+    def getRepMax(self,i):
+        return self.key.typedValues.vtypes[i].maxRepeat    
+    def getRepType(self,i):
+        vtype=self.key.typedValues.vtypes[i]
+        return type(vtype.vtype).__name__ 
+        
+    def getNames(self):
+        if self.opt=="jb":
+            from telemetryConfig import Telemetry
+            tel=Telemetry()
+            pv_list=tel.keywordValuePVNames(self.actor, self.keyword)
+            if len(pv_list)==0:
+                #print "name error-pv_list==None", self.actor, self.keyword
+                pv_list=[]
+                name="%s:%s:%s" % (self.prefix, self.actor, self.key.name)
+                pv_list.append(name)
+                return pv_list
+            return pv_list
+        elif self.opt=="jb1":  # I reproduce JB algorithm 
+            pv_list=[]
+            if self.n_values <= 1:
+                name="%s:%s:%s" % (self.prefix, self.actor, self.key.name)
+                pv_list.append(name)
+                return pv_list
+            else:
+                unnamed_index = 1
+                for index, vtype in enumerate(self.key.typedValues.vtypes):
+                    tp=type(vtype).__name__ 
+                    if tp=="RepeatedValueType":   #repeated count
+                        sub_name="%s" % (vtype.vtype.name)
+                    else:
+                        sub_name="%s" % (vtype.name)
+                    if sub_name=="None": 
+                        sub_name="unnamed_%1i" % (unnamed_index)
+                        unnamed_index += 1
+                    name="%s:%s:%s:%s" % (self.prefix, self.actor, self.key.name, sub_name)
+                    pv_list.append(name)
+                return pv_list
+            
+        elif self.opt=="em":
+            pv_list=[]
+            if self.n_values <= 1:
+                name="%s:%s:%s" % (self.prefix, self.actor, self.key.name)
+                pv_list.append(name)
+                return pv_list
+            else:
+                for index, vtype in enumerate(self.key.typedValues.vtypes):
+                    tp=type(vtype).__name__ 
+                    if tp=="RepeatedValueType":   #repeated count
+                        sub_name="%s" % (vtype.vtype.name)
+                    else:
+                        sub_name="%s" % (vtype.name)
+                    if sub_name=="None": 
+                        sub_name="unnamed_%1i" % (index)
+                    name="%s:%s:%s:%s" % (self.prefix, self.actor, self.key.name, sub_name)
+                    pv_list.append(name)
+                return pv_list
+        else:
+            raise ValueError('no name style selected')    
+#-----------
+
+
+def describeKeyword(actor,keyword, reg=None):
+    kdict = KeysDictionary.load(actor)
+    key=kdict[keyword]
+    if reg == None:
+        pass
+    else:
+        if reg not in key.name: 
+            return
+         
+    print "-------------------------" 
+    print "actor: %s " % (actor)
+    print key.describe()
+    ck=configKey(actor, keyword, prefix="25m", opt="jb1")
+    for name in ck.names: 
+        print "    pv=%s" % (name) 
+    
+def describeActor(actor, reg=None):
+    kdict = KeysDictionary.load(actor)
+    #print kdict.describe()
+    for item, keyword  in sorted(kdict.keys.items()):
+        describeKeyword(actor,keyword.name, reg=reg)
+    
+def describeActors(reg=None):
+    for actor in sorted(keyDictionaries):  
+        describeActor(actor, reg)
+
+if __name__ == "__main__":
+	parser = optparse.OptionParser()   
+	parser.add_option('-a', '--actor', help='Actor to find, default is None',dest='actor',default=None)
+	parser.add_option('-k', '--keyword', help='Keyword to find, default is None',dest='keyword',default=None)
+	parser.add_option('-r', '--regex', help='regular expression to search through actors and keywords, default is None',dest='reg',default=None)
+	(opts, args) = parser.parse_args()
+
+
+	actor=opts.actor; keyword=opts.keyword;  reg=opts.reg
+	print "=============================="
+	if (actor==None):
+		describeActors(reg)
+		print "Called describeActors"
+	elif ((actor!=None)and(keyword==None)):
+		describeActor(actor, reg)
+		print "Called describeActor"
+	elif ((actor!=None)and(keyword!=None)):
+		describeKeyword(actor,keyword,reg)
+		print "Called describeKeyword"
+	else:
+		print "invalid input"
+			
+	#describeActor("tcc")
+    #describeActors(reg="Lamp")
+    #describeKeyword(actor, keyword)
+	print "=============================="
+     

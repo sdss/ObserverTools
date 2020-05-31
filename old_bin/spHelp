@@ -1,0 +1,65 @@
+#!/usr/bin/env python 
+'''spHelp - print the list of observer's scripts on sos3'''
+
+'''EM,  09/07/2012
+history: 
+Nov-20-2103 added mcptpm  amd m4l  helps
+
+'''
+
+import sys
+from pprint import pprint as pp
+
+if __name__ == '__main__':
+    print '-'*70
+   # pp(sys.path)
+   # print '-'*70
+
+    print 'Apogee:'
+    print '   aptest  <SJD> <exp. name>  -  broken fibers for apogee dome flat'
+    print '   list_ap [-h (help)] [-m MJD] -  the list of APOGEE data headers'
+    print ''
+
+    print 'eBOSS:'
+    print '   list [<SJD>] -  the list of headers for boss files,  add SJD if not current '
+    print '   plate4 <plate> -  get s/n table for this plate'
+    print "   spds9.py,  spView -Opens and continuously updates ds9 with the latest BOSS files"
+    print ''
+
+    print 'eBOSS collimation and calibration:'
+    print '   XMID - check BOSS fibers position on sos flat'
+    print '   WAVEMID - check the position of BOSS spectra  on sos arc'
+    print '   spFix <exp.number> /[test,bad] - change boss data quolity to "test" or to "bad"'
+    print '   hart4 blue(sp1) red(sp1) blue(sp2) red(sp2) - to calculate center hartman position'
+    print '   compute_collimator_moves.py </data/spectro/MJD/EXPOSURE>  [by JP]'
+    print '        example: setup hartmannActor; compute_collimator_moves.py /data/spectro/57376/00210888'
+    print ''
+
+    print 'MaNGA:'
+    print '   list_m  [<MJD>] -  the list of headers for boss files'
+    print '   plate4manga <plate> [mjd1,mjd2,mjd3..] - get s/n table for this plate'
+    print ''
+
+    print 'Guider and ecam:'
+    print '   gShutterCheck.py - program to check guider flats if shutter works properly?'
+    print '         example: gShutterCheck.py 57370 57376 -l'
+    print '   list_gcam [-h (help)]  [-m mjd] [-e] [-f1] [-f2] -  the list of gcam  file headers '
+    print '   list_ecam  - similar to list_gcam'
+    print '   gds9.py - Opens and continuously updates ds9 with the latest guider file'
+    print '   fwhm.py - ecam, calculate position and fwhm of star'
+    print '   fwhmSweep.py <mjd>  <number1>  <number2> - ecam focus sweep'
+    print ''
+
+    print 'Other:'
+    import m4l;   print  "  ",m4l.__doc__
+    print '   mjd, sjd.py  - print the current SJD (MJD + 0.3 days)'
+#    import spTPM;   print  "  ",spTPM.__doc__
+    print '   spTPM  -  read TPM temperature of the primary and spectro dewar weights'
+    import mcptpm;   print  "   mcptpm,", mcptpm.__doc__
+#    import spVersion;   print  "  ",spVersion.__doc__
+    print  '   spVersion - get versions of idlmapper and idlspec2d for night log'
+    print '-'*70
+
+#import aptest
+#print  'aptest: ', aptest.__doc__
+

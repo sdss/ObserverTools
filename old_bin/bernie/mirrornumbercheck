@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+#     from standard input, do the subtraction to see whether
+#     any of the MIGS numbers differs more than 0.05 from NOMINAL.
+
+# as observer@sdss4-hub, you could say:
+#	m4l | ~/bin/bernie/mirrornumbercheck
+
+trap "/bin/rm junkmirrorcheck$$" ERR EXIT
+
+egrep \^PRIMARY\|\^SECONDARY\|\^Axial\|^Trans\|^Lateral \
+	| awk '$0 == "PRIMARY:" || $0 == "SECONDARY:" { print ; next } \
+	{ printf ("%s\t", $0) ; \
+	  if (($NF - $(NF-1) >= 0.05) || ($NF - $(NF-1) <= -0.05)) \
+		printf("Out of permissible range?") ; \
+	  printf("\n") }' \
+	> junkmirrorcheck$$ && cat junkmirrorcheck$$
