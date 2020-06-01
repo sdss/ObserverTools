@@ -12,7 +12,8 @@ Sloan V
     tracking and identifying slew errors
 2019-12-13      dgatlin     This has received a lot of work and can now
     build a data log and some summary
-202-06-01       dgatlin     Changed some methods to @staticmethods, moved to bin
+202-06-01       dgatlin     Changed some methods to @staticmethods, moved to
+    bin, refactored some names to more appropriately fit the role of logging.
 """
 import argparse
 import warnings
@@ -50,12 +51,14 @@ import log_support
 # For astropy
 warnings.filterwarnings('ignore', category=UserWarning, append=True)
 
+ap_dir = Path('/data/apogee/archive/')
+b_dir = Path('/data/spectro/')
 
-class Schedule:
-    def __init__(self, ap_images, m_images, mjd, args):
+
+class Logging:
+    def __init__(self, ap_images, m_images, args):
         self.ap_images = ap_images
         self.m_images = m_images
-        self.mjd = mjd
         self.args = args
         # Variables that begin with carts have len of the number of carts in
         # that night. Variables that begin with img have len nimages
@@ -89,7 +92,7 @@ class Schedule:
 
     def ap_test(self, img):
         test = sub.Popen('ssh observer@sdss-hub "~/bin/aptest {} {}"'
-                         ''.format(self.mjd, img.exp_id), shell=True,
+                         ''.format(self.args.mjd, img.exp_id), shell=True,
                          stdout=sub.PIPE)
         lines = test.stdout.read().split(b'\n')[3:]
         missing = eval(lines[0].split(b'Missing fibers: ')[-1])
@@ -151,7 +154,8 @@ class Schedule:
                         self.ap_data['cTime'].pop(i)
                         self.ap_data['cTime'].insert(i, img.isot)
                 detectors = []
-                red_dir = Path('/data/apogee/quickred/{}/'.format(self.mjd))
+                red_dir = Path('/data/apogee/quickred/{}/'.format(
+                    self.args.mjd))
                 red_fil = red_dir / 'ap2D-a-{}.fits.fz'.format(img.exp_id)
                 if red_fil.exists():
                     detectors.append('a')
@@ -235,25 +239,30 @@ class Schedule:
                 m_detectors = []
                 # img_mjd = int(Time(img.isot).mjd)
                 if img.lead == 'eBOSS':
-                    red_dir = Path('/data/boss/sos/{}/'.format(self.mjd))
+                    red_dir = Path('/data/boss/sos/{}/'.format(self.args.mjd))
                     red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                         img.exp_id)
                 else:  # MaNGA
                     if img.flavor == 'Science':
-                        red_dir = Path('/data/manga/dos/{}/'.format(self.mjd))
+                        red_dir = Path('/data/manga/dos/{}/'.format(
+                            self.args.mjd))
                         red_fil = red_dir / 'mgscisky-{}-r1-{:0>8}.fits'.format(
                             img.plate_id, img.exp_id)
                     elif img.flavor == 'Flat':
-                        red_dir = Path('/data/manga/dos/{}/'.format(self.mjd))
-                        red_fil = red_dir / 'mgtset-{}-{}-{:0>8}-r1.fits'.format(
-                            self.mjd, img.plate_id, img.exp_id)
+                        red_dir = Path('/data/manga/dos/{}/'.format(
+                            self.args.mjd))
+                        red_fil = red_dir / 'mgtset-{}-{}-{:0>8}-r1.fits' \
+                                            ''.format(self.args.mjd,
+                                                      img.plate_id, img.exp_id)
                     elif img.flavor == 'Arc':
-                        red_dir = Path('/data/manga/dos/{}/'.format(self.mjd))
-                        red_fil = red_dir / 'mgwset-{}-{}-{:0>8}-r1.fits'.format(
-                            self.mjd, img.plate_id, img.exp_id)
+                        red_dir = Path('/data/manga/dos/{}/'.format(
+                            self.args.mjd))
+                        red_fil = red_dir / 'mgwset-{}-{}-{:0>8}-r1.fits' \
+                                            ''.format(self.args.mjd,
+                                                      img.plate_id, img.exp_id)
                     else:  # Harts and Bias, no file written there
                         red_dir = Path('/data/manga/dos/{}/logs/'.format(
-                            self.mjd))
+                            self.args.mjd))
                         red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                             img.exp_id)
                 if red_fil.exists():
@@ -584,8 +593,8 @@ class Schedule:
         print('\n')
 
     def log_support(self):
-        start = Time(self.mjd, format='mjd').isot
-        end = Time(self.mjd + 1, format='mjd').isot
+        start = Time(self.args.mjd, format='mjd').isot
+        end = Time(self.args.mjd + 1, format='mjd').isot
         tel = log_support.LogSupport(start, end)
         tel.set_callbacks()
         tel.get_offsets()
@@ -601,13 +610,13 @@ class Schedule:
         print(tel.hartmann)
 
 
-def main():
+def parseargs():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--today', action='store_true',
                         help="Whether or not you want to search for today's"
                              " data, whether or not the night is complete."
                              " Note: must be run after 00:00Z")
-    parser.add_argument('-m', '--mjd',
+    parser.add_argument('-m', '--mjd', type=int,
                         help='If not today (-t), the mjd to search')
     parser.add_argument('-s', '--summary', help='Print the data summary',
                         action='store_true')
@@ -627,16 +636,21 @@ def main():
     parser.add_argument('--morning', action='store_true',
                         help='Only output apogee morning cals')
     args = parser.parse_args()
+    return args
+
+
+def main():
+    args = parseargs()
     if args.today:
         now = Time.now()
-        mjd = int(now.mjd + 3 / 24)
+        args.mjd = int(now.mjd + 3 / 24)
     elif args.mjd:
-        mjd = args.mjd
+        args.mjd = args.mjd
     else:
         raise s.GatlinError('Must provide -t or -m in arguments')
 
-    ap_data_dir = '/data/apogee/archive/{}/'.format(mjd)
-    b_data_dir = '/data/spectro/{}/'.format(mjd)
+    ap_data_dir = ap_dir / '{}'.format(args.mjd)
+    b_data_dir = b_dir / '{}'.format(args.mjd)
     ap_images = Path(ap_data_dir).glob('apR-a*.apz')
     b_images = Path(b_data_dir).glob('sdR-r1*fit.gz')
 
@@ -666,25 +680,26 @@ def main():
         args.boss = True
         args.apogee = True
 
-    schedule = Schedule(ap_images, b_images, mjd, args)
-    schedule.parse_images()
-    schedule.sort()
-    schedule.count_dithers()
+    log = Logging(ap_images, b_images, args)
+    log.parse_images()
+    log.sort()
+    log.count_dithers()
 
     if args.summary:
-        schedule.p_summary()
+        log.p_summary()
 
     if args.data:
-        schedule.p_data()
+        log.p_data()
 
     if p_boss:
-        schedule.p_boss()
+        log.p_boss()
 
     if p_apogee:
-        schedule.p_apogee()
+        log.p_apogee()
 
     if args.log_support:
-        schedule.log_support()
+        log.log_support()
+    return log
 
 
 if __name__ == '__main__':
