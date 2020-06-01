@@ -12,18 +12,20 @@ Sloan V
     tracking and identifying slew errors
 2019-12-13      dgatlin     This has received a lot of work and can now
     build a data log and some summary
+202-06-01       dgatlin     Changed some methods to @staticmethods, moved to bin
 """
 import argparse
 import warnings
 import subprocess as sub
 import sys
 import numpy as np
+import socket
 
 try:
     import starcoder42 as s
-except ImportError:
-    sys.path.append('/Users/dylangatlin/python/')
-    sys.path.append('/home/gatlin/python/')
+except ImportError or ModuleNotFoundError:
+    sys.path.append('/Users/dylangatlin/python/starcoder42/python/')
+    sys.path.append('/home/gatlin/python/starcoder42/python/')
     import starcoder42 as s
 if sys.version_info.major < 3:
     raise s.GatlinError('Interpretter must be Python 3 or newer')
@@ -42,8 +44,7 @@ from pathlib import Path
 from tqdm import tqdm
 from channelarchiver import Archiver
 
-import log_apogee
-import log_boss
+from python import apogee_data, boss_data
 import log_support
 
 # For astropy
@@ -81,7 +82,10 @@ class Schedule:
 
         self.telemetry = Archiver('http://sdss-telemetry.apo.nmsu.edu/'
                                   'telemetry/cgi/ArchiveDataServer.cgi')
-        self.telemetry.scan_archives()
+        try:
+            self.telemetry.scan_archives()
+        except socket.gaierror:
+            raise s.GatlinError('Cannot access EPICS Server, aborting')
 
     def ap_test(self, img):
         test = sub.Popen('ssh observer@sdss-hub "~/bin/aptest {} {}"'
@@ -118,7 +122,7 @@ class Schedule:
             print('Reading APOGEE Data')
             for image in tqdm(self.ap_images):
                 # print(image)
-                img = log_apogee.APOGEERaw(image, 1)
+                img = apogee_data.APOGEERaw(image, 1)
                 # img.parse_layer(1)
                 if not img.plate_id:  # If the first exposure is still
                     # writing, plate_id will be empty and without this if,
@@ -127,7 +131,6 @@ class Schedule:
                 if img.exp_type == 'Domeflat':
                     self.ap_test(img)
                     self.test_procs.append(img.cart_id)
-
 
                 if img.cart_id not in self.data['cCart']:
                     self.data['cPlate'].append(img.plate_id)
@@ -154,13 +157,13 @@ class Schedule:
                     detectors.append('a')
                 else:
                     detectors.append('x')
-                if (red_fil.parent / red_fil.name.replace('-a-', '-b-')
-                   ).exists():
+                if (red_fil.parent / red_fil.name.replace(
+                        '-a-', '-b-')).exists():
                     detectors.append('b')
                 else:
                     detectors.append('x')
-                if (red_fil.parent / red_fil.name.replace('-a-', '-c-')
-                   ).exists():
+                if (red_fil.parent / red_fil.name.replace(
+                        '-a-', '-c-')).exists():
                     detectors.append('c')
                 else:
                     detectors.append('x')
@@ -176,7 +179,7 @@ class Schedule:
         if self.args.boss:
             print('Reading BOSS Data')
             for image in tqdm(self.m_images):
-                img = log_boss.BOSSRaw(image)
+                img = boss_data.BOSSRaw(image)
                 if img.cart_id not in self.data['cCart']:
                     self.data['cCart'].append(img.cart_id)
                     self.data['cPlate'].append(img.plate_id)
@@ -239,15 +242,15 @@ class Schedule:
                     if img.flavor == 'Science':
                         red_dir = Path('/data/manga/dos/{}/'.format(self.mjd))
                         red_fil = red_dir / 'mgscisky-{}-r1-{:0>8}.fits'.format(
-                                img.plate_id, img.exp_id)
+                            img.plate_id, img.exp_id)
                     elif img.flavor == 'Flat':
                         red_dir = Path('/data/manga/dos/{}/'.format(self.mjd))
-                        red_fil = red_dir /'mgtset-{}-{}-{:0>8}-r1.fits'.format(
-                                self.mjd, img.plate_id, img.exp_id)
+                        red_fil = red_dir / 'mgtset-{}-{}-{:0>8}-r1.fits'.format(
+                            self.mjd, img.plate_id, img.exp_id)
                     elif img.flavor == 'Arc':
                         red_dir = Path('/data/manga/dos/{}/'.format(self.mjd))
-                        red_fil = red_dir /'mgwset-{}-{}-{:0>8}-r1.fits'.format(
-                                self.mjd, img.plate_id, img.exp_id)
+                        red_fil = red_dir / 'mgwset-{}-{}-{:0>8}-r1.fits'.format(
+                            self.mjd, img.plate_id, img.exp_id)
                     else:  # Harts and Bias, no file written there
                         red_dir = Path('/data/manga/dos/{}/logs/'.format(
                             self.mjd))
@@ -382,7 +385,8 @@ class Schedule:
                 self.cart_data['cMSummary'].append(
                     '{}xC'.format(self.cart_data['cNMC'][i]))
 
-    def hartmann_parse(self, hart):
+    @staticmethod
+    def hartmann_parse(hart):
         output = ''  # .format((Time(hart[0].times[-1])).isot)
         output += 'r1: {:>6.0f}, b1: {:>6.1f}\n'.format(
             hart[0].values[-1], hart[2].values[-1])
@@ -421,7 +425,8 @@ class Schedule:
                 pass
         print('\n')
 
-    def get_window(self, data, i):
+    @staticmethod
+    def get_window(data, i):
         try:
             window = ((data['iTime']
                        >= data['cTime'][i])
@@ -630,7 +635,6 @@ def main():
     else:
         raise s.GatlinError('Must provide -t or -m in arguments')
 
-
     ap_data_dir = '/data/apogee/archive/{}/'.format(mjd)
     b_data_dir = '/data/spectro/{}/'.format(mjd)
     ap_images = Path(ap_data_dir).glob('apR-a*.apz')
@@ -661,7 +665,7 @@ def main():
     if args.data:
         args.boss = True
         args.apogee = True
-    
+
     schedule = Schedule(ap_images, b_images, mjd, args)
     schedule.parse_images()
     schedule.sort()

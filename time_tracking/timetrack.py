@@ -20,7 +20,8 @@ timetrack.py -b -a -m  -m1 58271 -m2 58271
 
 import argparse
 #import time
-import log_apogee, eboss, log_manga, mjd
+import eboss, log_manga, mjd
+from python import apogee_data
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -41,7 +42,7 @@ if __name__ == "__main__":
         eboss.eboss(args.mjd1, args.mjd2, args.verbose)
        
     if args.apogee: 
-        log_apogee.apogee (args.mjd1, args.mjd2, args.verbose)
+        apogee_data.apogee (args.mjd1, args.mjd2, args.verbose)
         
     if args.manga: 
         log_manga.manga(args.mjd1, args.mjd2, args.verbose)
