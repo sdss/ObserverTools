@@ -245,7 +245,7 @@ if dd == "plot":
                          linewidth=0.8)
         plt.annotate("%2i" % (fix(j / 30) + 1), [fbr[j] + 10, 1.27], color="r",
                      size=13)
-    plt.xlabel('fiber number');
+    plt.xlabel('fiber number')
     plt.ylabel('intensity flat / intensity master');
     plt.title('Apogee fibers relative intensity', size=15)
     plt.show()
