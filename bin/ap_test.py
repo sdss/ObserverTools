@@ -17,8 +17,9 @@ class ApogeeFlat:
     def __init__(self, master_path, args):
         self.args = args
         self.master_data = np.loadtxt(master_path)
-        self.master_fiber_data = self.ap_bin(self.master_data)
-        self.standard_path, self.master_n_fibers = Path('/data/apogee/utr_cdr/')
+        self.master_fiber_data, self.master_n_fibers = self.ap_bin(
+            self.master_data)
+        self.standard_path = Path('/data/apogee/utr_cdr/')
 
         print('Master={}'.format(master_path))
 
@@ -41,8 +42,8 @@ class ApogeeFlat:
             s.iprint('Flat {}'. format(fil), 1)
         data = fitsio.read(fil, 0)
         fiber_data, n_fibers = self.red_1d(data)
-        assert(n_fibers == self.master_n_fibers, 'Must have the same number of'
-                                                 'fibers as the master flat')
+        assert n_fibers == self.master_n_fibers, ('Must have the same number of'
+                                                  'fibers as the master flat')
 
         flux_ratio = fiber_data / self.master_fiber_data
         missing = flux_ratio < 0.2
@@ -138,7 +139,10 @@ def parse_args():
     parser = ArgumentParser('A script to test the transparency of an APOGEE'
                             ' dome flat. It compares the flat to a known'
                             ' master.')
-    parser.add_argument('positional')
+    parser.add_argument('positional', help='MJDs, followed by any dome flats'
+                                           'in that night. Multiple MJDs can be'
+                                           'included, as long as the exposures'
+                                           'follow the correct MJD')
     parser.add_argument('-p', '--plot', action='store_true',
                         help='Whether or not to plot the output using'
                              ' matplotlib')
