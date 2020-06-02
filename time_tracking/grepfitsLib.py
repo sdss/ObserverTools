@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 
-'''
+"""
 Source
 http://hroe.me/2016/07/25/lessfits-grepfits/
 
-FLAVOR  = 'science '           / exposure type, SDSS spectro style  
+FLAVOR  = 'science '           / exposure type, SDSS spectro style
 
-'''
+"""
 
 import gzip
 import sys
 
-def grepfitsPro(argv):
 
+def grepfitsPro(argv):
     keywords = argv[1].replace(',', ' ').split()
 
     new_output = ['filename']
@@ -37,7 +37,8 @@ def grepfitsPro(argv):
             possible_lines = [a for a in hdr if a.startswith(search_keyword)]
             if len(possible_lines) == 0:
                 continue
-            possible_lines = possible_lines[0]   # TODO: fix that if more than one match, only using first
+            possible_lines = possible_lines[
+                0]  # TODO: fix that if more than one match, only using first
             new_item = possible_lines.split('=', 1)[1].split('/', 1)[0].strip()
             if new_item.startswith('"') or new_item.startswith("'"):
                 new_item = new_item[1:]
@@ -63,20 +64,21 @@ Usage: grepfits keywords filename ...
              e.g.:   x*.fits.gz
 """)
         exit()
-    
-    print("")    
+
+    print("")
     print("sys=", sys.argv)
     print("")
-        
-        
-    output=grepfitsPro(sys.argv)
 
-     # output_lengths = [max([len(entry) for entry in outputline]) for outputline in output]
-    output_lengths = [max([len(outputline[position]) for outputline in output]) for position in range(len(output[0]))]
+    output = grepfitsPro(sys.argv)
+
+    # output_lengths = [max([len(entry) for entry in outputline]) for
+    # outputline in output]
+    output_lengths = [max([len(outputline[position]) for outputline in output])
+                      for position in range(len(output[0]))]
     nspaces = 1
     for outputline in output:
         outstr = ('{0:' + str(output_lengths[0]) + 's}').format(outputline[0])
-        for i,outlen in enumerate(output_lengths[1:]):
-            outstr += ' '*nspaces + ('{0:' + str(outlen) + 's}').format(outputline[i+1])
+        for i, outlen in enumerate(output_lengths[1:]):
+            outstr += ' ' * nspaces + ('{0:' + str(outlen) + 's}').format(
+                outputline[i + 1])
         print(outstr)
-
