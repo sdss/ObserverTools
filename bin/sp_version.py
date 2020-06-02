@@ -39,6 +39,7 @@ def main():
     softwares.append('mangadrp')
     versions.append(mangadrp.stdout.read().decode('utf-8').strip('\n'))
 
+    print('{:-^42}'.format('Other Versions'))
     for s, v in zip(softwares, versions):
         print('{:<20}: {:<20}'.format(s, v))
 

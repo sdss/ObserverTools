@@ -70,19 +70,19 @@ plate = int(sys.argv[1])
 pluggings = get_plug_exps(plate)
 
 for plugid, exps in sorted(pluggings.items()):
-    print '--- Plugging %s ---' % plugid
-    print "MJD    ExpID   texp    b1    b2    r1    r2   Status"
+    print('--- Plugging %s ---' % plugid)
+    print("MJD    ExpID   texp    b1    b2    r1    r2   Status")
 
     sn2sum = dict(b1=0.0, b2=0.0, r1=0.0, r2=0.0)
     for expid, expinfo in sorted(exps.items()):
-        print '%5d  %6d  %5.1f' % (expinfo['mjd'], expid, expinfo['texp']),
+        print('%5d  %6d  %5.1f' % (expinfo['mjd'], expid, expinfo['texp']), end=' ')
         for camera in ('b1', 'b2', 'r1', 'r2'):
             if camera in expinfo['sn2']:
-                print '%5.2f' % (expinfo['sn2'][camera], ),
+                print('%5.2f' % (expinfo['sn2'][camera], ), end=' ')
                 sn2sum[camera] += expinfo['sn2'][camera]
             else:
-                print ' ---', 
-        print ' '+expinfo['status']
+                print(' ---', end=' ') 
+        print(' '+expinfo['status'])
 
     sn2_thresholds = get_sn2_thresholds()
     done = True
@@ -90,22 +90,22 @@ for plugid, exps in sorted(pluggings.items()):
         if sn2sum[camera] < sn2_thresholds[camera]:
             done = False
 
-    print "Totals:             ",
+    print("Totals:             ", end=' ')
     for camera in ('b1', 'b2', 'r1', 'r2'):
-        print '%5.2f' % (sn2sum[camera], ),
+        print('%5.2f' % (sn2sum[camera], ), end=' ')
 
     if done:
-        print " Done"
+        print(" Done")
     else:
-        print " Incomplete"
-        print "Remaining:          ",
+        print(" Incomplete")
+        print("Remaining:          ", end=' ')
         for camera in ('b1', 'b2', 'r1', 'r2'):
             dsn2 = sn2_thresholds[camera] - sn2sum[camera]
             if dsn2 > 0:
-                print '%5.2f' % (dsn2, ),
+                print('%5.2f' % (dsn2, ), end=' ')
             else:
-                print '  ok ', 
-        print 
+                print('  ok ', end=' ') 
+        print() 
 
 
 

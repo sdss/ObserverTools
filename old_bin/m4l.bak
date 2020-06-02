@@ -14,7 +14,7 @@ def mirrors () :
 	try :
 		tn = Telnet (HOST, PORT)
 	except :
-		print('Telnet connection to %s:%d failed: %s' % (HOST, PORT, format_exc()))
+		print 'Telnet connection to %s:%d failed: %s' % (HOST, PORT, format_exc())
 		return -1
 
 #	Read the data
@@ -22,13 +22,13 @@ def mirrors () :
 	try:
 		tn.write ('\n')
 	except :
-		print('Telnet write to %s:%d failed: %s' % (HOST, PORT, format_exc()))
+		print 'Telnet write to %s:%d failed: %s' % (HOST, PORT, format_exc())
 		return -1
 
 	try:
 		reply = tn.read_all ()
 	except :
-		print('Telnet read from %s:%d failed: %s' % (HOST, PORT, format_exc()))
+		print 'Telnet read from %s:%d failed: %s' % (HOST, PORT, format_exc())
 		return -1
 
 	tn.close()
@@ -36,4 +36,4 @@ def mirrors () :
 	return reply
 
 if __name__ == '__main__' :
-	print(mirrors())
+	print mirrors()

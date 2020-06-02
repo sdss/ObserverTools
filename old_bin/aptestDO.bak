@@ -45,7 +45,7 @@ from operator import itemgetter
 #---
 
 if not sys.argv[1:3]:
-      print("usage:  test1.py mjd  exp")
+      print "usage:  test1.py mjd  exp"
       sys.exit("Error: program did not get mjd and filename, exit")
 #pp="/Users/elenam/idl/fiberplot/data/"
 pp="/data/apogee/utr_cdr/"
@@ -59,8 +59,8 @@ if  sys.argv[3:4] :
 flatName="%s%s/apRaw-%s.fits"%(pp,mjd,exp)
 #masterName="/home/observer/bin/apRaw-03720068.fits"
 masterName="apRaw-21180043.fits"
-print("  flat:", flatName)
-print("  master:", masterName)
+print "  flat:", flatName
+print "  master:", masterName
 
 def rdfits(fname):
    hdulist=pyfits.open(fname)
@@ -93,7 +93,7 @@ ndat=zeros((imax1,imax2), dtype=int64)
 qj=False
 for i in range(nd):
   if(j >= imax1) or (k >= imax2):
-         print("break", j,k)
+         print "break", j,k
          break
   if dat[i] >= cutoff:
     ndat[j,k]=i
@@ -108,7 +108,7 @@ for i in range(nd):
       k=0
 #      print "   -----"
 nfibers=j
-print("  nFibers:",nfibers)
+print "  nFibers:",nfibers
 
 def flux(dat,ndat, nfibers):
   datFlux=zeros((nfibers))
@@ -176,7 +176,7 @@ for j in range(nfibers):
 # To this:    [(1,3),5,(8,15)]
 
 def consecLists(h):
-	for k, g in groupby(enumerate(h), lambda i_x: i_x[0]-i_x[1]):
+	for k, g in groupby(enumerate(h), lambda (i,x): i-x):
 		gList = list(g)
 		yield gList[0][1], gList[-1][1]
 		
@@ -204,11 +204,11 @@ for t in range(0,len(arrayFGroup)):
 
 #--------------
 
-print("  Missing APOGEE fibers: " + str(missingFibers))
-print("  Faint APOGEE fibers: " + str(faintFibers))
+print "  Missing APOGEE fibers: " + str(missingFibers)
+print "  Faint APOGEE fibers: " + str(faintFibers)
 
 
-print("-----------------")
+print "-----------------"
 
 if dd=="plot":
     xmin=1; xmax=300; ymin=-0.02; ymax=1.35  

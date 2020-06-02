@@ -39,14 +39,14 @@ elif hdr['BINX']==2 and hdr['BINY']==2:
     koeff=0.428
 else: 
     koeff=0 
-    print "unknown binning"
+    print("unknown binning")
 
 foc=hdr['FOCUS']
 fw=2.0*np.sqrt(nsq/3.14)
 
 #print "%s,  CenterX=%4i,  CenterY=%4i,  fwhm=%4.2f" % (ff,  cy, cx,  fw*0.428)
 ss="%s,  Xcen=%4i, Ycen=%4i, fwhm=%5.2f, fwhm=%5.2f(arcsec), foc=%s" % (ff,  cy, cx,  fw, fw*koeff, foc )
-print ss
+print(ss)
 
 
 #idx =np.where(dat == datMax)

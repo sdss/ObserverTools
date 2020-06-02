@@ -44,18 +44,18 @@ args = parser.parse_args()
 mjd1=args.mjd1
 mjd2=args.mjd2
 mjdsList=sorted([mjd1, mjd2])
-mjds=range(mjdsList[0], mjdsList[1]+1)
+mjds=list(range(mjdsList[0], mjdsList[1]+1))
 
 def prnLine(j, mjd, nfiles=0,  nflats=0,  nbad=0, pers='n/a'):
        ss="%4i  %5i  %4i  %4i  %4i    %5.1f"  % (j, mjd, nfiles, nflats, nbad, pers)
-       print ss
+       print(ss)
 
 header="   i   mjd   files  flats   bad    % "   
 width = 50
-print "Checking guider flats for MJDs  %s - %s" % (mjdsList[0], mjdsList[1])
-print "-"*width
-print header
-print "-"*width
+print("Checking guider flats for MJDs  %s - %s" % (mjdsList[0], mjdsList[1]))
+print("-"*width)
+print(header)
+print("-"*width)
 
 nflatsTot=0
 nbadTot=0
@@ -63,14 +63,14 @@ for j, m in enumerate(mjds):
     mdir="/data/gcam/%s/" % (m)
     if  os.path.exists(mdir)  != True:
         # prnLine(j, m,)
-         print "%4i  %5i - no directory"  % (j, m,)
+         print("%4i  %5i - no directory"  % (j, m,))
          continue
     ndirs=1
     files = glob.glob(mdir+'/gimg-*.fits.gz')
     nfiles= len(files)
     if  nfiles  == 0:
       #  prnLine(j, m, ndirs) 
-         print "%4i  %5i - no files in this directory"  % (j, m,)
+         print("%4i  %5i - no files in this directory"  % (j, m,))
          continue
          
     nflats=0
@@ -111,18 +111,18 @@ for j, m in enumerate(mjds):
     prnLine(j, m,  nfiles, nflats, nbad, proc) 
     if args.list: 
          for fbad, lev in zip(nbadList,nbadLev):
-              print  "        %s %7i " % (fbad, lev)
+              print("        %s %7i " % (fbad, lev))
     nflatsTot=nflatsTot+nflats 
     nbadTot=nbadTot+nbad
 
-print "-"*width
+print("-"*width)
 #print "Summary for guider flats  MJDs  %s - %s:"   % (mjdsList[0], mjdsList[1])
 s1="Total flats = %s"  % nflatsTot
 s2="Bad flats = %s"  %   nbadTot
 if nflatsTot !=0:  pers=nbadTot*100/nflatsTot
 else:  pers=0
 s3="Percent = %5.1f" % ( pers) + '%'
-print " %s, %s, %s" % (s1,s2,s3)
+print(" %s, %s, %s" % (s1,s2,s3))
 # print "-"*width
 
 

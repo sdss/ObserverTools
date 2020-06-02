@@ -30,7 +30,7 @@ def getTimeStamps(sjd):
     
 if __name__ == "__main__":
     sjd=curSjd()
-    print "sjd=",sjd
+    print("sjd=",sjd)
     desc = 'integral dust calculation for one mjd'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument( '-m', '--mjd',  help='enter mjd, default is current mjd',    
@@ -41,28 +41,28 @@ if __name__ == "__main__":
     vBool=args.verbose
     
     start,end=getTimeStamps(mjd)
-    print "MJD start/end times"
-    print start
-    print end
+    print("MJD start/end times")
+    print(start)
+    print(end)
     
     archiver.scan_archives()
     data1= archiver.get('25m:apo:dustb', start, end, interpolation='raw',scan_archives=False)
     data2= archiver.get('25m:apo:encl25m', start, end, interpolation='raw',scan_archives=False)
 
-    print "         Enlosure open/close times"
-    print data2
-    print "" 
+    print("         Enlosure open/close times")
+    print(data2)
+    print("") 
     sum=0
     nn=len(data1.values)
-    print "date   time    dust    encl    sum"
+    print("date   time    dust    encl    sum")
     for i in range(nn):
         tm=data1.times[i]
         encl= archiver.get('25m:apo:encl25m', tm, tm, interpolation='raw',scan_archives=False)
         if encl.values[0] > 0:
             sum=sum+ data1.values[i]*5/60.0
         if vBool:
-        	print data1.times[i], " %7.0f    %2i    %10.0f"%(data1.values[i], encl.values[0], sum)
-    print "sum=%6.2f"%(sum)
+        	print(data1.times[i], " %7.0f    %2i    %10.0f"%(data1.values[i], encl.values[0], sum))
+    print("sum=%6.2f"%(sum))
     
     
     

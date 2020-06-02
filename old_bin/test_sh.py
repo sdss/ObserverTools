@@ -17,9 +17,9 @@ ssh=subprocess.Popen(["ssh", "%s" % HOST, Command],
 result=ssh.stdout.readlines()
 if result == []:
 	error = ssh.stderr.readlines()
-	print >> sys.stderr, "ERROR, %s" % error
+	print("ERROR, %s" % error, file=sys.stderr)
 else:
-    print result
+    print(result)
 
 
 

@@ -23,12 +23,12 @@ def getMultiData(channel, startTime, endTime):
     channels = ["25m:guider:probe:exposureID","25m:guider:probe:probeID","25m:guider:probe:flags"]
     archiver.scan_archives()
     data0,data1,data2 = archiver.get(channels,startTime, endTime)
-    print "----------------------------------------------"
-    print "    Data     Time(UT)     Value"
-    print "----------------------------------------------"    
+    print("----------------------------------------------")
+    print("    Data     Time(UT)     Value")
+    print("----------------------------------------------")    
     for i in range(len(data0.values)):
-        print data0.values[i],data1.values[i],data2.values[i]
-    print "----------------------------------------------"
+        print(data0.values[i],data1.values[i],data2.values[i])
+    print("----------------------------------------------")
     return [data0,data1,data2]
 
 
@@ -64,15 +64,15 @@ def printData(pvname, startTime, endTime):
     ind=ck.names.index(pvname)    
     ifBits=(ck.getType(ind)=="Bits") and (opts.nbit != None)
     if (opts.nbit != None) and (ck.getType(ind) !="Bits"):
-        print "Warning: ignoring bits option as pvtype is not Bits"
+        print("Warning: ignoring bits option as pvtype is not Bits")
     wd=60
-    print "-"*wd
-    print "%s, N=%s" % (pvname,len(data.values))
+    print("-"*wd)
+    print("%s, N=%s" % (pvname,len(data.values)))
     header="    Data     Time(UT)     Value"
     if ifBits: # opts.nbit != None:
         header=header+ "    Bit= %s (%s)" % (opts.nbit, ck.getBitName(ind,opts.nbit))
-    print header  
-    print "-"*wd
+    print(header)  
+    print("-"*wd)
     
     for d,t in zip(data.values, data.times):
         gentime=t.strftime('%Y-%m-%d  %H:%M:%SZ')
@@ -82,7 +82,7 @@ def printData(pvname, startTime, endTime):
             d1=int(d,0)  # convert from hex-string to integer              
             nbits=ck.getBitWidth(ind)  # get the number of bits in the pvname(channel)
             d2=convert_to_bits(nbits,d1)  # present hex int as bits
-            sd2='-'.join(d2[i:i+4] for i in xrange(0,len(d2),4)) # split bits by 4 digits
+            sd2='-'.join(d2[i:i+4] for i in range(0,len(d2),4)) # split bits by 4 digits
             
             nbit=opts.nbit+1 # nbit start from 0 in descr, but convert from 1
             if (nbit >nbits):
@@ -93,15 +93,15 @@ def printData(pvname, startTime, endTime):
             ss="%s   %s" % (ss, bit)  # print selected bit
             ss="%s   %s" % (ss, sd2)  # add bits to string for printing
 
-        print ss
-    print "-"*wd
-    print "cafetch.py -p %s --t1 '%s' --t2 '%s'" % (pvname, startTime, endTime)
+        print(ss)
+    print("-"*wd)
+    print("cafetch.py -p %s --t1 '%s' --t2 '%s'" % (pvname, startTime, endTime))
 
     if opts.desc:
-        print "----------------------------------------------"
-        print ck.getDescribe()  
-    print "-"*wd
-    print ""
+        print("----------------------------------------------")
+        print(ck.getDescribe())  
+    print("-"*wd)
+    print("")
     return data
 
 if __name__ == "__main__":

@@ -23,4 +23,4 @@ def sjd () :
 	return int ((time() + TAI_UTC) / 86400.0 + 40587.3)
 
 if __name__ == '__main__' :
-	print(sjd())
+	print sjd()

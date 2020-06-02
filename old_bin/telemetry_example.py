@@ -15,11 +15,11 @@ archiver.scan_archives()
 data1= archiver.get('25m:guider:axisError:RA', start, end, interpolation='raw',scan_archives=False)
 data2= archiver.get('25m:guider:axisError:DEC', start, end, interpolation='raw',scan_archives=False)
 
-print "Example of telemetry data query"
-print "N   startTime axisError:RA axisError:DEC"
+print("Example of telemetry data query")
+print("N   startTime axisError:RA axisError:DEC")
 
 n=len(data1.values)
 for i in range(n):
     t=data1.times[i]
-    print "%3i   %s     %5.2f      %5.2f" % ( i, t.strftime('%H:%M:%SZ'), data1.values[i],  data2.values[i])
+    print("%3i   %s     %5.2f      %5.2f" % ( i, t.strftime('%H:%M:%SZ'), data1.values[i],  data2.values[i]))
 

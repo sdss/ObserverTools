@@ -2,11 +2,8 @@
 
 """ Print list of apogee files in <mjd> directory (or current). 
 
-list_gcam 
-
-list_gcam  (for current mjd)
-list_gcam  -m  <mjd>  (for other mjd)
-
+list_ap1.py  (for current mjd)
+list_ap1.py -m  <mjd>  (for other mjd)
 """
 
 from optparse import OptionParser, OptionGroup
@@ -24,8 +21,7 @@ def curSjd():  # current mjd
 #...
 def  do_one_im(i,fname):        
     hdr = pyfits.getheader(fname)
-    #-- UT=hdr.get('DATE-OBS')[10:16]
-    UT=hdr.get('DATE-OBS')[10:19]
+    UT=hdr.get('DATE-OBS')[10:16]
     nExp=fname[17:26]
     ss="%4i %s  %s " % (i, UT, nExp)
     imtype=hdr.get('IMAGETYP')
@@ -51,39 +47,42 @@ def  do_one_im(i,fname):
     else:  q="-"
     ss="%s %s " % (ss, q)     
 
-    print(ss)
+    print ss
  
 #...
 def main(argv=None):
     cur_mjd=curSjd()
     if argv is None: argv = sys.argv[1:]
-    usage = '%prog [-m 55555  -n 100  -k  120 ]' 
+    usage = '%prog [-m 55555]' 
 #    usage += '\n\nDIR example: /data/gcam/5623*'
     parser = OptionParser(usage)
-    parser.add_option('-m','--mjd', dest='mjd',default=cur_mjd, help='select mjd,  \
-             default mjd is current (%default)',type=int)
-    parser.add_option( '--n1', dest='n1', default=0,  \
-           help='first file to list, default is  (%default)',type=int)
-    parser.add_option('--n2', dest='n2',default=1000000, \
-             help='last file to list, default is the last file ',type=int)
+    parser.add_option('-m','--mjd', dest='mjd',default=cur_mjd,
+        help='select mjd,  default mjd is current (%default)',type=int)
+
+    parser.add_option('-k','--k', dest='kStart',default=1,
+        help='start file, default is  (%default)',type=int)
+    parser.add_option('-n','--n', dest='nEnd',default=9999, \
+        help='end file, default is the last file ',type=int)
+
     (opts,args) = parser.parse_args(args=argv)
 
     mjd=opts.mjd
-    fNames = '/data/gcam/%s/gimg-%s.fits.gz' % (mjd, "*")
+    fNames = '/data/ecam/%s/gimg-%s.fits' % (mjd, "*")
 
-    title="GUIDER images:  %s" % fNames
-    header="   i   UT       File/Exp   Imtype  expT  dark  flat cart foc   proc"
-    line="-"*68
-    print(title, "\n",  line, "\n", header, "\n", line)     
+    title="Ecamera images:  %s" % fNames
+    header="   i   UT    File/Exp   Imtype  expT  dark  flat cart foc   proc"
+    line="-"*80
+    print title, "\n",  line, "\n", header, "\n", line     
 
     files =sorted( glob.glob(fNames))
-    nfiles=len(files)     
-    kStart=opts.n1
-    nEnd=opts.n2
+    nfiles=len(files)
+     
+    kStart=opts.kStart
+    nEnd=opts.nEnd
     if nEnd > nfiles: nEnd=nfiles
     for i in range(kStart, nEnd+1): 
         do_one_im(i,files[i-1])        
-    print(line, "\n")
+    print line, "\n"
 
 #...
 if __name__ == "__main__":

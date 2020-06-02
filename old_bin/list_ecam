@@ -47,7 +47,7 @@ def  do_one_im(i,fname):
     else:  q="-"
     ss="%s %s " % (ss, q)     
 
-    print ss
+    print(ss)
  
 #...
 def main(argv=None):
@@ -72,7 +72,7 @@ def main(argv=None):
     title="Ecamera images:  %s" % fNames
     header="   i   UT    File/Exp   Imtype  expT  dark  flat cart foc   proc"
     line="-"*80
-    print title, "\n",  line, "\n", header, "\n", line     
+    print(title, "\n",  line, "\n", header, "\n", line)     
 
     files =sorted( glob.glob(fNames))
     nfiles=len(files)
@@ -82,7 +82,7 @@ def main(argv=None):
     if nEnd > nfiles: nEnd=nfiles
     for i in range(kStart, nEnd+1): 
         do_one_im(i,files[i-1])        
-    print line, "\n"
+    print(line, "\n")
 
 #...
 if __name__ == "__main__":

@@ -47,8 +47,8 @@ class gds9 :
 		self.zoom = zoom
 
 		if verbose :
-			print 'dir = %s\ntarget = %s\nscale = %s\nzoom = %s' % \
-				(self.dir, self.target, self.scale, self.zoom)
+			print('dir = %s\ntarget = %s\nscale = %s\nzoom = %s' % \
+				(self.dir, self.target, self.scale, self.zoom))
 
 #	Initialize
 
@@ -110,11 +110,11 @@ class gds9 :
 
 		file = self.latest_fits_file ('gimg')
 		if verbose :
-			print 'latest fits file = %s, last fits file = %s' % (file, self.last_file)
+			print('latest fits file = %s, last fits file = %s' % (file, self.last_file))
 
 		if file != self.last_file :
 			if verbose :
-				print 'displaying %s' % file
+				print('displaying %s' % file)
 			self.display (file, 0)
 			self.last_file = file
 
@@ -154,10 +154,10 @@ if __name__ == '__main__' :
 	zoom = options.zoom
 
 	if verbose :
-		print 'auto_mjd = %d' % auto_mjd
-		print 'interval = %d' % interval
-		print 'scale = %s' % scale
-		print 'zoom = %s' % zoom
+		print('auto_mjd = %d' % auto_mjd)
+		print('interval = %d' % interval)
+		print('scale = %s' % scale)
+		print('zoom = %s' % zoom)
 
 #	Start the display
 
@@ -169,10 +169,10 @@ if __name__ == '__main__' :
 	while (True) :
 		if auto_mjd and (old_sjd != sjd()) :
 			try :
-				print stat ('/data/gcam/%d' % sjd())[ST_MTIME]
+				print(stat ('/data/gcam/%d' % sjd())[ST_MTIME])
 
 				if verbose :
-					print 'Setting SJD from %d to %d' % (old_sjd, sjd())
+					print('Setting SJD from %d to %d' % (old_sjd, sjd()))
 				old_sjd = sjd()
 
 				g = gds9 (None, target, scale, zoom)
@@ -180,7 +180,7 @@ if __name__ == '__main__' :
 
 			except :
 				if verbose :
-					print 'No files for SJD %d, retrying...' % sjd()
+					print('No files for SJD %d, retrying...' % sjd())
 #				sleep (interval)
 #				next
 		else :

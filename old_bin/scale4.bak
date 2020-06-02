@@ -49,7 +49,7 @@ def get_plates(pl):
   h = 'observer@plate-mapper3:~mapper/scan/?????/plPlugMapM-' + pl + '*par'
   ret_code = os.system ('cd ' + w_dir + ' ; scp -q -p ' + h + ' .')
   if ret_code != 0:
-    print('ERROR: cannot copy files: try again')
+    print 'ERROR: cannot copy files: try again'
 
 def getFiles(f):
   #- Elena's script
@@ -205,14 +205,14 @@ def get_scale(dt, pha,ha,palt,alt):
   #--- uncomment to see parameters ---
   #-print 'Alt  PAlt  ref  Pref  ref-Pref   sc_a'
   #-print alt, palt, ref, pref, ref - pref, sc_a
-  print('Alt %5.1f PlanAlt %5.1f' % (alt, palt))
+  print 'Alt %5.1f PlanAlt %5.1f' % (alt, palt)
 
   #---sc_a = 0.
   #--sc_a = - ref_con * cos(d2r * alt) * sin( d2r * (ha - pha))
   #-sc_a = ref_con * (cos(d2r * alt) - cos(d2r * palt))
 
-  print('*** Calculated values ***')
-  print(' Thermal %8.5f / Refraction %8.5f / Aberration %8.5f' % (sc_t, sc_a, sc_aber))
+  print '*** Calculated values ***'
+  print ' Thermal %8.5f / Refraction %8.5f / Aberration %8.5f' % (sc_t, sc_a, sc_aber)
   #---return const_add + sc_t + sc_a
   #--return const_add + sc_t + sc_a, sc_t, sc_a
   #-return sc_t + sc_a + sc_aber, sc_t, sc_a, sc_aber
@@ -238,12 +238,12 @@ parser.add_argument('-n', '--n', action="store_true",
 args = parser.parse_args()    
 #mjd=args.t
 
-print()
+print
 if args.t < -19. or args.p < 1:
-  print('Both Plate and Temperature must be set')
-  print('Syntax: scale4 -t 14.0 -p 7815 [-f 100]')
+  print 'Both Plate and Temperature must be set'
+  print 'Syntax: scale4 -t 14.0 -p 7815 [-f 100]'
 else:
-  print('Input: T = ',args.t, 'plate =',args.p)
+  print 'Input: T = ',args.t, 'plate =',args.p
 
   spl = str(args.p)
   if args.n == True:
@@ -258,7 +258,7 @@ else:
     par = plates[np -1 ]
     fil20 = par.split('/')
     fil2 = fil20[len(fil20) - 1]
-    print('Use file: ',fil2)
+    print 'Use file: ',fil2
 
     t,pha,palt,ra,dec = get_pars(par)
     dt = args.t - t
@@ -271,10 +271,10 @@ else:
     palt = b_plan[3]
 
     #-print dt,pha,ha,palt,alt
-    print('*** Tech Information ***')
-    print('Design  Temperature,C   HA,deg  : ',t, pha)
+    print '*** Tech Information ***'
+    print 'Design  Temperature,C   HA,deg  : ',t, pha
     #- new_scale, new_scale_t, new_scale_r = get_scale(dt, pha,ha,palt,alt)
-    print('HA now: ', ha)
+    print 'HA now: ', ha
     new_scale, new_scale_t, new_scale_r, new_scale_aber = \
     get_scale(dt, pha,ha,palt,alt)
 
@@ -283,26 +283,26 @@ else:
     #-print 'Predicted scale: ',1. + 1.e-2*new_scale_t, ' (tcc)   ', new_scale_t*1.e4, ' (Russell speaking)'
     #-print ' ** With refraction: '
     #0print
-    print()
-    print('*** PREDICTED ABSOLUTE SCALE VALUE ***')
+    print
+    print '*** PREDICTED ABSOLUTE SCALE VALUE ***'
     #-print 'Predicted scale: ',1. + 1.e-2*new_scale, ' (tcc)   ', new_scale*1.e4, ' (Russell speaking)'
     #-print 'Diff from 1.00: ',new_scale, ' (% tcc)   ', new_scale*1.e4, ' Russell speaking'
-    print('Predicted Absolute scale: %8.5f (tcc) %5i (Russell speaking)' % (1. + 1.e-2*new_scale , new_scale*1.e4))
-    print('Difference from 1.00000 : %8.5f (percent tcc) ' % new_scale)
-    print('*** IT IS REPORTED WITHOUT ABERRATION ***')
+    print 'Predicted Absolute scale: %8.5f (tcc) %5i (Russell speaking)' % (1. + 1.e-2*new_scale , new_scale*1.e4)
+    print 'Difference from 1.00000 : %8.5f (percent tcc) ' % new_scale
+    print '*** IT IS REPORTED WITHOUT ABERRATION ***'
     #--print 'Predicted Absolute scale: %8.5f (tcc) %5i (Russell speaking)' % (1. + 1.e-2*new_scale , new_scale*1.e4)
-    print('*** Try now empirical equation: scale = predicted + focus/2 + 95')
+    print '*** Try now empirical equation: scale = predicted + focus/2 + 95'
     #-print '*** Try now empirical equation: scale = predicted + focus/2 - 75'
     if args.f != -5000.:
       #-print '==> In this case it is %5i (Russell-STUI speaking)' % (new_scale*1.e4 + 0.5*args.f - 75)
-      print('==> In this case it is %5i (Russell-STUI speaking)' % (new_scale*1.e4 + 0.5*args.f + 95))
-    print(' Note that the first cartridge is usually ~ 5C warmer!')
+      print '==> In this case it is %5i (Russell-STUI speaking)' % (new_scale*1.e4 + 0.5*args.f + 95)
+    print ' Note that the first cartridge is usually ~ 5C warmer!'
 
-    print()
+    print
 
   else:
-    print('ERROR: I cannot see par file. Try running me with -n  option')
-    print(' Also, may be this plate is not in the plan tonight?')
+    print 'ERROR: I cannot see par file. Try running me with -n  option'
+    print ' Also, may be this plate is not in the plan tonight?'
 
 #- mjd=sjd()
 #-print '-- OK --'

@@ -18,7 +18,7 @@ directory="/data/ecam/%s/" % (sys.argv[1])
 # if directory exist? 
 if  os.path.exists(directory)  != True:	
     sys.exit("Error: no directory  %s  " % (directory))
-print directory
+print(directory)
 
 f1=int(sys.argv[2])
 f2=int(sys.argv[3])
@@ -48,12 +48,12 @@ for i in range(f1,f2):
                  foc=hdr['FOCUS']
              else: foc=None
              focArr.append(foc)
-             print "%s,  centerX=%4i,  centerY=%4i, fwhm = %4.2f pix, fwhm = %4.2f arcsec,  foc=%s" % (ff,  cy, cx,  fw, fw1, foc)
+             print("%s,  centerX=%4i,  centerY=%4i, fwhm = %4.2f pix, fwhm = %4.2f arcsec,  foc=%s" % (ff,  cy, cx,  fw, fw1, foc))
         else:
-            print "%s -- %s " % (ff,imType)    
+            print("%s -- %s " % (ff,imType))    
         hdulist.close()
      else:
-        print "%s -- no file" % (ff) 
+        print("%s -- no file" % (ff)) 
 
 #plot(focArr, fwhmArr, 'ro')
 #xlabel('Focus')
@@ -68,7 +68,7 @@ arrayFoc = scipy.array(focArr)
 polycoeffs = scipy.polyfit(arrayFoc, arrayPix, 2)
 yfit = scipy.polyval(polycoeffs, arrayFoc)
 foc=-polycoeffs[1]/(2.0*polycoeffs[0])
-print "Focus = ",foc
+print("Focus = ",foc)
 
 from scipy.interpolate import interp1d
 xnew = np.linspace(arrayFoc.min(),arrayFoc.max(), 20)

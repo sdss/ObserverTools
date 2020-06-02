@@ -24,18 +24,18 @@ def main(argv=None):
     mjd=args.mjd        
         
     host="hub25m"
-    print "/data/mcptpm/%s" % mjd
-    print "need pwd for observer@sdsshost2"
+    print("/data/mcptpm/%s" % mjd)
+    print("need pwd for observer@sdsshost2")
     COMMAND="ls -la /data/mcptpm/%s" % mjd
     ssh = sb.Popen(["ssh", "%s" % host, COMMAND], shell=False, stdout=sb.PIPE, stderr=sb.PIPE)
     result = ssh.stdout.readlines()
 
     if result == []:
         error = ssh.stderr.readlines()
-        print >>sys.stderr, "ERROR: %s" % error
+        print("ERROR: %s" % error, file=sys.stderr)
     else:
         for r  in result: 
-            print r.strip()
+            print(r.strip())
 
 #------
 

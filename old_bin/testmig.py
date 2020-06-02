@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from cPickle import loads
+from pickle import loads
 from telnetlib import Telnet
 from traceback import print_exc
 
@@ -18,7 +18,7 @@ def readMIG() :
 		tn = Telnet (HOST, PORT)
 
 	except :
-		print 'Telnet connection to ' + HOST + ':' + PORT + ' failed'
+		print('Telnet connection to ' + HOST + ':' + PORT + ' failed')
 		print_exc()
 		return -1
 
@@ -27,7 +27,7 @@ def readMIG() :
 	try:
 		reply = tn.read_all ()
 	except :
-		print 'Connection to ' + HOST + ':' + PORT + ' prematurely closed\nReply: ' + reply
+		print('Connection to ' + HOST + ':' + PORT + ' prematurely closed\nReply: ' + reply)
 		print_exc()
 		return -1
 
@@ -37,4 +37,4 @@ def readMIG() :
 	return loads (reply)
 
 if __name__ == '__main__' :
-	print readMIG()
+	print(readMIG())

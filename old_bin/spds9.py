@@ -68,8 +68,8 @@ class spds9 :
 		self.zoom = zoom
 
 		if verbose :
-			print 'dir = %s\ntarget = %s\nscale = %s\nzoom = %s' % \
-				(self.dir, self.target, self.scale, self.zoom)
+			print('dir = %s\ntarget = %s\nscale = %s\nzoom = %s' % \
+				(self.dir, self.target, self.scale, self.zoom))
 
 #	Initialize
 
@@ -139,7 +139,7 @@ class spds9 :
 		for frame in range (0, self.npatterns) :
 			file = self.latest_fits_file (self.patterns[frame])
 			if verbose :
-				print frame, file, self.last_files[frame]
+				print(frame, file, self.last_files[frame])
 			if file != self.last_files[frame] :
 				self.display (file, frame)
 				self.last_files[frame] = file
@@ -180,10 +180,10 @@ if __name__ == '__main__' :
 	zoom = options.zoom
 
 	if verbose :
-		print 'auto_mjd = %d' % auto_mjd
-		print 'interval = %d' % interval
-		print 'scale = %s' % scale
-		print 'zoom = %s' % zoom
+		print('auto_mjd = %d' % auto_mjd)
+		print('interval = %d' % interval)
+		print('scale = %s' % scale)
+		print('zoom = %s' % zoom)
 
 #	Start the display
 
@@ -195,10 +195,10 @@ if __name__ == '__main__' :
 	while (True) :
 		if auto_mjd and (old_sjd != sjd()) :
 			try :
-				print stat ('/data/spectro/%d' % sjd())[ST_MTIME]
+				print(stat ('/data/spectro/%d' % sjd())[ST_MTIME])
 
 				if verbose :
-					print 'Setting SJD from %d to %d' % (old_sjd, sjd())
+					print('Setting SJD from %d to %d' % (old_sjd, sjd()))
 				old_sjd = sjd()
 
 				s = spds9 (None, target, scale, zoom)
@@ -206,7 +206,7 @@ if __name__ == '__main__' :
 
 			except :
 				if verbose :
-					print 'No files for SJD %d, retrying...' % sjd()
+					print('No files for SJD %d, retrying...' % sjd())
 #				sleep (interval)
 #				next
 		else :

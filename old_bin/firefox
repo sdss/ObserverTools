@@ -1,0 +1,3 @@
+#!/bin/sh
+export HOME=${MOZILLA_PATH}
+exec /usr/bin/firefox

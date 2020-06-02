@@ -16,7 +16,7 @@ import pyfits, numpy
 
 def prnLine(m, mjd, ndirs='-',  nfiles='-',  nflats='-',  nbad='-', proc='  -'): 
       ss="%4s  %5s  %1s  %4s  %4s   %4s   %3s" % (m, mjd, ndirs, nfiles, nflats, nbad, proc)
-      print ss
+      print(ss)
 
 # convert from guider to ds9 coordinate system
 def ds9topy(p): return [p[1],p[0]] 
@@ -100,7 +100,7 @@ def do_one_dir(m, mjd, outfile, listfiles=False, cutoff=10000):
     if listfiles: 
        for fbad in nbadList:
             ss="  %s  %8.2f %5.2f %7.2f %s " %(fbad[0], fbad[1],fbad[2], fbad[3],fbad[4])
-            print "      ",ss
+            print("      ",ss)
     return nflats, nbad  
    
 if __name__ == "__main__":
@@ -119,28 +119,28 @@ if __name__ == "__main__":
     
     nflatsTot=0;   nbadTot=0; 
     mjdsList=sorted([args.mjd1, args.mjd2])
-    mjds=range(mjdsList[0], mjdsList[1]+1)
+    mjds=list(range(mjdsList[0], mjdsList[1]+1))
     line = 50*"-"  
     listfiles=args.list
     outfile = open(args.outfile,'w')
     outfile.write("File %s   Dark    Std    cutoff \n" % (27*" "))
     outfile.flush() 
 
-    print line
+    print(line)
     ss="   i   mjd  dir files  %s  bad " % args.imtype
-    print ss, "% " 
-    print line    
+    print(ss, "% ") 
+    print(line)    
     for m, mjd in enumerate(mjds):
         nflats, nbad= do_one_dir(m, mjd, outfile, listfiles=listfiles, cutoff=args.cutoff)  
         nflatsTot=nflatsTot+nflats
         nbadTot=nbadTot+nbad
-    print line
+    print(line)
  
     if  nflatsTot == 0:  pers="n/a"
     else:  pers="%s" % int(nbadTot*100.0/nflatsTot)+'%'
-    print "Image type:  %s" % args.imtype
-    print "MJDs : %s - %s,  cutoff=%s" % (args.mjd1, args.mjd2, args.cutoff)
-    print "Sum:  %s = %s,   bad = %s,  percent = %s"  % (args.imtype, nflatsTot, nbadTot, pers)
-    print line
-    print ""
+    print("Image type:  %s" % args.imtype)
+    print("MJDs : %s - %s,  cutoff=%s" % (args.mjd1, args.mjd2, args.cutoff))
+    print("Sum:  %s = %s,   bad = %s,  percent = %s"  % (args.imtype, nflatsTot, nbadTot, pers))
+    print(line)
+    print("")
 #...

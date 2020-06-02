@@ -30,7 +30,7 @@ def getTimeStamps(sjd):
     
 if __name__ == "__main__":
     sjd=curSjd()
-    print "sjd=",sjd
+    print("sjd=",sjd)
     desc = 'fiducials for one mjd'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument( '-m', '--mjd',  help='enter mjd, default is current mjd',    
@@ -41,9 +41,9 @@ if __name__ == "__main__":
     vBool=args.verbose
     
     start,end=getTimeStamps(mjd)
-    print "MJD start/end times"
-    print start
-    print end
+    print("MJD start/end times")
+    print(start)
+    print(end)
     
     archiver.scan_archives()
     data1= archiver.get('25m:mcp:rotFiducialCrossing:index', start, end, interpolation='raw',scan_archives=False)
@@ -51,12 +51,12 @@ if __name__ == "__main__":
 
     #print "         Enlosure open/close times"
     #print data2
-    print "" 
+    print("") 
     nn=len(data1.values)
-    print "date   time    index    encl    sum"
+    print("date   time    index    encl    sum")
     for i in range(nn):
         tm=data1.times[i]
         degrees= archiver.get('25m:mcp:rotFiducialCrossing:deg', tm, tm, interpolation='raw',scan_archives=False)
         if vBool:
-        	print data1.times[i], " %7.0f    %2i"%(data1.values[i], degrees.values[0])
+        	print(data1.times[i], " %7.0f    %2i"%(data1.values[i], degrees.values[0]))
     

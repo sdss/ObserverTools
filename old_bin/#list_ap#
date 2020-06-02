@@ -48,11 +48,7 @@ Sept, 08, 2014  changes A.B dithers settings:
    B 13.5 --> 10.5
 Oct,15, 2014  removed changes on Sept, 08, 2014
 
-May 30, 2019 -- DO added lines 221 and 222 since 'A' and 'B' dither positions 
-correspond to differenet pixel numbers again.
-
-Jan, 28 2020 - EM do not write A/B anymore, dither positions changes again
- 
+May 30, 2019 -- DO added lines 221 and 222 since 'A' and 'B' dither positions correspond to differenet pixel numbers again.
 
 """
 
@@ -132,7 +128,7 @@ def getMap(files):
         elif imtype=="Object" : 
                map=map+"o" 
         else:
-            print("wrong image type, f=%s, imtype = %s" % (f,imtype)) 
+            print "wrong image type, f=%s, imtype = %s" % (f,imtype) 
             map=map+"?"
       #  print i, f, map
     return map             
@@ -213,7 +209,7 @@ def  list_one_file(i,f,mjd, dither1=False):
       except :    # it was except IOError:
         continue 
     if not q:
-       print("    cannot read file : %s" % ff) 
+       print "    cannot read file : %s" % ff 
        return
     
     ct=hdr.get('CARTID'); plate=hdr.get('PLATEID'); 
@@ -222,15 +218,11 @@ def  list_one_file(i,f,mjd, dither1=False):
 
     dth= float(hdr['DITHPIX'])
     
-    # DO added lines to this  block:
     if dth==12.994: sdth="A  %4.1f" % dth
     elif dth==13.499: sdth="B  %4.1f" % dth
     elif dth==10.495: sdth="A  %4.1f" % dth
     elif dth==11.0: sdth="B  %4.1f" % dth
     else: sdth="?  %4.1f"% dth 
-
-    # EM- do not write A/B anymore
-    #sdth="?  %4.1f"% dth
 
     #dth=round(dth, 1)
   #  if dth==10.0: sdth="A  %4.1f" % dth
@@ -298,7 +290,7 @@ def  list_one_file(i,f,mjd, dither1=False):
 #    if (regex==dither):
 #        ss1=ss1+" %5.2f" % diffDither
     
-    print(ss1) #, len(ss1)
+    print ss1 #, len(ss1)
 
 
 def  list_one_mjd(mjd, args):
@@ -317,7 +309,7 @@ def  list_one_mjd(mjd, args):
        
     files=getFiles(fNames)
     if len(files)==0: 
-        print(" - mjd=%s, no files found  -- " % (mjd))        
+        print " - mjd=%s, no files found  -- " % (mjd)        
         #sys.exit(" - mjd=%s, no files found  -- " % (mjd))
         return 
 
@@ -344,7 +336,7 @@ def  list_one_mjd(mjd, args):
         else:   sys.exit("  error: 1")   
         mapRange=getSequence(map, regex)
         if mapRange==None:
-            print("  no sequence found")
+            print  "  no sequence found"
             return              
     #    print mapRange[0], mapRange[1]
         files=files[mapRange[0]:mapRange[1]]
@@ -353,7 +345,7 @@ def  list_one_mjd(mjd, args):
     for i,f in enumerate(sorted(files)):
         if not os.path.isfile(f):
             ss1="%s %3i"% (mjd, i+1)  #i
-            print("%s      no file found:  %s " % (ss1, f))
+            print "%s      no file found:  %s " % (ss1, f)
             continue
         list_one_file(i,f, mjd, dither1)   
 
@@ -396,20 +388,20 @@ def main():
         fNames="%s%s/apRaw-%s.fits"%(pp,m,"*")   # raw data
         fArch="/data/apogee/archive/%s/apR-[a,b,c]-*.apz" % (mjd)  # archive
         fReduct="/data/apogee/quickred/%s/ap2D-a-*.fits.fz" % (mjd)  # quickred
-        print("APOGEE data list,   mjd=%s,  %s" % (m, request))  
-        print("raw_data: ", fNames)  
-        print("archive: ", fArch)  
-        print("quickred: ", fReduct)  
+        print "APOGEE data list,   mjd=%s,  %s" % (m, request)  
+        print "raw_data: ", fNames  
+        print "archive: ", fArch  
+        print "quickred: ", fReduct  
         
         
-        print(line, "\n",  header, "\n", line)        
+        print line, "\n",  header, "\n", line        
         files=getFiles(fNames)
         if len(files)==0: 
-             print(" - no files found  for this mjd  %s-- " % m) 
-             print(line, "\n") 
+             print " - no files found  for this mjd  %s-- " % m 
+             print line, "\n" 
              continue
         list_one_mjd(m, args)
-        print(line, "\n") 
+        print line, "\n" 
         
 if __name__ == "__main__":
     sys.exit(main())

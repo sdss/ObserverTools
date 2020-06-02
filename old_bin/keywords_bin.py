@@ -49,7 +49,7 @@ class configKey:
     
     def getEnumNumber(self, i,ss):
         vtype=self.key.typedValues.vtypes[i]
-        for item, k  in vtype.enumValues.items():
+        for item, k  in list(vtype.enumValues.items()):
             if item.lower()==ss.lower():
                 return k
 
@@ -134,8 +134,8 @@ def describeKeyword(actor,keyword, reg=None):
     else:
         if reg not in key.name: 
             return         
-    print "------------------" 
-    print "actor: %s" % (actor)
+    print("------------------") 
+    print("actor: %s" % (actor))
     ck=configKey(actor, keyword, prefix="25m", opt="jb1")
     if opts.short_print:
         for i, name in enumerate(ck.names): 
@@ -145,12 +145,12 @@ def describeKeyword(actor,keyword, reg=None):
             if tp=="RepeatedValueType":
                 ss="%s,  RepType=%s,  Nmin=%s,  Nmax=%s" \
                     % (ss,ck.getRepType(i), ck.getRepMin(i), ck.getRepMax(i))        
-            print ss 
+            print(ss) 
     else:
-        print key.describe()
+        print(key.describe())
         for i, name in enumerate(ck.names): 
             ss="    n=%s  pv=%s" % (i+1, ck.getName(i))
-            print ss  
+            print(ss)  
     global total
     total=total+1   
     
@@ -183,7 +183,7 @@ if __name__ == "__main__":
 
     actor=opts.actor; keyword=opts.keyword;  reg=opts.reg
 
-    print "=============================="
+    print("==============================")
     describeActors(reg)
 
     #if (actor==None):
@@ -198,8 +198,8 @@ if __name__ == "__main__":
     #else:
     #    print "invalid input"	
 
-    print "=============================="
+    print("==============================")
     if total == 0:
-        print "Did not find any keywords"
+        print("Did not find any keywords")
     else:
-        print "Total keyword found %s " % total
+        print("Total keyword found %s " % total)

@@ -12,7 +12,7 @@ from scipy import ndimage
 from pylab import *
 
 if len(sys.argv) < 4:
-    print "Example:  python fwhmSweep.py 58652 100 150"
+    print("Example:  python fwhmSweep.py 58652 100 150")
     sys.exit("fwhmSweep.py <mjd> <file1> <file2>")
 
 directory="/data/ecam/%s/" % (sys.argv[1])
@@ -20,7 +20,7 @@ directory="/data/ecam/%s/" % (sys.argv[1])
 # if directory exist? 
 if  os.path.exists(directory)  != True:	
     sys.exit("Error: no directory  %s  " % (directory))
-print directory
+print(directory)
 
 f1=int(sys.argv[2])
 f2=int(sys.argv[3])
@@ -55,7 +55,7 @@ for i in range(f1,f2+1):
                   koeff=0.428
              else: 
                   koeff=0 
-                  print "unknown binning"
+                  print("unknown binning")
 
              fw1=fw*koeff;   
     #         fwhmArr.append(fw)
@@ -64,12 +64,12 @@ for i in range(f1,f2+1):
                  foc=hdr['FOCUS']
              else: foc=None
              focArr.append(foc)
-             print "%s,  centerX=%4i,  centerY=%4i, fwhm=%5.2f pix, fwhm = %4.2f arcsec,  foc=%s" % (ff,  cy, cx,  fw, fw1, foc)
+             print("%s,  centerX=%4i,  centerY=%4i, fwhm=%5.2f pix, fwhm = %4.2f arcsec,  foc=%s" % (ff,  cy, cx,  fw, fw1, foc))
         else:
-            print "%s -- %s " % (ff,imType)    
+            print("%s -- %s " % (ff,imType))    
         hdulist.close()
      else:
-        print "%s -- no file" % (ff) 
+        print("%s -- no file" % (ff)) 
 
 #to_plot=False
 #if to_plot:
