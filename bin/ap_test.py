@@ -10,6 +10,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 import starcoder42 as s
 
+__version__ = 3.0
+
 
 class ApogeeFlat:
     def __init__(self, master_path, args):

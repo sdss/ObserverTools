@@ -154,9 +154,9 @@ if __name__ == '__main__' :
 	zoom = options.zoom
 
 	if verbose :
-		print 'auto_mjd = %d' % auto_mjd
-		print 'interval = %d' % interval
-		print 'scale = %s' % scale
+		print('auto_mjd = %d' % auto_mjd)
+		print('interval = %d' % interval)
+		print('scale = %s' % scale)
 		print 'zoom = %s' % zoom
 
 #	Start the display

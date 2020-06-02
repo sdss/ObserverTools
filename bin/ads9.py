@@ -24,7 +24,7 @@ default_dir = '/data/apogee/utr_cdr/'  # This works on any system, not just
 __version__ = 3.0
 
 
-class ADS9:
+class ApogeeDS9:
     """Displays the last image from the guider camera in ds9"""
 
     def __init__(self, args):
@@ -200,7 +200,7 @@ def parseargs():
 def main():
     args = parseargs()
     # Start the display
-    a = ADS9(args)
+    a = ApogeeDS9(args)
 
     while True:
         a.update()

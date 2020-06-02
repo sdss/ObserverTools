@@ -13,6 +13,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 from bin import mjd
 
+__version__ = 3.0
+
 
 def create_hash_line(file):
     file = Path(file)

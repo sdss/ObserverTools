@@ -2,6 +2,8 @@
 
 import time
 
+__version__ = 3.0
+
 TAI_UTC = 0  # TAI_UTC =34;
 aSjd = 40587.3
 bSjd = 86400.0

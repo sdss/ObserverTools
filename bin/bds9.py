@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Description:	Opens and continuously updates ds9 with the latest raw APOGEE file
+Description:	Opens and continuously updates ds9 with the latest raw BOSS file
 
 History:
 Jun 21, 2011	Jon Brinkmann	Apache Point Observatory Created file from
@@ -8,7 +8,8 @@ Jun 21, 2011	Jon Brinkmann	Apache Point Observatory Created file from
 2020-05-31      Dylan Gatlin    Replaced almost every library for a python 3
     upgrade. ds9 -> pyds9, os.path -> pathlib, optionparse -> argparse. Updated
     syntax to Python 3 and greatly improved PEP-8 compliance. Changed source
-    of apogee data to work on any system
+    of boss data to work on any system
+2020-06-01      Dylan Gatlin    Forked from ads9.py to be used for Boss
 
 """
 from pathlib import Path
@@ -18,13 +19,13 @@ import pyds9
 import time
 
 verbose = False
-default_dir = '/data/apogee/utr_cdr/'  # This works on any system, not just
-# apogee
+default_dir = '/data/spectro/'  # This works on any system, not just manga
+cameras = ['r1', 'r2', 'b1', 'b2']
 
 __version__ = 3.0
 
 
-class ADS9:
+class BossDS9:
     """Displays the last image from the guider camera in ds9"""
 
     def __init__(self, args):
@@ -39,7 +40,7 @@ class ADS9:
             self.args.fits_dir = default_dir
 
         if not self.args.target:
-            self.args.target = 'ads9.{}'.format(os.getpid())
+            self.args.target = 'bds9.{}'.format(os.getpid())
 
         if self.args.verbose:
             print('dir = {}\ntarget = {}\nscale = {}\nzoom = {}'.format(
@@ -49,6 +50,7 @@ class ADS9:
         # Initialize
 
         self.ds9 = pyds9.DS9(self.args.target)
+        self.ds9.set('tile')
 
     @staticmethod  # This means it doesn't take self as an argument
     def is_fits(filename):
@@ -133,7 +135,7 @@ class ADS9:
     def update(self):
         """Update the display"""
 
-        file = self.latest_fits_file('apRaw*')
+        file = self.latest_fits_file('sdR-r1*')
         if self.args.verbose:
             print('latest fits file = {}, last fits file = {}'
                   ''.format(file, self.last_file))
@@ -141,7 +143,8 @@ class ADS9:
         if file != self.last_file:
             if verbose:
                 print('displaying {}'.format(file))
-            self.display(file, 0)
+            for i, cam in enumerate(cameras):
+                self.display(file.replace('r1', cam), i)
             self.last_file = file
 
     def close(self):
@@ -151,11 +154,9 @@ class ADS9:
 # If run as a program, start here
 
 def parseargs():
-    # Define command line options
-
     parser = ArgumentParser(description='A tool to leave running continuously'
                                         'that will display the most current'
-                                        'apogee exposure. By default, it will'
+                                        'boss exposure set. By default, it will'
                                         'run every 60 seconds.')
     parser.add_argument('-d', '--directory', dest='fits_dir',
                         default=default_dir, type=str,
@@ -163,7 +164,7 @@ def parseargs():
                              'directory of dated folders, where the newest'
                              'folder has the newest data.'
                              ' Default is {}'.format(
-                            default_dir))
+                              default_dir))
     parser.add_argument('-V', '--version', action='store_true', help='Version'
                                                                      'info')
     parser.add_argument('-t', '--target', dest='target', default=None,
@@ -200,10 +201,10 @@ def parseargs():
 def main():
     args = parseargs()
     # Start the display
-    a = ADS9(args)
+    boss = BossDS9(args)
 
     while True:
-        a.update()
+        boss.update()
 
         time.sleep(args.interval)
 

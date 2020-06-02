@@ -28,27 +28,32 @@ except ImportError or ModuleNotFoundError:
     sys.path.append('/Users/dylangatlin/python/starcoder42/python/')
     sys.path.append('/home/gatlin/python/starcoder42/python/')
     import starcoder42 as s
-if sys.version_info.major < 3:
-    raise s.GatlinError('Interpretter must be Python 3 or newer')
 
 try:
     from astropy.time import Time
 except ImportError:
     raise s.GatlinError('Astropy not found for interpreter\n'
                         '{}'.format(sys.executable))
+
 try:
     import fitsio
 except ImportError:
     raise s.GatlinError('fitsio not found by interpreter\n'
                         '{}'.format(sys.executable))
+
 from pathlib import Path
 from tqdm import tqdm
 from channelarchiver import Archiver
 
 from python import apogee_data, boss_data, log_support
 
+if sys.version_info.major < 3:
+    raise s.gatlinerror('interpretter must be python 3 or newer')
+
 # For astropy
 warnings.filterwarnings('ignore', category=UserWarning, append=True)
+
+__version__ = 3.3
 
 ap_dir = Path('/data/apogee/archive/')
 b_dir = Path('/data/spectro/')
