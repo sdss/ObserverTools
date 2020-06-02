@@ -2,7 +2,8 @@
 
 
 #
-import apogee, eboss, manga, mjd
+import eboss
+from bin import mjd
 import warnings
 warnings.filterwarnings('ignore')
 import argparse

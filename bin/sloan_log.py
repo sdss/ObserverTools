@@ -45,8 +45,7 @@ from pathlib import Path
 from tqdm import tqdm
 from channelarchiver import Archiver
 
-from python import apogee_data, boss_data
-import log_support
+from python import apogee_data, boss_data, log_support
 
 # For astropy
 warnings.filterwarnings('ignore', category=UserWarning, append=True)

@@ -80,10 +80,10 @@ for i in range(nd):
    #dat[i]=masterData[nd-i-1,col]   
    flat[i]=flatData[nd-i-1,col] 
 
-#savetxt('masterFlatColArray.dat',dat)
+#savetxt('ap_master_flat_col_array.dat',dat)
 
 #dat file generated from listed masterfie
-dat = loadtxt('/home/observer/bin/masterFlatColArray.dat')
+dat = loadtxt('/home/observer/bin/ap_master_flat_col_array.dat')
 
 #print "-"*20
 cutoff=200.;  imax1=500;  imax2=100  # vm cutoff=120

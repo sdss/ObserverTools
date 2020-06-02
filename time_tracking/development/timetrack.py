@@ -20,7 +20,8 @@ timetrack.py -b -a -m  -m1 58271 -m2 58271
 
 import argparse
 #import time
-import apogee, eboss, manga, mjd
+import apogee, eboss, manga
+from bin import mjd
 import warnings
 warnings.filterwarnings('ignore')
 

@@ -14,7 +14,8 @@ import argparse
 import glob
 import os
 import stat
-import mjd
+from bin import mjd
+
 try:
     from astropy.io import fits
     from astropy.time import Time

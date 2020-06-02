@@ -3,21 +3,20 @@
 import time
 
 TAI_UTC = 0  # TAI_UTC =34;
-TAI_UTC = 0
 aSjd = 40587.3
 bSjd = 86400.0
 
 
-def current_sjd():
+def mjd():
     # current mjd
-    d = time.gmtime();
+    d = time.gmtime()
     tt = time.mktime(d)
     sjd = (tt + TAI_UTC) / bSjd + aSjd
     return int(sjd)
 
 
 def main():
-    print(current_sjd())
+    print(mjd())
 
 
 if __name__ == "__main__":
