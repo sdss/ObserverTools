@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Description:	Opens and continuously updates ds9 with the latest raw APOGEE file
+Description:	Opens and continuously updates ds9 with the latest file. Run
+ds9_live.py -h for details.
 
 History:
 Jun 21, 2011	Jon Brinkmann	Apache Point Observatory Created file from
@@ -24,7 +25,16 @@ __version__ = 3.0
 
 
 class DS9Window:
-    """Displays the last image in a given directory in ds9"""
+    """Displays the last image in a given directory in ds9
+    inputs:
+    name: The name of the window, it will add the fits dir and a hash onto this
+        in the actual window
+    fits_dir: a directory of dated folders where images are stored
+    regex: The formatting of the fits images we want to display
+    scale: The image scale
+    zoom: The image zoom
+    verbose: A debugging tool
+    """
 
     def __init__(self, name, fits_dir, regex, scale, zoom, verbose):
 
@@ -78,7 +88,9 @@ class DS9Window:
 
             if file.is_dir():
 
-                # Store the name and mtime of only the latest FITS file
+                # Store the name and mtime of only the latest FITS file, reads
+                # through every file, checks its mtime, and keeps the most
+                # recent for the return
 
                 mtime = file.stat().st_mtime
                 # print max_time, file, mtime
@@ -145,6 +157,7 @@ class DS9Window:
         if file != self.last_file:
             if self.verbose:
                 print('displaying {}'.format(file))
+            # Because BOSS has 4 cameras, it must loop 4 times
             if self.name == 'BOSS':
                 for i, cam in enumerate(boss_cams):
                     self.display(file.replace('r1', cam), i)

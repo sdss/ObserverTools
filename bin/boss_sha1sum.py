@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 
 """
-boss_sha1sum.py [MJD]
+Creates an file with a list of sha1 hashes in the same directory as the raw data
+under /data/spectro. This script run like
+
+boss_sha1sum.py MJD [MJD2] [MJD3]...
+
+
 
 Created by Stephen Bailey (LBNL) Fall 2011
 2020-06-01      dgatlin     Completely rewrote it for Python 3 and modern

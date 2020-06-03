@@ -48,7 +48,7 @@ from channelarchiver import Archiver
 from python import apogee_data, boss_data, log_support
 
 if sys.version_info.major < 3:
-    raise s.gatlinerror('interpretter must be python 3 or newer')
+    raise s.GatlinError('interpretter must be python 3 or newer')
 
 # For astropy
 warnings.filterwarnings('ignore', category=UserWarning, append=True)
@@ -95,6 +95,9 @@ class Logging:
             raise s.GatlinError('Cannot access EPICS Server, aborting')
 
     def ap_test(self, img):
+        """Calls aptest on hub, this could certainly be replaced in the near
+        future.
+        """
         test = sub.Popen('ssh observer@sdss-hub "~/bin/aptest {} {}"'
                          ''.format(self.args.mjd, img.exp_id), shell=True,
                          stdout=sub.PIPE)

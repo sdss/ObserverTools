@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-
+"""
+If run as a script, it prints the mjd, but this tool is often imported in other
+ Python functions. This is probably the most used script in this library, so
+ stability is critical. The outputs here do disagree slightly from
+ astropy.time.Time.now().mjd, and this discrepancy should be investigated.
+"""
 import time
 
 __version__ = 3.0
