@@ -265,7 +265,7 @@ for period in range(len(periods)):
 	# pvs_to_retrieve=[ '25m:guider:axisError:RA', '25m:guider:axisError:DEC']
 
 	for pv in pvs_to_retrieve:
-		print "# " + pv
+		print("# " + pv)
 		retrieved_pv = archiver.get(pv, start, end, interpolation='raw',scan_archives=False)
 		for i in range(len(retrieved_pv.values)):
-			print "%s\t%f" % (retrieved_pv.times[i].strftime('%Y-%m-%d %H:%M:%S.%f'), retrieved_pv.values[i])
+			print("%s\t%f" % (retrieved_pv.times[i].strftime('%Y-%m-%d %H:%M:%S.%f'), retrieved_pv.values[i]))

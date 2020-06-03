@@ -13,42 +13,46 @@ Jun 21, 2011	Jon Brinkmann	Apache Point Observatory Created file from
 """
 from pathlib import Path
 from argparse import ArgumentParser
-import os
+import hashlib
 import pyds9
 import time
 
-verbose = False
-default_dir = '/data/apogee/utr_cdr/'  # This works on any system, not just
-# apogee
+default_dir = Path('/data/apogee/utr_cdr/')
+boss_cams = ['r1', 'r2', 'b1', 'b2']
 
 __version__ = 3.0
 
 
-class ApogeeDS9:
-    """Displays the last image from the guider camera in ds9"""
+class DS9Window:
+    """Displays the last image in a given directory in ds9"""
 
-    def __init__(self, args):
+    def __init__(self, name, fits_dir, regex, scale, zoom, verbose):
 
         # Constants and variables
 
         self.last_file = ''
 
         # Arguments
-        self.args = args
-        if not self.args.fits_dir:
-            self.args.fits_dir = default_dir
+        self.name = name
+        self.fits_dir = Path(fits_dir)
+        self.regex = regex
+        self.scale = scale
+        self.zoom = zoom
+        self.verbose = verbose
 
-        if not self.args.target:
-            self.args.target = 'ads9.{}'.format(os.getpid())
+        hsh = hashlib.sha1(''.join(self.name + str(self.fits_dir) + self.regex
+                                   + self.scale).encode())
+        self.ds9_target = '{}: {}: {}'.format(self.name, self.fits_dir,
+                                              hsh.hexdigest()[:10])
 
-        if self.args.verbose:
-            print('dir = {}\ntarget = {}\nscale = {}\nzoom = {}'.format(
-                self.args.fits_dir, self.args.target, self.args.scale,
-                self.args.zoom))
+        if self.verbose:
+            print('dir = {}\nName = {}\nscale = {}\nzoom = {}'.format(
+                self.fits_dir, self.name, self.scale,
+                self.zoom))
 
         # Initialize
 
-        self.ds9 = pyds9.DS9(self.args.target)
+        self.ds9 = pyds9.DS9(self.name)
 
     @staticmethod  # This means it doesn't take self as an argument
     def is_fits(filename):
@@ -69,7 +73,7 @@ class ApogeeDS9:
 
         # Obtain the files in the directory and add the full path to them
 
-        for file in Path(self.args.fits_dir).glob('*'):
+        for file in Path(self.fits_dir).glob('*'):
             file = file.absolute()
 
             if file.is_dir():
@@ -124,24 +128,28 @@ class ApogeeDS9:
             self.ds9.set('frame {}'.format(frame))
             self.ds9.set('file {}'.format(file))
 
-            if self.args.zoom:
-                self.ds9.set('zoom to {}'.format(self.args.zoom))
+            if self.zoom:
+                self.ds9.set('zoom to {}'.format(self.zoom))
 
-            if self.args.scale:
-                self.ds9.set('scale {}'.format(self.args.scale))
+            if self.scale:
+                self.ds9.set('scale {}'.format(self.scale))
 
     def update(self):
         """Update the display"""
 
-        file = self.latest_fits_file('apRaw*')
-        if self.args.verbose:
+        file = self.latest_fits_file(self.regex)
+        if self.verbose:
             print('latest fits file = {}, last fits file = {}'
                   ''.format(file, self.last_file))
 
         if file != self.last_file:
-            if verbose:
+            if self.verbose:
                 print('displaying {}'.format(file))
-            self.display(file, 0)
+            if self.name == 'BOSS':
+                for i, cam in enumerate(boss_cams):
+                    self.display(file.replace('r1', cam), i)
+            else:
+                self.display(file, 0)
             self.last_file = file
 
     def close(self):
@@ -157,32 +165,45 @@ def parseargs():
                                         'that will display the most current'
                                         'apogee exposure. By default, it will'
                                         'run every 60 seconds.')
+    parser.add_argument('-a', '--apogee', action='store_true',
+                        help='If included, will display APOGEE images.'
+                             ' Overrides most arguments')
+    parser.add_argument('-b', '--boss', action='store_true',
+                        help='If included, will display BOSS images.'
+                             ' Overrides most arguments')
     parser.add_argument('-d', '--directory', dest='fits_dir',
                         default=default_dir, type=str,
                         help='Set FITS data directory. It needs to be a'
                              'directory of dated folders, where the newest'
                              'folder has the newest data.'
-                             ' Default is {}'.format(
-                            default_dir))
-    parser.add_argument('-V', '--version', action='store_true', help='Version'
-                                                                     'info')
-    parser.add_argument('-t', '--target', dest='target', default=None,
-                        type=str,
-                        help='Set ds9 target. Default is autogenerated.')
+                             ' Default is {}'.format(default_dir))
+
+    parser.add_argument('-e', '--ecam', action='store_true',
+                        help='If included, will display engineering camera'
+                             'images. Overrides most arguments.')
+    parser.add_argument('-g', '--guider', action='store_true',
+                        help='If included, will display guider images.'
+                             ' Overrides most arguments.')
     parser.add_argument('-i', '--interval', dest='interval', default=60,
                         type=int, help='Set the refresh rate.	Default is 5'
                                        'seconds. Refreshes will be this '
-                                       'number '
-                                       ' of seconds apart.')
+                                       'number  of seconds apart.')
+    parser.add_argument('-n', '--name', dest='name', default='Scanner',
+                        type=str,
+                        help='Set ds9 Window name. Default is autogenerated.')
+    parser.add_argument('-r', '--regex', default='apRaw*',
+                        help='A regex to match the fits files, default is'
+                             ' {}'.format('apRaw*'))
     parser.add_argument('-s', '--scale', dest='scale', default='histequ',
                         type=str, help='Set scaling. Default is "histequ"')
+
+    parser.add_argument('--version', action='store_true', help='Version info')
+
     parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
                         default=False,
                         help='Be verbose. Default is to be quiet.')
     parser.add_argument('-z', '--zoom', dest='zoom', default='1.0',
                         type=str, help='Set zoom factor. Default is 1.0')
-
-    # Get command line arguments
 
     args = parser.parse_args()
 
@@ -194,16 +215,50 @@ def parseargs():
     if args.version:
         print(__version__)
 
+    if args.apogee and args.boss:
+        raise Exception('Cannot do both boss and apogee')
+
+    if args.apogee:
+        if Path('/summary-ics/').exists():
+            args.fits_dir = Path('/summary-ics')
+        else:
+            args.fits_dir = Path('/data/apogee/utr_cdr/')
+        args.name = 'APOGEE'
+        # TODO set these to better values
+        args.scale = args.scale
+        args.zoom = args.zoom
+
+    elif args.boss:
+        args.fits_dir = Path('/data/spectro/')
+        args.name = 'BOSS'
+        args.scale = args.scale
+        args.zoom = args.zoom
+        args.regex = 'sdR-r1*'
+
+    elif args.guider:
+        args.fits_dir = Path('/data/gcam/')
+        args.name = 'Guider Camera'
+        args.scale = args.scale
+        args.zoom = args.zoom
+        args.regex = 'gimg-*'
+
+    elif args.ecam:
+        args.fits_dir = Path('/data/gcam/')
+        args.name = 'Engineering Camera'
+        args.scale = args.scale
+        args.zoom = args.zoom
+        args.regex = 'proc-gimg-*'
+
     return args
 
 
 def main():
     args = parseargs()
     # Start the display
-    a = ApogeeDS9(args)
-
+    window = DS9Window(args.name, args.fits_dir, args.regex, args.scale,
+                       args.zoom, args.verbose)
     while True:
-        a.update()
+        window.update()
 
         time.sleep(args.interval)
 

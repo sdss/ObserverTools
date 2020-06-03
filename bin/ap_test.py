@@ -78,9 +78,11 @@ class ApogeeFlat:
 
     def red_1d(self, arr):
         """Returns a 1d slice of a 2d array given"""
-        # This slice method is the one used in the original aptest, but there
-        # are some issues with it since it looks at a single column, and ignores
-        # a lot of useful data.
+        # This slice method is similar to the one used in the original aptest,
+        # but TODO this needs to be tested rigorously
+        # There are some science concerns about this algorithm's effectiveness
+        # because it only uses a single column and doesn't account for dithers
+        # well. This could be greatly improved.
         slce = arr[:, 2952]
         binned_slce, n_fibers = self.ap_bin(slce)
         return binned_slce, n_fibers

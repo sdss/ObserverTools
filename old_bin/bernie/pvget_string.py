@@ -19,9 +19,9 @@ archiver.scan_archives()
 pvs_to_retrieve=[ '25m:guider:survey:surveyMode' ]
 
 for pv in pvs_to_retrieve:
-	print "# " + pv
-	print "# DIAGNOSTIC: start:  " + start
-	print "# DIAGNOSTIC: end:    " + end
+	print("# " + pv)
+	print("# DIAGNOSTIC: start:  " + start)
+	print("# DIAGNOSTIC: end:    " + end)
 	retrieved_pv = archiver.get(pv, start, end, interpolation='raw',scan_archives=False)
 	for i in range(len(retrieved_pv.values)):
-		print "%s\t%s" % (retrieved_pv.times[i].strftime('%Y-%m-%d %H:%M:%S.%f'), retrieved_pv.values[i])
+		print("%s\t%s" % (retrieved_pv.times[i].strftime('%Y-%m-%d %H:%M:%S.%f'), retrieved_pv.values[i]))

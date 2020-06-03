@@ -40,5 +40,5 @@ sudo apt install libxt-dev libbz2-dev
 
 ### Python
 ```bash
-pip install pyds9 fitsio astropy numpy pathlib tqdm channelarchiver
+pip install pyds9 fitsio astropy numpy pathlib tqdm channelarchiver scipy pyfits
 ```

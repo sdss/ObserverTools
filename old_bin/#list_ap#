@@ -52,14 +52,15 @@ May 30, 2019 -- DO added lines 221 and 222 since 'A' and 'B' dither positions co
 
 """
 
-import glob
-import pyfits, numpy, scipy
-import sys, os.path
 import argparse
-import datetime as dt
-import time
-import scipy.optimize
+import glob
+import os.path
 import re
+import sys
+import time
+
+import numpy
+import pyfits
 
 args=""
 
@@ -128,7 +129,7 @@ def getMap(files):
         elif imtype=="Object" : 
                map=map+"o" 
         else:
-            print "wrong image type, f=%s, imtype = %s" % (f,imtype) 
+            print("wrong image type, f=%s, imtype = %s" % (f,imtype)) 
             map=map+"?"
       #  print i, f, map
     return map             
@@ -209,7 +210,7 @@ def  list_one_file(i,f,mjd, dither1=False):
       except :    # it was except IOError:
         continue 
     if not q:
-       print "    cannot read file : %s" % ff 
+       print("    cannot read file : %s" % ff) 
        return
     
     ct=hdr.get('CARTID'); plate=hdr.get('PLATEID'); 
@@ -290,7 +291,7 @@ def  list_one_file(i,f,mjd, dither1=False):
 #    if (regex==dither):
 #        ss1=ss1+" %5.2f" % diffDither
     
-    print ss1 #, len(ss1)
+    print(ss1) #, len(ss1)
 
 
 def  list_one_mjd(mjd, args):
@@ -309,7 +310,7 @@ def  list_one_mjd(mjd, args):
        
     files=getFiles(fNames)
     if len(files)==0: 
-        print " - mjd=%s, no files found  -- " % (mjd)        
+        print(" - mjd=%s, no files found  -- " % (mjd))        
         #sys.exit(" - mjd=%s, no files found  -- " % (mjd))
         return 
 
@@ -336,7 +337,7 @@ def  list_one_mjd(mjd, args):
         else:   sys.exit("  error: 1")   
         mapRange=getSequence(map, regex)
         if mapRange==None:
-            print  "  no sequence found"
+            print("  no sequence found")
             return              
     #    print mapRange[0], mapRange[1]
         files=files[mapRange[0]:mapRange[1]]
@@ -345,7 +346,7 @@ def  list_one_mjd(mjd, args):
     for i,f in enumerate(sorted(files)):
         if not os.path.isfile(f):
             ss1="%s %3i"% (mjd, i+1)  #i
-            print "%s      no file found:  %s " % (ss1, f)
+            print("%s      no file found:  %s " % (ss1, f))
             continue
         list_one_file(i,f, mjd, dither1)   
 
@@ -388,20 +389,20 @@ def main():
         fNames="%s%s/apRaw-%s.fits"%(pp,m,"*")   # raw data
         fArch="/data/apogee/archive/%s/apR-[a,b,c]-*.apz" % (mjd)  # archive
         fReduct="/data/apogee/quickred/%s/ap2D-a-*.fits.fz" % (mjd)  # quickred
-        print "APOGEE data list,   mjd=%s,  %s" % (m, request)  
-        print "raw_data: ", fNames  
-        print "archive: ", fArch  
-        print "quickred: ", fReduct  
+        print("APOGEE data list,   mjd=%s,  %s" % (m, request))  
+        print("raw_data: ", fNames)  
+        print("archive: ", fArch)  
+        print("quickred: ", fReduct)  
         
         
-        print line, "\n",  header, "\n", line        
+        print(line, "\n",  header, "\n", line)        
         files=getFiles(fNames)
         if len(files)==0: 
-             print " - no files found  for this mjd  %s-- " % m 
-             print line, "\n" 
+             print(" - no files found  for this mjd  %s-- " % m) 
+             print(line, "\n") 
              continue
         list_one_mjd(m, args)
-        print line, "\n" 
+        print(line, "\n") 
         
 if __name__ == "__main__":
     sys.exit(main())

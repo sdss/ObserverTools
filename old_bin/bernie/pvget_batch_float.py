@@ -22,8 +22,8 @@ for year in (2017, 2018):
 		start=str("%d-%02d-%02d 00:00:00.0" % (year, month+1, 1))
 		end=str("%d-%02d-%02d 00:00:00.0" % (year, month+1, monthdays[month]))
 		for pv in pvs_to_retrieve:
-		    	print "# " + pv
-		    	print("## interval: %s to %s" % (start, end))
+		    	print("# " + pv)
+		    	print(("## interval: %s to %s" % (start, end)))
 		    	retrieved_pv = archiver.get(pv, start, end, interpolation='raw',scan_archives=False)
 		    	for i in range(len(retrieved_pv.values)):
-					print "%s\t%f" % (retrieved_pv.times[i].strftime('%Y-%m-%d %H:%M:%S.%f'), retrieved_pv.values[i])
+					print("%s\t%f" % (retrieved_pv.times[i].strftime('%Y-%m-%d %H:%M:%S.%f'), retrieved_pv.values[i]))

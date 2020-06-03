@@ -23,4 +23,4 @@ data4= archiver.get('25m:boss:SP2R0LN2TempRead', start, end, interpolation='raw'
 n=len(data1.values)
 for i in range(n):
     t=data1.times[i]
-    print "%s\t%5.2f\t%5.2f\t%5.2f\t%5.2f" % (t.strftime('%Y-%m-%d %H:%M:%S.%f'), data1.values[i],  data2.values[i], data3.values[i],  data4.values[i])
+    print("%s\t%5.2f\t%5.2f\t%5.2f\t%5.2f" % (t.strftime('%Y-%m-%d %H:%M:%S.%f'), data1.values[i],  data2.values[i], data3.values[i],  data4.values[i]))

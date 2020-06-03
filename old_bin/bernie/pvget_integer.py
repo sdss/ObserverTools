@@ -21,9 +21,9 @@ pvs_to_retrieve=['25m:guider:cartridgeLoaded:plateID' ]
 
 
 for pv in pvs_to_retrieve:
-	print "# " + pv
-	print "# DIAGNOSTIC: start:  " + start
-	print "# DIAGNOSTIC: end:    " + end
+	print("# " + pv)
+	print("# DIAGNOSTIC: start:  " + start)
+	print("# DIAGNOSTIC: end:    " + end)
 	retrieved_pv = archiver.get(pv, start, end, interpolation='raw',scan_archives=False)
 	for i in range(len(retrieved_pv.values)):
-		print "%s\t%d" % (retrieved_pv.times[i].strftime('%Y-%m-%d %H:%M:%S.%f'), retrieved_pv.values[i])
+		print("%s\t%d" % (retrieved_pv.times[i].strftime('%Y-%m-%d %H:%M:%S.%f'), retrieved_pv.values[i]))

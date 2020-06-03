@@ -13,8 +13,8 @@ archiver.scan_archives()
 # DEFAULT INTERVAL IS PAST 24 HOURS BUT WE SHOULD BE ABLE TO OVERRIDE ON THE COMMAND-LINE:
 start = str(datetime.datetime.utcnow() - datetime.timedelta(days=1))	# 1 day before current moment
 end = str(datetime.datetime.utcnow())			# current moment
-print "# DIAGNOSTIC: start:  " + start
-print "# DIAGNOSTIC: end:    " + end
+print("# DIAGNOSTIC: start:  " + start)
+print("# DIAGNOSTIC: end:    " + end)
 
 archiver.scan_archives()
 
@@ -29,7 +29,7 @@ pvs_to_retrieve=[ '25m:boss:SP1B2CCDTempRead', '25m:boss:SP1R0CCDTempRead', '25m
 # pvs_to_retrieve=[ '25m:guider:axisError:RA', '25m:guider:axisError:DEC']
 
 for pv in pvs_to_retrieve:
-	print "# " + pv
+	print("# " + pv)
 	retrieved_pv = archiver.get(pv, start, end, interpolation='raw',scan_archives=False)
 	for i in range(len(retrieved_pv.values)):
-		print "%s\t%f" % (retrieved_pv.times[i].strftime('%Y-%m-%d %H:%M:%S.%f'), retrieved_pv.values[i])
+		print("%s\t%f" % (retrieved_pv.times[i].strftime('%Y-%m-%d %H:%M:%S.%f'), retrieved_pv.values[i]))
