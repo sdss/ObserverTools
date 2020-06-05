@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 import ds9_live
 
+
 class TestADS9(unittest.TestCase):
     def test_no_args(self):
         args = ds9_live.parseargs()
