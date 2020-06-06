@@ -8,7 +8,6 @@ import numpy as np
 import fitsio
 from argparse import ArgumentParser
 from pathlib import Path
-import starcoder42 as s
 
 __version__ = 3.0
 
@@ -37,9 +36,9 @@ class ApogeeFlat:
 
     def test_image(self, fil):
         try:
-            s.iprint('Flat {}'.format(fil.relative_to(self.standard_path)), 1)
+            print('    Flat {}'.format(fil.relative_to(self.standard_path)))
         except ValueError:
-            s.iprint('Flat {}'. format(fil), 1)
+            print('    Flat {}'. format(fil))
         data = fitsio.read(fil, 0)
         fiber_data, n_fibers = self.red_1d(data)
         assert n_fibers == self.master_n_fibers, ('Must have the same number of'

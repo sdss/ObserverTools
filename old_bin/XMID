@@ -10,8 +10,8 @@ import sys,os,string
 from numpy import *
 
 if not sys.argv[1:4]:
-     print "    Usage:  XMID  2036.0 2045.0 2043.0 2044.0  [ct]"
-     print "    ct - optional cart number, 0 - sos nominal"
+     print("    Usage:  XMID  2036.0 2045.0 2043.0 2044.0  [ct]")
+     print("    ct - optional cart number, 0 - sos nominal")
      sys.exit("Error: program requires at least 4 arguments, exit")
 nPar=len(sys.argv)
 #print " "
@@ -82,21 +82,21 @@ tblXmidC=tblXmid[tblInd,0:4]   #  requested cart parameters from table
 difXmidC=sosXmid -tblXmidC     #  difference between sos and table for requested cart
 
 #print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
-print " "*13, "  b1     r1     b2     r2"
-print "current     : %6.1f %6.1f %6.1f %6.1f" % (sosXmid[0],sosXmid[1],sosXmid[2],sosXmid[3])
-print "nominal [%2i]: %6.1f %6.1f %6.1f %6.1f" % (tblCart[tblInd],tblXmidC[0],tblXmidC[1],tblXmidC[2],tblXmidC[3])
-print "XMID spec   : %6.1f %6.1f %6.1f %6.1f" % (difXmidC[0], difXmidC[1],difXmidC[2],difXmidC[3])
+print(" "*13, "  b1     r1     b2     r2")
+print("current     : %6.1f %6.1f %6.1f %6.1f" % (sosXmid[0],sosXmid[1],sosXmid[2],sosXmid[3]))
+print("nominal [%2i]: %6.1f %6.1f %6.1f %6.1f" % (tblCart[tblInd],tblXmidC[0],tblXmidC[1],tblXmidC[2],tblXmidC[3]))
+print("XMID spec   : %6.1f %6.1f %6.1f %6.1f" % (difXmidC[0], difXmidC[1],difXmidC[2],difXmidC[3]))
 #print "difference: %6.1f %6.1f %6.1f %6.1f" % (difXmidC[0], difXmidC[1],difXmidC[2],difXmidC[3])
-print "-"*40
+print("-"*40)
 
 # -a=-b=c
 # boss moveColl spec=sp1 a=-63 b=-63 c=63  # +1
 step=63.0;
 sp1=round((difXmidC[0]+difXmidC[1])/2.0*step);  sp2=round((difXmidC[2]+difXmidC[3])/2.0*step)
-print "boss moveColl spec=sp1 a=%i b=%i c=%i" % (sp1,sp1,-sp1)
-print "boss moveColl spec=sp2 a=%i b=%i c=%i" % (sp2,sp2,-sp2)
-print "-"*40
-print "The tolerance is +/- 8 pixels (yellow), +/- 12 pixel (red)"
+print("boss moveColl spec=sp1 a=%i b=%i c=%i" % (sp1,sp1,-sp1))
+print("boss moveColl spec=sp2 a=%i b=%i c=%i" % (sp2,sp2,-sp2))
+print("-"*40)
+print("The tolerance is +/- 8 pixels (yellow), +/- 12 pixel (red)")
 #print ""
 
 #  figure
@@ -104,7 +104,7 @@ print "The tolerance is +/- 8 pixels (yellow), +/- 12 pixel (red)"
 # check if to plot
 if not plotQ:  sys.exit(" ")
 
-print "Plotting, close  window  with plot  to exit"
+print("Plotting, close  window  with plot  to exit")
 
 tblXmidN=zeros([n,4])
 tblXmidN[:,0:4]=tblXmid[:,0:4]-tblXmid[0,0:4]  #  tbl minus tbl sos nominal
@@ -147,4 +147,4 @@ line3 = plt.plot([xmin,xmax],[ymin,ymax],color='black', linewidth=0.6)
 
 #plt.draw()
 plt.show()
-print ""
+print("")

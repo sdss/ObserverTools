@@ -17,9 +17,9 @@ if test ${SSH_AUTH_SOCK:-foo} = "foo"; then
     do
         pid=$(ls ${dir} | cut -d. -f2)
         foo=$(uname)
-        if [ ${foo:0:6} = "CYGWIN" ]; then
+        if [[ ${foo:0:6} = "CYGWIN" ]]; then
             trypid=$(ps | grep ssh-agent | grep -v grep | awk '{print $1}')
-            if [ -z "$trypid" ]; then
+            if [[ -z "$trypid" ]]; then
                 procname='nope'
             else
                 procname='ssh-agent'

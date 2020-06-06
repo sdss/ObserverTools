@@ -7,7 +7,7 @@ If run as a script, it prints the mjd, but this tool is often imported in other
 """
 import time
 
-__version__ = 3.0
+__version__ = 3.1
 
 TAI_UTC = 0  # TAI_UTC =34;
 aSjd = 40587.3
@@ -20,6 +20,12 @@ def mjd():
     tt = time.mktime(d)
     sjd = (tt + TAI_UTC) / bSjd + aSjd
     return int(sjd)
+
+
+def mjd_to_time(sjd):
+    sjd1 = sjd
+    tm = (sjd1 - aSjd) * bSjd - TAI_UTC
+    return tm  # time in seconds time.time()
 
 
 def main():

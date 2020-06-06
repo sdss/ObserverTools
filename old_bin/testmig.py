@@ -7,34 +7,37 @@ from traceback import print_exc
 HOST = 'plate-mapper3-p.apo.nmsu.edu'
 PORT = 2001
 
-def readMIG() :
-	'''Reads the Mitutoyo profilometry gauges from HOST:PORT,
-	returning the values as a list of strings.  Bad gauge(es) are
-	indicated by the string "MIG Error" instead of a value.
-	'''
 
-#	Open the network connection
-	try :
-		tn = Telnet (HOST, PORT)
+def readMIG():
+    """Reads the Mitutoyo profilometry gauges from HOST:PORT,
+    returning the values as a list of strings.  Bad gauge(es) are
+    indicated by the string "MIG Error" instead of a value.
+    """
 
-	except :
-		print('Telnet connection to ' + HOST + ':' + PORT + ' failed')
-		print_exc()
-		return -1
+    # Open the network connection
+    try:
+        tn = Telnet(HOST, PORT)
 
-#	Read the pickle
+    except:
+        print('Telnet connection to ' + HOST + ':' + PORT + ' failed')
+        print_exc()
+        return -1
 
-	try:
-		reply = tn.read_all ()
-	except :
-		print('Connection to ' + HOST + ':' + PORT + ' prematurely closed\nReply: ' + reply)
-		print_exc()
-		return -1
+    # Read the pickle
 
-#	Return the values
+    try:
+        reply = tn.read_all()
+    except:
+        print('Connection to ' + HOST + ':' + PORT + 'prematurely '
+              'closed\nReply: ' + reply)
+        print_exc()
+        return -1
 
-	tn.close()
-	return loads (reply)
+    # Return the values
 
-if __name__ == '__main__' :
-	print(readMIG())
+    tn.close()
+    return loads(reply)
+
+
+if __name__ == '__main__':
+    print(readMIG())

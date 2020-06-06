@@ -1,9 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # EM 09/04/2010
 #  usage:
 #  wmidRes  4908.6   7984.0	 4999.9	 8058.3  (copy and past wavemids from sos)
 
-import sys, os, string
 # pl:  from pylab import *
 import matplotlib.pyplot as plt
 from numpy import *
@@ -38,8 +37,6 @@ if nPar >= 7:
 # print "sosCart=", sosCart
 # print "plotQ=",plotQ
 
-plotQ = False
-
 # check if Kaike's table exist on disk
 fPath = os.getcwd()
 # fName="bin/wavemid.dat"
@@ -47,16 +44,16 @@ fPath = os.getcwd()
 fullName = "/home/observer/bin/wavemid.dat"
 Q = os.path.exists(fullName)
 if not Q:
-    sys.exit(fName + " was not found, exit")
+    sys.exit(fullName + " was not found, exit")
 # print "Kaike's table is found"
 
 # read Kaike's table file  to string array
 file = open(fullName, "r")
 line = "a"
 lineArr = []
-while (line != ""):
+while line != "":
     line = file.readline()
-    line = string.strip(line)
+    line = line.strip()
     if line != "":
         lineArr.append(line)
 file.close()
@@ -91,7 +88,8 @@ else:
 
 # select line for requested cart and calulate the difference 
 tblWmidC = tblWmid[tblInd, 0:4]  # requested cart parameters from table
-difWmid = sosWmid - tblWmidC  # difference between sos and table for requested cart
+difWmid = sosWmid - tblWmidC  # difference between sos and table for requested
+# cart
 
 # print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
 print("           ", "    b1     r1     b2     r2")
@@ -101,11 +99,13 @@ print("current     : %6.1f %6.1f %6.1f %6.1f" % (
 # print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
 # print "tblCart=", tblCart[tblInd]
 
-# print "nominal  : %6.1f %6.1f %6.1f %6.1f" % (tblWmidC[0],tblWmidC[1],tblWmidC[2],tblWmidC[3])
+# print "nominal  : %6.1f %6.1f %6.1f %6.1f" % (tblWmidC[0],tblWmidC[1],
+# tblWmidC[2],tblWmidC[3])
 
 print("nominal[%2i] : %6.1f %6.1f %6.1f %6.1f" % (
     tblCart[tblInd], tblWmidC[0], tblWmidC[1], tblWmidC[2], tblWmidC[3]))
-# print "difference : %6.1f %6.1f %6.1f %6.1f" % (difWmid[0], difWmid[1],difWmid[2],difWmid[3])
+# print "difference : %6.1f %6.1f %6.1f %6.1f" % (difWmid[0], difWmid[1],
+# difWmid[2],difWmid[3])
 print("WAVEMID spec: %6.1f %6.1f %6.1f %6.1f" % (
     difWmid[0], difWmid[1], difWmid[2], difWmid[3]))
 print("-------------- ")
@@ -166,7 +166,8 @@ line3 = plt.plot([xmin, xmax], [xmin * 1.36, xmax * 1.36], color='black',
                  linewidth=0.4)
 # plt.setp(line3, color='black', linewidth=1.0)
 # for i in range(1,n):
-#     plt.annotate("%2i"% (tblCart[i]), [tblWmidN[i,0]+0.4,tblWmidN[i,1]-0.1], color="b", size=12)
+#     plt.annotate("%2i"% (tblCart[i]), [tblWmidN[i,0]+0.4,tblWmidN[i,1]-0.1],
+#     color="b", size=12)
 
 plt.subplot(122)
 # sp2=plt.plot(tblWmidN[1:,2],tblWmidN[1:,3],"bo")
@@ -187,7 +188,8 @@ plt.annotate("current", [sosWmidN[2] + 0.5, sosWmidN[3] - 0.1], color="r",
 line3 = plt.plot([xmin, xmax], [xmin * 1.36, xmax * 1.36], color='black',
                  linewidth=0.4)
 # for i in range(1,n):
-#     plt.annotate("%2i"% (tblCart[i]), [tblWmidN[i,2]+0.4,tblWmidN[i,3]-0.1], color="b", size=12)
+#     plt.annotate("%2i"% (tblCart[i]), [tblWmidN[i,2]+0.4,tblWmidN[i,3]-0.1],
+#     color="b", size=12)
 
 # plt.ion()
 
