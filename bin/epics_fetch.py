@@ -1,21 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
+A terminal tool to access the SDSS EPICS server using channelarchiver
+
 See this CA library  https://github.com/RobbieClarken/channelarchiver
+
 """
 
-from channelarchiver import Archiver, codes, utils
-import optparse
-import datetime
+from channelarchiver import Archiver
+from argparse import ArgumentParser
+from astropy.time import Time
 from keydict import configKey
 
-parser = optparse.OptionParser()
-utc = utils.UTC()
-
-prefix = "test"
-
-ss = 'http://sdss-telemetry.apo.nmsu.edu/telemetry/cgi/ArchiveDataServer.cgi'
-archiver = Archiver(ss)
+archiver = Archiver('http://sdss-telemetry.apo.nmsu.edu/telemetry/cgi/'
+                    'ArchiveDataServer.cgi')
 
 
 def getMultiData(channel, startTime, endTime):
@@ -50,7 +48,7 @@ def convert_to_bits(nbit, d):
     return ss
 
 
-def getData(channel, startTime, endTime):
+def get_data(channel, startTime, endTime):
     """ getting one pv """
 
     archiver.scan_archives()
@@ -58,11 +56,12 @@ def getData(channel, startTime, endTime):
     return data
 
 
-def printData(pvname, startTime, endTime):
-    archiver.scan_archives()
-    data = archiver.get(pvname, startTime, endTime)
+def print_dataset(dataset):
+    if isinstance(dataset, list):
+        for data in dataset:
+            for t, v,  in data:
+                print(datum.time, datum.value)
 
-    split_pv = pvname.split(':')
     ck = configKey(split_pv[1], split_pv[2], prefix="25m", opt="jb1")
     ind = ck.names.index(pvname)
     ifBits = (ck.getType(ind) == "Bits") and (opts.nbit is not None)
@@ -112,31 +111,39 @@ def printData(pvname, startTime, endTime):
     return data
 
 
-if __name__ == "__main__":
-    def_t2 = datetime.datetime.now(tz=utc)
-    def_t1 = def_t2 - datetime.timedelta(0, 300)
-    format = "%Y-%m-%d %H:%M:%S"
-    def_t1 = def_t1.strftime(format)
-    def_t2 = def_t2.strftime(format)
-
+def parse_args():
+    now = Time.now()
     pvname = "25m:mcp:cwPositions"
+    parser = ArgumentParser(description='A command line interface for the SDSS'
+                                        'EPICS Server. Prints a simple table of'
+                                        'data. If no time window is specified,'
+                                        'it will print the most recent value'
+                                        'only.')
 
-    parser.add_option('-p', '--pvname', dest='pvname', default=pvname,
-                      help='pvname,  default 25m:mcp:cwPositions')
-    parser.add_option('--t1', '--startTime', dest='statTime', default=def_t1,
-                      help='start time of query, default is 5 min ago, format'
-                           ' "2015-06-23 22:10"')
-    parser.add_option('--t2', '--endTime', dest='endTime', default=def_t2,
-                      help='end time of query, default is current time now,'
-                           ' format "2015-06-23 22:15"')
-    # parser.add_option('-b', '--bit', dest='bit',default=False,
-    # action='store_true',
-    #    help='if True, add convertion to bits, default False')
-    parser.add_option('-b', dest='nbit', default=None, help='bit number ',
-                      type='int')
-    parser.add_option('--desc', dest='desc', default=False, action='store_true',
-                      help='print description?')
+    parser.add_argument('-p', '--pvnames', nargs='+',
+                        default="25m:mcp:cwPositions",
+                        help='pvname,  default 25m:mcp:cwPositions')
+    parser.add_argument('--t1', '--startTime', dest='statTime',
+                        default=now.isot,
+                        help='start time of query, default is 5 min ago, format'
+                             ' "2015-06-23 22:10"')
+    parser.add_argument('--t2', '--endTime', dest='endTime', default=now.isot,
+                        help='end time of query, default is current time now,'
+                             ' format "2015-06-23 22:15"')
+    parser.add_argument('-b', dest='nbit', default=None, help='bit number ',
+                        type='int')
+    parser.add_argument('--desc', dest='desc', default=False,
+                        action='store_true',
+                        help='print description?')
 
     (opts, args) = parser.parse_args()
 
-    data = printData(opts.pvname, opts.statTime, opts.endTime)
+    data = print_data(opts.pvname, opts.statTime, opts.endTime)
+
+
+def main():
+    args = parse_args()
+
+
+if __name__ == '__main__':
+    main()
