@@ -1,0 +1,18 @@
+ 0      4910    7998    4990    8053
+10	4904	7994	4990	8049
+11	4914	8007	4995	8057
+12	4903	7994	4991	8051
+13	4913	8006	4992	8052
+14	4903	7993	4994	8054
+15	4908	8000	4996	8058
+17	4902	7992	4989	8048
+18	4907	8000	4993	8053
+
+
+#  nominal wavemid for cart=0 are from Kike's instruction
+#  need to check sos file settings:   
+#  https://trac.sdss3.org/browser/repo/idlspec2d/tags/v5_4_34/examples/opLimits.par
+#  Table are from Kaike mesurments in order
+#  Ct     b1       r1         b2        r2 
+#   a=-b, c=0
+#   boss moveColl spec=sp1 a=31 b=-31 c=0 #   Move b1  by +1 A, r1 by 1.36 A.
