@@ -9,18 +9,20 @@
 
 from time import time
 
-def sjd () :
-	''' Calculates the SDSS Julian Date, which is the MJD + 0.3 days
-		See http://maia.usno.navy.mil/
-	'''
 
-#	NOTE: The next line must be changed everytime TAI-UTC changes
-#		unless the host computer is already on TAI
+def sjd():
+    """ Calculates the SDSS Julian Date, which is the MJD + 0.3 days
+        See http://maia.usno.navy.mil/
+    """
 
-#	TAI_UTC = 34	# TAI-UTC = 34 seconds as of 1/1/09
-	TAI_UTC = 0	# hub25m is on TAI, so no conversion is necessary
+    #	NOTE: The next line must be changed everytime TAI-UTC changes
+    #		unless the host computer is already on TAI
 
-	return int ((time() + TAI_UTC) / 86400.0 + 40587.3)
+    #	TAI_UTC = 34	# TAI-UTC = 34 seconds as of 1/1/09
+    TAI_UTC = 0  # hub25m is on TAI, so no conversion is necessary
 
-if __name__ == '__main__' :
-	print(sjd())
+    return int((time() + TAI_UTC) / 86400.0 + 40587.3)
+
+
+if __name__ == '__main__':
+    print(sjd())

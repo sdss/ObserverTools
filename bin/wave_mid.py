@@ -5,7 +5,10 @@
 
 # pl:  from pylab import *
 import matplotlib.pyplot as plt
-from numpy import *
+from pathlib import Path
+import numpy as np
+import sys
+
 
 if not sys.argv[1:4]:
     print("    Usage:  WAVEMID  2036.0 2045.0 2043.0 2044.0  [ct] [plot] ")
@@ -17,8 +20,8 @@ nPar = len(sys.argv)
 
 # read sos xmids arguments  
 # for i in range(1,len(sys.argv)):
-sosWmid = zeros(4, dtype=float)
-for i in range(0, 4):
+sosWmid = np.zeros(4, dtype=float)
+for i in range(4):
     sosWmid[i] = float(sys.argv[i + 1])
 
 # read sosCart & plot options
@@ -38,17 +41,15 @@ if nPar >= 7:
 # print "plotQ=",plotQ
 
 # check if Kaike's table exist on disk
-fPath = os.getcwd()
+fPath = Path('.')
 # fName="bin/wavemid.dat"
 # fullName=fPath+"/"+fName
-fullName = "/home/observer/bin/wavemid.dat"
-Q = os.path.exists(fullName)
-if not Q:
+fullName = Path(__file__).parent.parent / 'dat/wavemid.dat'
+if not fullName.exists():
     sys.exit(fullName + " was not found, exit")
-# print "Kaike's table is found"
 
 # read Kaike's table file  to string array
-file = open(fullName, "r")
+file = fullName.open('r')
 line = "a"
 lineArr = []
 while line != "":
@@ -59,11 +60,11 @@ while line != "":
 file.close()
 
 # convert Kaike's table to np.array
-# print "--- Kaike's table for arc's sets (bin/wavemid.dat):"
+# print "--- Kaike's table for arc's sets (dat/wavemid.dat):"
 # print "cart   b1      r1      b2      r2"
 n = len(lineArr)
-tblCart = zeros([n])
-tblWmid = zeros([n, 4])
+tblCart = np.zeros([n])
+tblWmid = np.zeros([n, 4])
 for i in range(0, n):
     aa = lineArr[i].split()
     tblCart[i] = int(aa[0])
@@ -75,7 +76,7 @@ for i in range(0, n):
 #    else: print ss
 
 # search sos cart number in Kaike's table
-iii = nonzero(tblCart == sosCart)[0]
+iii = np.nonzero(tblCart == sosCart)[0]
 # print iii,  len(iii)
 if len(iii) == 0:
     sys.exit("Error: no requested cart number in the table, exit")
@@ -92,9 +93,9 @@ difWmid = sosWmid - tblWmidC  # difference between sos and table for requested
 # cart
 
 # print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
-print("           ", "    b1     r1     b2     r2")
-print("current     : %6.1f %6.1f %6.1f %6.1f" % (
-    sosWmid[0], sosWmid[1], sosWmid[2], sosWmid[3]))
+print(" " * 13, "  b1     r1     b2     r2")
+print("current     : %6.1f %6.1f %6.1f %6.1f".format(
+      sosWmid[0], sosWmid[1], sosWmid[2], sosWmid[3]))
 
 # print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
 # print "tblCart=", tblCart[tblInd]
@@ -128,11 +129,11 @@ if not plotQ:
 
 print("Plotting, close window with plot to exit")
 
-tblWmidN = zeros([n, 4])
+tblWmidN = np.zeros([n, 4])
 # tbl minus tbl sos nominal
 tblWmidN[:, 0:4] = tblWmid[:, 0:4] - tblWmid[0, 0:4]
 
-sosWmidN = zeros([4])
+sosWmidN = np.zeros([4])
 sosWmidN[:] = sosWmid[:] - tblWmid[0, :]  # sos minus tbl sos nominal
 
 plt.figure(num=None, figsize=(9, 4), )

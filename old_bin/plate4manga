@@ -61,19 +61,19 @@ file_tmp3 = 'logfile_tmp_uniq2.txt' + Tstamp
 file_tmp4 = 'logfile_tmp_uniq3.txt' + Tstamp
 
 if len(sys.argv) <= 1:
-  print "************************************"
-  print "== Syntax: =="
-  print " ~/plate4manga 1111"
-  print "   where 1111 is your plate number,"
-  print "   OR"
-  print " ~/plate4manga 1111 55555"
-  print "   where 55555 is MJD which you need"
-  print "   to sum separately"
-  print " ~/plate4manga 1111 55555,55556,55557 "
-  print "   to sum ONLY those MJDs. Separate them "
-  print "   by coma, with NO spaces!"
-  print "************************************"
-  print
+  print("************************************")
+  print("== Syntax: ==")
+  print(" ~/plate4manga 1111")
+  print("   where 1111 is your plate number,")
+  print("   OR")
+  print(" ~/plate4manga 1111 55555")
+  print("   where 55555 is MJD which you need")
+  print("   to sum separately")
+  print(" ~/plate4manga 1111 55555,55556,55557 ")
+  print("   to sum ONLY those MJDs. Separate them ")
+  print("   by coma, with NO spaces!")
+  print("************************************")
+  print()
 else:
         
   plate = sys.argv[1]
@@ -180,8 +180,8 @@ else:
   posix.system(str6)
   time.sleep(0.1)
 
-  print " "
-  print "(S/N)^2 accumulated for plate",plate, " \n"
+  print(" ")
+  print("(S/N)^2 accumulated for plate",plate, " \n")
 
   b1 = list([])
   r1 = list([])
@@ -204,7 +204,7 @@ else:
   
     #--- work with file here
       fil = st[0:18]
-      print "---- " + fil + " ----"
+      print("---- " + fil + " ----")
   
       #--- MJD ---
       mjd = fil[8:13]
@@ -294,9 +294,9 @@ else:
 
   fop1.close()
 
-  print "---------------------------------------------------------------"
-  print " MJD    b1     r1     b2     r2     Texp    Sum      Plugfile"
-  print "---------------------------------------------------------------"
+  print("---------------------------------------------------------------")
+  print(" MJD    b1     r1     b2     r2     Texp    Sum      Plugfile")
+  print("---------------------------------------------------------------")
 
 
   sum2_b1,sum2_r1,sum2_b2,sum2_r2,sum2_texp = 0.,0.,0.,0.,0.
@@ -304,7 +304,7 @@ else:
 
   for i in range(len(mjd2)):
     if len(sys.argv) < 3:
-      print '%s %6.2f %6.2f %6.2f %6.2f %6.1f %7.2f  %s' % ( mjd2[i], b1[i],r1[i], b2[i], r2[i], texp[i], b1[i]+r1[i]+b2[i]+r2[i], plug_file[i])
+      print('%s %6.2f %6.2f %6.2f %6.2f %6.1f %7.2f  %s' % ( mjd2[i], b1[i],r1[i], b2[i], r2[i], texp[i], b1[i]+r1[i]+b2[i]+r2[i], plug_file[i]))
 
       if b1[i] >= h_lim and b2[i] >= h_lim and r1[i] >= h_lim and r2[i] >= h_lim:
       #--if b1[i] >= h_lim and b2[i] >= h_lim and r1[i] >= h_lim and r2[i] >= h_lim and plug_file[i] == plug_file[-1]:
@@ -325,7 +325,7 @@ else:
     if len(sys.argv) == 3:
       for mjd_task3 in mjd_task_a:
         if mjd2[i] == mjd_task3 and mjd_task3 != "":
-          print '%s %6.2f %6.2f %6.2f %6.2f %6.1f %6.2f  %s' % ( mjd2[i], b1[i],r1[i], b2[i], r2[i], texp[i], b1[i]+r1[i]+b2[i]+r2[i], plug_file[i])
+          print('%s %6.2f %6.2f %6.2f %6.2f %6.1f %6.2f  %s' % ( mjd2[i], b1[i],r1[i], b2[i], r2[i], texp[i], b1[i]+r1[i]+b2[i]+r2[i], plug_file[i]))
 
           if b1[i] >= h_lim and b2[i] >= h_lim and r1[i] >= h_lim and r2[i] >= h_lim:
             sum2_b1 = sum2_b1 + b1[i]
@@ -340,20 +340,20 @@ else:
       sum3_r2 = sum3_r2 + r2[i]
       sum3_texp = sum3_texp + texp[i]
                                              
-  print "---------------------------------------------------------------"
-  print 's/n^2=%6.2f %6.2f %6.2f %6.2f %7.1f  --> %6.2f [above %4.2f]' %\
-  (sum2_b1, sum2_r1,sum2_b2,sum2_r2,sum2_texp,sum2_b1+sum2_r1+sum2_b2+sum2_r2,h_lim)
+  print("---------------------------------------------------------------")
+  print('s/n^2=%6.2f %6.2f %6.2f %6.2f %7.1f  --> %6.2f [above %4.2f]' %\
+  (sum2_b1, sum2_r1,sum2_b2,sum2_r2,sum2_texp,sum2_b1+sum2_r1+sum2_b2+sum2_r2,h_lim))
 
-  print "---------------------------------------------------------------"
-  print 'Average  b:  %6.2f    r:  %6.2f' % (0.5*(sum2_b1 + sum2_b2) , 0.5*(sum2_r1 + sum2_r2))
+  print("---------------------------------------------------------------")
+  print('Average  b:  %6.2f    r:  %6.2f' % (0.5*(sum2_b1 + sum2_b2) , 0.5*(sum2_r1 + sum2_r2)))
 
-  print "---------------------------------------------------------------"
+  print("---------------------------------------------------------------")
 
   if len(sys.argv) < 3:
-    print "Important change: only plugging %s is summed" % plug_file[-1] 
-    print "if no MJD[s] are specified explicitly"
+    print("Important change: only plugging %s is summed" % plug_file[-1]) 
+    print("if no MJD[s] are specified explicitly")
 
   st_rm1 = 'rm -f ' + file_tmp1 + ' ' + file_tmp2 + ' ' + file_tmp3 + ' ' + file_tmp4
   posix.system(st_rm1)
   #-d- print "tmp files removed \n"
-  print '\n'
+  print('\n')

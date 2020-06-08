@@ -4,10 +4,10 @@
 #         (copy and past wavemids from sos)
 #  EM 05/04/2011 added plot
 
-import string
-# pl:  from pylab import *
 import matplotlib.pyplot as plt
-from numpy import *
+from pathlib import Path
+import numpy as np
+import sys
 
 if not sys.argv[1:4]:
     print("    Usage:  XMID  2036.0 2045.0 2043.0 2044.0  [ct]")
@@ -18,8 +18,8 @@ nPar = len(sys.argv)
 
 # read sosXmids arguments  
 # for i in range(1,len(sys.argv)):
-sosXmid = zeros(4, dtype=float)
-for i in range(0, 4):
+sosXmid = np.zeros(4, dtype=float)
+for i in range(4):
     sosXmid[i] = float(sys.argv[i + 1])
 
 # read sosCart & plot options
@@ -36,50 +36,47 @@ if nPar >= 7:
     else:
         sosCart = int(sys.argv[6])
 
-plotQ = False
-
 # check if Kaike's table exist on disk
-fPath = os.getcwd()
+fPath = Path('.')
 # fName="bin/xmid.dat"
 # fullName=fPath+"/"+fName
-fullName = "/home/observer/bin/xmid.dat"
+fullName = Path(__file__).parent.parent / "dat/xmid.dat"
 # print "fullName=", fullName
-Q = os.path.exists(fullName)
-if not Q:
-    sys.exit(fName + " was not found, exit")
+if not fullName.exists():
+    sys.exit(fullName + " was not found, exit")
 
 # read Kaike's table file  to string array
-file = open(fullName, "r")
+file = fullName.open('r')
 line = "a"
 lineArr = []
 while line != "":
     line = file.readline()
-    line = string.strip(line)
+    line = line.strip()
     if line != "":
         lineArr.append(line)
 file.close()
 
 # convert Kaike's table to np.array
-# print "--- Kaike's table for flat's sets (bin/xmid.dat)"
+# print "--- Kaike's table for flat's sets (dat/xmid.dat)"
 # print "cart   b1      r1      b2      r2"
 n = len(lineArr)
-tblCart = zeros([n])
-tblXmid = zeros([n, 4])
+tblCart = np.zeros([n])
+tblXmid = np.zeros([n, 4])
 for i in range(0, n):
     aa = lineArr[i].split()
     tblCart[i] = int(aa[0])
     for j in range(0, 4):
         tblXmid[i, j] = float(aa[j + 1])
     ss = "%2i   %6.1f  %6.1f  %6.1f  %6.1f" % (
-    tblCart[i], tblXmid[i, 0], tblXmid[i, 1], tblXmid[i, 2], tblXmid[i, 3])
+        tblCart[i], tblXmid[i, 0], tblXmid[i, 1], tblXmid[i, 2], tblXmid[i, 3])
 #    if i == 0: print ss, "(sos nominal)"
 #   else: print ss
 
 # search sos cart number in Kaike's table 
-iii = nonzero(tblCart == sosCart)[0]
+iii = np.nonzero(tblCart == sosCart)[0]
 # print iii,  len(iii)
 if len(iii) == 0:
-    sys.exit("Error: no such catridge info,  exit")
+    sys.exit("Error: no requested cart number in the table, exit")
 elif len(iii) > 1:
     sys.exit("Error: more then one cart number found in the table, exit")
 else:
@@ -94,12 +91,12 @@ difXmidC = sosXmid - tblXmidC  # difference between sos and table for requested
 
 # print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
 print(" " * 13, "  b1     r1     b2     r2")
-print("current     : %6.1f %6.1f %6.1f %6.1f" % (
-sosXmid[0], sosXmid[1], sosXmid[2], sosXmid[3]))
-print("nominal [%2i]: %6.1f %6.1f %6.1f %6.1f" % (
-tblCart[tblInd], tblXmidC[0], tblXmidC[1], tblXmidC[2], tblXmidC[3]))
-print("XMID spec   : %6.1f %6.1f %6.1f %6.1f" % (
-difXmidC[0], difXmidC[1], difXmidC[2], difXmidC[3]))
+print("current     : %6.1f %6.1f %6.1f %6.1f".format(
+      sosXmid[0], sosXmid[1], sosXmid[2], sosXmid[3]))
+print("nominal [%2i]: %6.1f %6.1f %6.1f %6.1f".format(
+      tblCart[tblInd], tblXmidC[0], tblXmidC[1], tblXmidC[2], tblXmidC[3]))
+print("XMID spec   : %6.1f %6.1f %6.1f %6.1f".format(
+    difXmidC[0], difXmidC[1], difXmidC[2], difXmidC[3]))
 # print "difference: %6.1f %6.1f %6.1f %6.1f" % (difXmidC[0], difXmidC[1],
 # difXmidC[2],difXmidC[3])
 print("-" * 40)
@@ -121,13 +118,13 @@ print("The tolerance is +/- 8 pixels (yellow), +/- 12 pixel (red)")
 if not plotQ:
     sys.exit(" ")
 
-print("Plotting, close  window  with plot  to exit")
+print("Plotting, close window with plot to exit")
 
-tblXmidN = zeros([n, 4])
+tblXmidN = np.zeros([n, 4])
 tblXmidN[:, 0:4] = tblXmid[:, 0:4] - tblXmid[0,
                                      0:4]  # tbl minus tbl sos nominal
 
-sosXmidN = zeros([4])
+sosXmidN = np.zeros([4])
 sosXmidN[:] = sosXmid[:] - tblXmid[0, :]  # sos minus tbl sos nominal
 
 plt.figure(num=None, figsize=(9.5, 4.5), )
@@ -159,7 +156,8 @@ plt.annotate("current", [sosXmidN[0] + 0.5, sosXmidN[1] - 0.1], color="r",
 line3 = plt.plot([xmin, xmax], [ymin, ymax], color='black', linewidth=0.6)
 # plt.setp(line3, color='black', linewidth=1.0)
 # for i in range(1,n):
-#     plt.annotate("%2i"% (tblCart[i]), [tblXmidN[i,0]+0.4,tblXmidN[i,1]-0.1], color="b", size=12)
+#     plt.annotate("%2i"% (tblCart[i]), [tblXmidN[i,0]+0.4,tblXmidN[i,1]-0.1],
+#     color="b", size=12)
 
 plt.subplot(122)
 # sp2=plt.plot(tblXmidN[0:,2],tblXmidN[0:,3],"bo")
@@ -178,7 +176,8 @@ plt.annotate("current", [sosXmidN[2] + 0.5, sosXmidN[3] - 0.1], color="r",
              size=13)
 line3 = plt.plot([xmin, xmax], [ymin, ymax], color='black', linewidth=0.6)
 # for i in range(1,n):
-#     plt.annotate("%2i"% (tblCart[i]), [tblXmidN[i,2]+0.4,tblXmidN[i,3]-0.1], color="b", size=12)
+#     plt.annotate("%2i"% (tblCart[i]), [tblXmidN[i,2]+0.4,tblXmidN[i,3]-0.1],
+#     color="b", size=12)
 
 # plt.ion()
 

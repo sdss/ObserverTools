@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# filters output of elena's "list_all" and prints lines if they represent collimator actuator moves
+# filters output of elena's "list_all" and prints lines if they represent
+# collimator actuator moves
 #
 # a hack that can be used to verify actuator moves.
 

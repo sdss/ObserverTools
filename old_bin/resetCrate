@@ -4,34 +4,34 @@ from sys import exit, stdin
 from telnetlib import Telnet
 from time import sleep
 
-latNode='t-g-sdss-2.apo.nmsu.edu'
-portNum=2800
-   
+latNode = 't-g-sdss-2.apo.nmsu.edu'
+portNum = 2800
+
 print('Are you SURE you want to reset the MCP/TPM crate? ', end=' ')
-try :
-	answer = stdin.readline().tolower()
-except :
-	answer = 'no'
+try:
+    answer = stdin.readline().tolower()
+except:
+    answer = 'no'
 
-if 'y' == answer or 'yes' == answer :
-	try:
-		tn = Telnet (latNode, portNum)
-	except Exception :
-		print('Telnet connection to %s:%d open failed' % (latNode, portNum))
-		exit (-1)
+if 'y' == answer or 'yes' == answer:
+    try:
+        tn = Telnet(latNode, portNum)
+    except Exception:
+        print('Telnet connection to %s:%d open failed' % (latNode, portNum))
+        exit(-1)
 
-	print('Engaging reset relay')
-	try:
-		tn.write ('!11\r')                   # turn power on to relay
-	except Exception :
-		print('Telnet socket write failed')
+    print('Engaging reset relay')
+    try:
+        tn.write('!11\r')  # turn power on to relay
+    except Exception:
+        print('Telnet socket write failed')
 
-	sleep (1)
+    sleep(1)
 
-	print('Releasing relay')
-	try:
-		tn.write ('!10\r')                   # turn power off to relay
-	except Exception :
-		print('Telnet socket write failed')
+    print('Releasing relay')
+    try:
+        tn.write('!10\r')  # turn power off to relay
+    except Exception:
+        print('Telnet socket write failed')
 
-	tn.close()
+    tn.close()

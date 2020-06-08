@@ -1,0 +1,19 @@
+  0    2040    2040    2044    2038
+10	 2042	 2041	 2041	2037
+11	 2040	2038	2041	2037
+12	 2043	2042	 2041	2037
+13	 2039	 2038	 2044	2040
+14	 2039	2038	 2045	2041
+15	 2039	2038	 2043	2039
+17	 2042	2041	2043	2039
+18	 2040	2039	 2046	2042
+
+ 
+#  nominal xmid for cart=0 are from SOS 
+#  https://trac.sdss3.org/browser/repo/idlspec2d/tags/v5_4_34/examples/opLimits.par
+#  Table are from Kaike mesurments
+#  Ct     b1       r1         b2        r2 
+#  boss moveColl spec=sp1 a=-63 b=-63 c=63     # +1 in XMIDs
+
+
+
