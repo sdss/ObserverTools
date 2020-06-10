@@ -1,7 +1,9 @@
 *.pyc  # Python
-*__pycache__/  # Python 3
+__pycache__/  # Python 3
 *.swp  # vim
 .idea  # For PyCharm
 *.outfile
 *.fit*  # Usually too large for GitHub to handle well
 *.bak  # For 2to3
+*.sha1sum
+

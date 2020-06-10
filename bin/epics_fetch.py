@@ -22,6 +22,7 @@ def get_data(channel, start_time, end_time):
 
     archiver.scan_archives()
     data = archiver.get(channel, start_time, end_time, interpolation='raw')
+    data.times = Time(data.times, format='iso')
     return data
 
 
@@ -31,7 +32,7 @@ def print_data(data):
     print('    {:<30}| {:<30}'.format('Time', 'Value'))
     print('    ' + ('=' * 76))
     for t, v, in zip(data.times, data.values):
-        print('    {:<30}| {:<30}'.format(t, v))
+        print('    {:<30}| {}'.format(t.isot, v))
 
 
 def print_datasets(datasets):
@@ -50,7 +51,8 @@ def parse_args():
                                         'it will print the most recent value'
                                         'only.')
 
-    parser.add_argument('channels', nargs='?', default="25m:mcp:cwPositions",
+    parser.add_argument('-c', '--channels', nargs='?',
+                        default="25m:mcp:cwPositions",
                         help='A list of channel names, default is'
                              ' 25m:mcp:cwPositions')
     parser.add_argument('--t1', '--startTime', dest='startTime',
@@ -67,6 +69,7 @@ def parse_args():
 
 def main():
     args = parse_args()
+    print(args.channels)
     datasets = get_data(args.channels, args.startTime, args.endTime)
     print_datasets(datasets)
 

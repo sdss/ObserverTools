@@ -140,10 +140,10 @@ def parse_args():
     parser = ArgumentParser('A script to test the transparency of an APOGEE'
                             ' dome flat. It compares the flat to a known'
                             ' master.')
-    parser.add_argument('positional', help='MJDs, followed by any dome flats'
-                                           'in that night. Multiple MJDs can be'
-                                           'included, as long as the exposures'
-                                           'follow the correct MJD')
+    parser.add_argument('positionals', nargs='+',
+                        help='MJDs, followed by any dome flats in that night.'
+                             ' Multiple MJDs can be included, as long as the'
+                             ' exposures follow the correct MJD')
     parser.add_argument('-p', '--plot', action='store_true',
                         help='Whether or not to plot the output using'
                              ' matplotlib')
@@ -153,13 +153,13 @@ def parse_args():
     # and a 2D list of shape mjd by exps of exp ids in that day.
     args.mjds = []
     args.exps = [[]]
-    day_i = 0
-    for arg in args.positional:
+    for arg in args.positionals:
         if len(str(arg)) <= 5:
             args.mjds.append(arg)
-            day_i += 1
             args.exps.append([])
+            day_i = len(args.mjds) - 1
         else:
+            print(day_i)
             args.exps[day_i].append(arg)
 
     args.mjds = args.mjds
@@ -169,7 +169,8 @@ def parse_args():
 
 def main():
     args = parse_args()
-    master_path = Path(__file__).parent.parent / 'tests/apRaw-03720068.fits'
+    master_path = (Path(__file__).absolute().parent.parent
+                   / 'dat/ap_master_flat_col_array.dat').absolute()
     apogee = ApogeeFlat(master_path, args)
     apogee.run_inputs()
 

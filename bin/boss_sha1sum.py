@@ -16,7 +16,7 @@ Created by Stephen Bailey (LBNL) Fall 2011
 import hashlib
 from argparse import ArgumentParser
 from pathlib import Path
-from bin import mjd
+from . import mjd
 
 __version__ = 3.0
 
@@ -41,22 +41,30 @@ def parseargs():
                                         'data, which is stored at the provided'
                                         'mjd. If no mjd is provided, then it is'
                                         'run for today.')
-    parser.add_argument('mjds', nargs='+', help='The mjd (or mjds) which you'
+    parser.add_argument('mjds', nargs='?', default=[mjd.mjd()],
+                        help='The mjd (or mjds) which you'
                                                 'want to create a sum for')
+    parser.add_argument('-f', '--file', 
+                        help='The location of the sha1sum file for output,'
+                             ' default is /data/spectro/<mjd>/<mjd>.sha1sum.'
+                             ' Only works if one or fewer mjds is provided.')
+
     args = parser.parse_args()
     return args
 
 
 def main():
     args = parseargs()
-    if len(args.mjds) == 0:
-        args.mjds = [mjd.mjd()]
-
     for mj in args.mjds:
         data_dir = Path('/data/spectro/{}'.format(mj))
-        output_file = data_dir / '{}.sha1sum'.format(mj)
+        if args.file:
+            output_file = Path(args.file)
+        else:
+            output_file = data_dir / '{}.sha1sum'.format(mj)
+        print(args.file)
         write_hashes(data_dir, output_file)
 
 
 if __name__ == '__main__':
     main()
+

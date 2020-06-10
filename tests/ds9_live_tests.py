@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 import unittest
 from pathlib import Path
-import ds9_live
+from bin import ds9_live
+import pyds9
 
 
 class TestADS9(unittest.TestCase):
+    def test_pyds9(self):
+        pyds9.test()
+
     def test_no_args(self):
         args = ds9_live.parseargs()
         window = ds9_live.DS9Window(args.name, args.fits_dir, args.regex,

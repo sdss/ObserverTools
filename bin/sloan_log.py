@@ -44,7 +44,7 @@ except ImportError:
 from pathlib import Path
 from tqdm import tqdm
 from channelarchiver import Archiver
-
+sys.path.append('..')
 from python import apogee_data, boss_data, log_support
 
 if sys.version_info.major < 3:
@@ -617,7 +617,7 @@ class Logging:
         print(tel.hartmann)
 
 
-def parseargs():
+def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--today', action='store_true',
                         help="Whether or not you want to search for today's"
@@ -647,10 +647,10 @@ def parseargs():
 
 
 def main():
-    args = parseargs()
+    args = parse_args()
     if args.today:
         now = Time.now()
-        args.mjd = int(now.mjd + 3 / 24)
+        args.mjd = int(now.mjd + 0.3)
     elif args.mjd:
         args.mjd = args.mjd
     else:
