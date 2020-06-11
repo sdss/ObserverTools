@@ -21,6 +21,7 @@ import os
 
 default_dir = Path('/data/apogee/utr_cdr/')
 boss_cams = ['r1', 'r2', 'b1', 'b2']
+file_sizes = {'APOGEE': 60e6, 'BOSS': 9e6, 'Guider': 4e5, 'Engineering': 9e5}
 
 __version__ = 3.0
 
@@ -173,6 +174,12 @@ class DS9Window:
         if fil != self.last_file:
             if self.verbose:
                 print('displaying {}'.format(fil))
+            try:
+                # In case the file is incomplete, it won't crash ds9
+                if fil.lstat().st_size < file_sizes[self.name]:
+                    return
+            except KeyError:
+                pass
             # Because BOSS has 4 cameras, it must loop 4 times
             if self.name == 'BOSS':
                 for i, cam in enumerate(boss_cams):
@@ -267,14 +274,14 @@ def parseargs():
 
     elif args.guider:
         args.fits_dir = Path('/data/gcam/')
-        args.name = 'Guider Camera'
+        args.name = 'Guider'
         args.scale = args.scale
         args.zoom = args.zoom
         args.regex = 'gimg-*'
 
     elif args.ecam:
         args.fits_dir = Path('/data/gcam/')
-        args.name = 'Engineering Camera'
+        args.name = 'Engineering'
         args.scale = args.scale
         args.zoom = args.zoom
         args.regex = 'proc-gimg-*'
