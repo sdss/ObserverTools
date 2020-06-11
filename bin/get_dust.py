@@ -69,7 +69,8 @@ def main():
             print("{} {:7.0f}    {:.0f}    {:10.0f}"
                   "".format(t, d, enclosure_state, dust_sum))
 
-    print("Integrated Dust Counts: {:6.2f} dust-hrs".format(dust_sum))
+    print("Integrated Dust Counts: ~{:6.0f} dust-hrs".format(
+          dust_sum - dust_sum % 100))
 
 
 if __name__ == '__main__':

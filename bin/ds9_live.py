@@ -51,11 +51,10 @@ class DS9Window:
         self.zoom = zoom
         self.verbose = verbose
 
-        # hsh = hashlib.sha1(''.join(self.name + str(self.fits_dir) + self.regex
-                                   # + self.scale).encode())
-        # self.ds9_target = '{}: {}: {}'.format(self.name, self.fits_dir,
-                                              # hsh.hexdigest()[:10])
-        self.ds9_target = 'ds9_live:{}'.format(os.getpid())
+        hsh = hashlib.sha1(''.join(self.name + str(self.fits_dir) + self.regex
+                                   + self.scale).encode())
+        self.ds9_target = '{}:{}'.format(self.name, hsh.hexdigest()[:6])
+        # self.ds9_target = 'ds9_live:{}'.format(os.getpid())
 
         if self.verbose:
             print('dir = {}\nName = {}\nscale = {}\nzoom = {}'.format(
@@ -63,8 +62,23 @@ class DS9Window:
                 self.zoom))
 
         # Initialize
-
-        self.ds9 = pyds9.DS9()
+        targets = pyds9.ds9_targets()
+        if not targets:
+            targets = []
+        for ds9 in targets:
+            if self.name in ds9:
+                print('A similar instance of ds9 is already running as {},'
+                      ' would you like to close it?'.format(ds9))
+                destroy = input('[y]/n: ')
+                if destroy.lower() == 'y':
+                    d = pyds9.DS9(ds9)
+                    os.system('kill {}'.format(d.pid))
+                else:
+                    print('Please provide a new name then:')
+                    self.name = input('>')
+        self.ds9 = pyds9.DS9(self.name)
+        if 'BOSS' in self.name:
+            self.ds9.set('tile yes')
 
     @staticmethod  # This means it doesn't take self as an argument
     def is_fits(filename):
@@ -232,7 +246,7 @@ def parseargs():
         print(__version__)
 
     if args.apogee and args.boss:
-        raise Exception('Cannot do both boss and apogee')
+        raise Exception('Cannot do both boss and apogee in one script, sorry')
 
     if args.apogee:
         if Path('/summary-ics/').exists():
