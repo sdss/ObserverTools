@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ test run of DOS from manga from sdss-hub
 [manga@sdss4-manga ~]$ mangadrp_version
 trunk 8043

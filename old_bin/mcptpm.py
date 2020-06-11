@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python3 
 
 """mcptpm.py [-m mjd] - the list of mcptpm directory """
 

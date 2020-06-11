@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #  EM 12/12/2012
 
 #  usage:  list_ap_Call 

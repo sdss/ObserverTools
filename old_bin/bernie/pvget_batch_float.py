@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # bernie Tue. 27 Nov. '18
 # batch script dividing up into months, because longer periods can cause trouble

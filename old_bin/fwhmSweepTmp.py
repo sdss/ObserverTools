@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # usage: 
 # fwhmSweep.py 56530 7 14

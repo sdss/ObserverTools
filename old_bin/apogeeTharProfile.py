@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 '''apogeeTharTest.py  test #2 line fitting, plot optional (EM)
 

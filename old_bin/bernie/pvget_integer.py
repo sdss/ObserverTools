@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # bernie Tue. 26 June '18
 # just playing around:  a script to retrieve arbitrarily defined intervals of APO process variables

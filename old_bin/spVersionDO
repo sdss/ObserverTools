@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python3 
 
 """spVersion - get versions of idlmapper and idlspec2d for night log"""
 

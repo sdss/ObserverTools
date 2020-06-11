@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ## refinement with two functions
 ##  open_shutter_search.py 56376 56379 -o "dd.txt"
