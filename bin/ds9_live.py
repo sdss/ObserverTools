@@ -17,11 +17,14 @@ from argparse import ArgumentParser
 import hashlib
 import pyds9
 import time
+import fitsio
+from astropy.time import Time, TimeDelta
 import os
 
 default_dir = Path('/data/apogee/utr_cdr/')
 boss_cams = ['r1', 'r2', 'b1', 'b2']
-file_sizes = {'APOGEE': 60e6, 'BOSS': 9e6, 'Guider': 4e5, 'Engineering': 9e5}
+file_sizes = {'APOGEE': 67115520, 'BOSS': 9e6, 'Guider': 4e5,
+              'Engineering': 9e5}
 
 __version__ = 3.0
 
@@ -69,14 +72,20 @@ class DS9Window:
         for ds9 in targets:
             if self.name in ds9:
                 print('A similar instance of ds9 is already running as {},'
-                      ' would you like to close it?'.format(ds9))
-                destroy = input('[y]/n: ')
-                if destroy.lower() == 'y':
+                      ' would you like to connect to it, close it, or create'
+                      ' another window with a new name?'.format(ds9))
+                action = input('[connect]/close/change: ')
+                if action.lower() == 'connect':
+                    self.name = ds9
+                elif action.lower() == 'close':
                     d = pyds9.DS9(ds9)
-                    os.system('kill {}'.format(d.pid))
+                    d.set('exit')
                 else:
-                    print('Please provide a new name then:')
+                    print('Please provide a new name. This can also be done'
+                          'via the -n argument:')
                     self.name = input('>')
+        if self.verbose:
+            print(self.name)
         self.ds9 = pyds9.DS9(self.name)
         if 'BOSS' in self.name:
             self.ds9.set('tile yes')
@@ -168,22 +177,36 @@ class DS9Window:
 
         fil = self.latest_fits_file(self.regex)
         if self.verbose:
-            print('latest fits file = {}, last fits file = {}'
+            print('Latest fits file ={}\nLast fits file   ={}'
                   ''.format(fil, self.last_file))
-
         if fil != self.last_file:
             if self.verbose:
-                print('displaying {}'.format(fil))
+                print('Displaying {}'.format(fil))
             try:
-                # In case the file is incomplete, it won't crash ds9
-                if fil.lstat().st_size < file_sizes[self.name]:
+                # In case the file is incomplete, it won't crash ds9. This
+                # can happen if it is either size 0 (just made), or it is made,
+                # but it hasn't been populated by the first exposure. This only
+                # happens when it's run on APOGEE outside of sdss-apogee
+                stats = fil.lstat()
+                try:  # Handles the exists but unwritten issue
+                    hdr = fitsio.read_header(fil)
+                except OSError:
+                    print('File is actively being written, trying again in 60s')
                     return
-            except KeyError:
-                pass
+
+                # Handles the size issue
+                if stats.st_size < file_sizes[self.name]:
+                    print('File too small, skipping. This usually happens when'
+                          ' the previous image was a hartmann')
+                    return
+            except KeyError as e:
+                if self.verbose:
+                    print('Handled error: {}'.format(e))
             # Because BOSS has 4 cameras, it must loop 4 times
-            if self.name == 'BOSS':
+            if 'BOSS' in self.name:
                 for i, cam in enumerate(boss_cams):
-                    print(fil, type(fil))
+                    if self.verbose:
+                        print(fil, type(fil))
                     self.display(fil.parent / fil.name.replace('r1', cam), i)
             else:
                 self.display(fil, 0)
@@ -269,7 +292,7 @@ def parseargs():
         args.fits_dir = Path('/data/spectro/')
         args.name = 'BOSS'
         args.scale = args.scale
-        args.zoom = args.zoom
+        args.zoom = 0.5
         args.regex = 'sdR-r1*'
 
     elif args.guider:
