@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python3 
 
 """spTPM  -  read TPM temperature of the primary and spectro dewar weights"""
 

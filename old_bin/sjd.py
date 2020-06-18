@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Description:
 #	Calculates the SDSS Julian Date, which is the MJD + 0.3 days
 #	See http://maia.usno.navy.mil/

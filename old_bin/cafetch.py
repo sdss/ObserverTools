@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 See this CA library  https://github.com/RobbieClarken/channelarchiver

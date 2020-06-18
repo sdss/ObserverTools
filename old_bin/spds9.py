@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 Description:	Opens and continuously updates ds9 with the latest
 				spectrograph files

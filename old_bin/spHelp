@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python3 
 '''spHelp - print the list of observer's scripts on sos3'''
 
 '''EM,  09/07/2012

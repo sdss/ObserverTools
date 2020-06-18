@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python3 
 
 # python fwhm.py <mjd> <fileNumber>
 # python fwhm.py 55799 0021

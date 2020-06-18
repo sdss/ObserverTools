@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # EM 
 #  program to check if guider shutter works properly with flats

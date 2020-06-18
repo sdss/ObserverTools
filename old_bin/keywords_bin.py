@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ This program is for easy navigation on actorkeys library, which describe
 keywords. Usage:
 keywords.py [-a actor] [-k keyword] [-h help] [-r search_pattern] [-s short_print]

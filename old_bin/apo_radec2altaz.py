@@ -1,5 +1,5 @@
 #!/usr/local/bin/python
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This is a wrapper around RO scripts to 
 # calculate HA, AZ, ALT, Airmass from RA and DEC 
