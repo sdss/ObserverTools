@@ -30,6 +30,8 @@ def create_hash_line(file):
 
 def write_hashes(path, output_file):
     path = Path(path)
+    print('This will definitely conflict')
+    x = mjd.mjd()
     out = output_file.open('w')
     for fits in path.glob('*.fit.gz'):
         out.write(create_hash_line(fits))
