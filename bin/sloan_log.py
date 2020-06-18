@@ -44,6 +44,7 @@ except ImportError:
 from pathlib import Path
 from tqdm import tqdm
 from channelarchiver import Archiver
+
 sys.path.append('..')
 from python import apogee_data, boss_data, log_support
 
@@ -91,8 +92,9 @@ class Logging:
                                   'telemetry/cgi/ArchiveDataServer.cgi')
         try:
             self.telemetry.scan_archives()
-        except socket.gaierror:
-            raise s.GatlinError('Cannot access EPICS Server, aborting')
+        except socket.gaierror as e:
+            raise s.GatlinError('Cannot access EPICS Server, aborting\n{}'
+                                ''.format(e))
 
     def ap_test(self, img):
         """Calls aptest on hub, this could certainly be replaced in the near

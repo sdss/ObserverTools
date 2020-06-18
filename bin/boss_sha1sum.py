@@ -16,7 +16,7 @@ Created by Stephen Bailey (LBNL) Fall 2011
 import hashlib
 from argparse import ArgumentParser
 from pathlib import Path
-from . import mjd
+import mjd
 
 __version__ = 3.0
 
@@ -30,7 +30,9 @@ def create_hash_line(file):
 
 def write_hashes(path, output_file):
     path = Path(path)
+    print('Hello there merge conflict')
     out = output_file.open('w')
+    print('This will probably create a conflict')
     for fits in path.glob('*.fit.gz'):
         out.write(create_hash_line(fits))
 
@@ -42,8 +44,8 @@ def parseargs():
                                         'mjd. If no mjd is provided, then it is'
                                         'run for today.')
     parser.add_argument('mjds', nargs='?', default=[mjd.mjd()],
-                        help='The mjd (or mjds) which you'
-                                                'want to create a sum for')
+                        help='The mjd (or mjds) which you want to create a sum'
+                             ' for')
     parser.add_argument('-f', '--file', 
                         help='The location of the sha1sum file for output,'
                              ' default is /data/spectro/<mjd>/<mjd>.sha1sum.'
@@ -67,4 +69,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
