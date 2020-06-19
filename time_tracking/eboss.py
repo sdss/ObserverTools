@@ -127,8 +127,8 @@ def boss_str(plates, mjd1, mjd2, verbose):
         if donness == "Complete":
             for pl in plateObj.pluggings:
                 for exp in pl.scienceExposures():
-                    if exp.mjd() > mjd:
-                        mjd = exp.mjd()
+                    if exp.sjd() > mjd:
+                        mjd = exp.sjd()
             mjdCompleted = mjd
             if mjdCompleted > mjd2:
                 mjdCompleted = None

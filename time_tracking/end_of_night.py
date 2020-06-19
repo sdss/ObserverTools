@@ -5,7 +5,7 @@
 import eboss
 import manga
 import apogee
-from bin import mjd
+from bin import sjd
 import argparse
 import warnings
 
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     desc = 'list of files for time tracking report '
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-m1', '--mjd1', help='start mjd, default current mjd',
-                        default=mjd.mjd(), type=int)
+                        default=sjd.sjd(), type=int)
     # parser.add_argument('-m2', '--mjd2', help='end mjd, default current mjd',
     # default=mjd.curSjd(), type=int)
     # parser.add_argument('-a', '--apogee',  help='get apogee report',

@@ -8,53 +8,49 @@
 The intent of this is to create a more future-proof tool for logging through
 Sloan V
 
+In order to run it locally, you will need to either have access to /data, or
+ fake it with a single night. You'll need a date from /data/spectro and
+ /data/apogoee/archive. You'll also need to tunnel into port 80 of
+ sdss-telemetry using
+ ssh -L 5080:telemetry.apo.nmsu.edu:80 observer@sdss-gateway.apo.nmsu.edu
+ Currently, you'll need access to hub to run aptest, but I'm working on removing
+ that dependency since aptest can be done using /data/apogee/archive
+
 2019-11-01      dgatlin     init, in response to some issues with gcam
     tracking and identifying slew errors
 2019-12-13      dgatlin     This has received a lot of work and can now
     build a data log and some summary
-202-06-01       dgatlin     Changed some methods to @staticmethods, moved to
+2020-06-01      dgatlin     Changed some methods to @staticmethods, moved to
     bin, refactored some names to more appropriately fit the role of logging.
+2020-06-17      dgatlin     Moved telemetry to epics_fetch
 """
 import argparse
 import warnings
-import subprocess as sub
 import sys
 import numpy as np
-import socket
-
-try:
-    import starcoder42 as s
-except ImportError or ModuleNotFoundError:
-    sys.path.append('/Users/dylangatlin/python/starcoder42/python/')
-    sys.path.append('/home/gatlin/python/starcoder42/python/')
-    import starcoder42 as s
-
-try:
-    from astropy.time import Time
-except ImportError:
-    raise s.GatlinError('Astropy not found for interpreter\n'
-                        '{}'.format(sys.executable))
+import epics_fetch
+import ap_test
 
 try:
     import fitsio
 except ImportError:
-    raise s.GatlinError('fitsio not found by interpreter\n'
-                        '{}'.format(sys.executable))
+    raise Exception('fitsio not found by interpreter\n'
+                    '{}'.format(sys.executable))
 
 from pathlib import Path
 from tqdm import tqdm
-from channelarchiver import Archiver
+from astropy.time import Time
 
-sys.path.append('..')
+sys.path.append(Path(__file__).absolute().parent.parent)
 from python import apogee_data, boss_data, log_support
 
 if sys.version_info.major < 3:
-    raise s.GatlinError('interpretter must be python 3 or newer')
+    raise Exception('Interpretter must be python 3 or newer')
 
 # For astropy
 warnings.filterwarnings('ignore', category=UserWarning, append=True)
 
-__version__ = 3.3
+__version__ = 3.4
 
 ap_dir = Path('/data/apogee/archive/')
 b_dir = Path('/data/spectro/')
@@ -79,33 +75,37 @@ class Logging:
         self.b_data = {'cCart': [], 'cTime': [],
                        'iTime': [], 'iID': [],
                        'iDetector': [], 'iDither': [],
-                       'iEType': [], 'iExdt': [], 'iCart': [], 'iHart': [],
+                       'iEType': [], 'idt': [], 'iCart': [], 'iHart': [],
                        'iPlate': [], 'hHart': [], 'hTime': []}
         # These values are not known from the header and must be created
         # after self.sort.
-        self.cart_data = {'cNAPA': [], 'cNAPB': [], 'cNMN': [], 'cNMS': [],
-                          'cNME': [], 'cNMC': [], 'cAPSummary': [],
-                          'cMSummary': []}
+        self.cart_data = {'cNAPA': [], 'cNAPB': [], 'cNBN': [], 'cNBS': [],
+                          'cNBE': [], 'cNBC': [], 'cBdt': [],
+                          'cAPSummary': [],
+                          'cBSummary': []}
         self.test_procs = []
-
-        self.telemetry = Archiver('http://sdss-telemetry.apo.nmsu.edu/'
-                                  'telemetry/cgi/ArchiveDataServer.cgi')
-        try:
-            self.telemetry.scan_archives()
-        except socket.gaierror as e:
-            raise s.GatlinError('Cannot access EPICS Server, aborting\n{}'
-                                ''.format(e))
+        self.telemetry = epics_fetch.telemetry
+        self.ap_tester = ap_test.ApogeeFlat(
+            Path(__file__).absolute().parent.parent
+            / 'dat/ap_master_flat_col_array.dat', self.args)
 
     def ap_test(self, img):
         """Calls aptest on hub, this could certainly be replaced in the near
         future.
         """
-        test = sub.Popen('ssh observer@sdss-hub "~/bin/aptest {} {}"'
-                         ''.format(self.args.mjd, img.exp_id), shell=True,
-                         stdout=sub.PIPE)
-        lines = test.stdout.read().split(b'\n')[3:]
-        missing = eval(lines[0].split(b'Missing fibers: ')[-1])
-        faint = eval(lines[1].split(b'Faint fibers:   ')[-1])
+        # This is from ap_test
+        missing, faint = self.ap_tester.test_image(img)
+        # TODO Convert to ap_test
+        # test = sub.Popen((Path(__file__).absolute().parent.parent
+        #                   / 'old_bin/aptest').__str__() + ' {} {}'
+        #                  ''.format(self.args.mjd, img.exp_id), shell=True,
+        #                  stdout=sub.PIPE, stderr=sub.PIPE)
+        # lines = test.stdout.read().decode('utf-8').splitlines()[3:]
+        # err = test.stderr.read().decode('utf-8')
+        # if err:
+        #     raise Exception(err)
+        # missing = eval(lines[0].split('Missing fibers: ')[-1])
+        # faint = eval(lines[1].split('Faint fibers:   ')[-1])
         n_missing = 0
         n_faint = 0
         for miss in missing:
@@ -140,7 +140,7 @@ class Logging:
                     # writing, plate_id will be empty and without this if,
                     # it would fail. With this if, it will skip the plate
                     continue
-                if img.exp_type == 'Domeflat':
+                if (img.exp_type == 'Domeflat') and ('-b-' in img.file.name):
                     self.ap_test(img)
                     self.test_procs.append(img.cart_id)
 
@@ -216,7 +216,7 @@ class Logging:
                 # self.b_data['iSeeing'].append(img.seeing)
                 self.b_data['iDither'].append(img.dither)
                 self.b_data['iEType'].append(img.flavor)
-                self.b_data['iExdt'].append(img.exp_time)
+                self.b_data['idt'].append(img.exp_time)
                 self.b_data['iCart'].append(img.cart_id)
                 self.b_data['iHart'].append(img.hartmann)
                 self.b_data['iPlate'].append(img.plate_id)
@@ -361,26 +361,32 @@ class Logging:
                 (self.ap_data['iCart'] == cart)
                 & (self.ap_data['iDither'] == 'B')
                 & (self.ap_data['iEType'] == 'Object')))
-            self.cart_data['cNMN'].append(np.sum(
+            self.cart_data['cNBN'].append(np.sum(
                 (self.b_data['iCart'] == cart)
                 & (self.b_data['iDither'] == 'N')
                 & (self.b_data['iEType'] == 'Science')))
-            self.cart_data['cNMS'].append(np.sum(
+            self.cart_data['cNBS'].append(np.sum(
                 (self.b_data['iCart'] == cart)
                 & (self.b_data['iDither'] == 'S')
                 & (self.b_data['iEType'] == 'Science')))
-            self.cart_data['cNME'].append(np.sum(
+            self.cart_data['cNBE'].append(np.sum(
                 (self.b_data['iCart'] == cart)
                 & (self.b_data['iDither'] == 'E')
                 & (self.b_data['iEType'] == 'Science')))
-            self.cart_data['cNMC'].append(np.sum(
+            self.cart_data['cNBC'].append(np.sum(
                 (self.b_data['iCart'] == cart)
                 & (self.b_data['iDither'] == 'C')
                 & (self.b_data['iEType'] == 'Science')))
+            if len(self.b_data['iCart']):
+                self.cart_data['cBdt'].append(np.max(
+                    self.b_data['idt'][(self.b_data['iCart'] == cart)
+                                       & (self.b_data['iEType'] == 'Science')]
+            ))
 
         for i, cart in enumerate(self.data['cCart']):
             """To determine the number of apogee a dithers per cart (cNAPA),
             as well as b dithers (cNAPB), and the same for NSE dithers."""
+            # APOGEE dithers
             if self.cart_data['cNAPA'][i] == self.cart_data['cNAPB'][i]:
                 self.cart_data['cAPSummary'].append(
                     '{}xAB'.format(self.cart_data['cNAPA'][i]))
@@ -388,20 +394,25 @@ class Logging:
                 self.cart_data['cAPSummary'].append(
                     '{}xA {}xB'.format(self.cart_data['cNAPA'][i],
                                        self.cart_data['cNAPB'][i]))
-            if self.cart_data['cNMC'][i] == 0:
-                if (self.cart_data['cNMN'][i]
-                        == self.cart_data['cNMS'][i]
-                        == self.cart_data['cNME'][i]):
-                    self.cart_data['cMSummary'].append(
-                        '{}xNSE'.format(self.cart_data['cNMN'][i]))
+            # BOSS (MaNGA) dithers
+            if self.cart_data['cNBC'][i] == 0:
+                if (self.cart_data['cNBN'][i]
+                        == self.cart_data['cNBS'][i]
+                        == self.cart_data['cNBE'][i]):
+                    self.cart_data['cBSummary'].append(
+                        '{}xNSE'.format(self.cart_data['cNBN'][i]))
                 else:
-                    self.cart_data['cMSummary'].append(
-                        '{}xN {}xS {}xE'.format(self.cart_data['cNMN'][i],
-                                                self.cart_data['cNMS'][i],
-                                                self.cart_data['cNME'][i]))
+                    self.cart_data['cBSummary'].append(
+                        '{}xN {}xS {}xE'.format(self.cart_data['cNBN'][i],
+                                                self.cart_data['cNBS'][i],
+                                                self.cart_data['cNBE'][i]))
             else:
-                self.cart_data['cMSummary'].append(
-                    '{}xC'.format(self.cart_data['cNMC'][i]))
+                self.cart_data['cBSummary'].append(
+                    '{}xC'.format(self.cart_data['cNBC'][i]))
+            if len(self.cart_data['cBdt']):
+                if self.cart_data['cBdt'][i] != 900:
+                    self.cart_data['cBSummary'][-1] += '@{}s'.format(
+                        self.cart_data['cBdt'][i])
 
     @staticmethod
     def hartmann_parse(hart):
@@ -420,7 +431,7 @@ class Logging:
         output += 'SP1: {:>6.1f}, SP2: {:>6.1f}\n'.format(
             hart[6].values[-1], hart[7].values[-1])
         output += 'Spectrograph Temperatures:\n'
-        output += 'SP1: {:>6.1f}, SP2: {:>6.1f}'.format(
+        output += 'SP1: {:>6.1f}, SP2: {:>6.1f}\n'.format(
             hart[8].values[-1], hart[9].values[-1])
         return output
 
@@ -433,7 +444,7 @@ class Logging:
             print('Cart {}, plate {}, {}'
                   ', {},'.format(cart, self.data['cPlate'][i],
                                  self.cart_data['cAPSummary'][i],
-                                 self.cart_data['cMSummary'][i]))
+                                 self.cart_data['cBSummary'][i]))
             try:
                 j = np.where(self.ap_data['dCart'] == cart)[0][0]
                 print('Missing Fibers: {}, Faint fibers: {}'.format(
@@ -454,7 +465,7 @@ class Logging:
 
         except IndexError:
             window = ((data['iTime'] >= data['cTime'][i])
-                      & (data['iTime'] < Time.now()))
+                      & (data['iTime'] < Time.now() + 0.25))
         return window
 
     def p_data(self):
@@ -462,7 +473,6 @@ class Logging:
         print('{:^80}'.format('Data Log'))
         print('=' * 80)
         for cart in self.data['cCart']:
-            print()
             i = np.where(cart == self.ap_data['cCart'])[0][0]
             print('# Cart {}, Plate {}, {}'.format(cart,
                                                    self.data['cPlate'][i],
@@ -519,7 +529,7 @@ class Logging:
                     self.b_data['iEType'][window],
                     self.b_data['iDither'][window],
                     self.b_data['iDetector'][window],
-                    self.b_data['iExdt'][window],
+                    self.b_data['idt'][window],
                     self.b_data['iHart'][window],
                 ):
                     print('{:<5.0f} {:0>8} {:0>8.0f} {:<7} {:<4} {:<11}'
@@ -538,7 +548,7 @@ class Logging:
                 except IndexError:
                     window = ((self.b_data['hTime']
                                >= self.data['cTime'][i])
-                              & (self.b_data['hTime'] < Time.now()))
+                              & (self.b_data['hTime'] < Time.now() + 0.25))
                 for t, hart in zip(self.b_data['hTime'][window],
                                    self.b_data['hHart'][window]):
                     print()
@@ -563,7 +573,7 @@ class Logging:
                           self.b_data['iEType'],
                           self.b_data['iDither'],
                           self.b_data['iDetector'],
-                          self.b_data['iExdt'],
+                          self.b_data['idt'],
                           self.b_data['iHart']):
             print('{:<5.0f} {:<8} {:>2.0f}-{:<5.0f} {:0>8.0f} {:<7} {:<4}'
                   ' {:<11}'
@@ -571,7 +581,7 @@ class Logging:
                   ''.format(int(mjd), iso[12:19], cart, plate, exp_id,
                             exp_type.strip(),
                             dith.strip(), detectors, etime, hart))
-        print('\n')
+        print()
 
     def p_apogee(self):
         print('=' * 80)
@@ -644,6 +654,8 @@ def parse_args():
                              ' Might be slower, but it could go either way.')
     parser.add_argument('--morning', action='store_true',
                         help='Only output apogee morning cals')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Increased printing for debugging')
     args = parser.parse_args()
     return args
 
@@ -651,12 +663,12 @@ def parse_args():
 def main():
     args = parse_args()
     if args.today:
-        now = Time.now()
-        args.mjd = int(now.mjd + 0.3)
+        now = Time.now() + 0.25
+        args.mjd = int(now.mjd)
     elif args.mjd:
         args.mjd = args.mjd
     else:
-        raise s.GatlinError('Must provide -t or -m in arguments')
+        raise argparse.ArgumentError('Must provide -t or -m in arguments')
 
     ap_data_dir = ap_dir / '{}'.format(args.mjd)
     b_data_dir = b_dir / '{}'.format(args.mjd)

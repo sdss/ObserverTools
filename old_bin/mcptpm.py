@@ -4,7 +4,7 @@
 
 import sys
 import argparse
-from bin import mjd
+from bin import sjd
 import subprocess as sb
 
 
@@ -18,7 +18,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-m', '--mjd',
                         help='mjd, default is current mjd',
-                        default=mjd.mjd(),
+                        default=sjd.sjd(),
                         type=int)
     args = parser.parse_args()
     day = args.mjd

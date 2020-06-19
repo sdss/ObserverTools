@@ -1,12 +1,11 @@
-#!(conda activate tui27; which python)
+#!/usr/bin/env python3
+"""
+A tool to grab a single BOSS image and pull a few items from its header. It is
+ used in bin/sloan_log.py, but it could be used directly as well.
+"""
 import argparse
 from pathlib import Path
-import starcoder42 as s
-
-try:
-    from astropy.time import Time
-except ImportError:
-    raise s.GatlinError('Astropy is needed for this library')
+from astropy.time import Time
 import fitsio
 
 
@@ -23,7 +22,7 @@ class BOSSRaw:
         # ler = self.image[layer_ind]
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
         self.dither = header['MGDPOS']
-        self.exp_time = header['EXPTIME']
+        self.exp_time = int(header['EXPTIME'])
         self.isot = Time(header['DATE-OBS'])  # UTC
         self.plate_id = header['PLATEID']
         self.cart_id = header['CARTID']
@@ -53,12 +52,12 @@ def main():
     parser.add_argument('-v', '--verbose', action='count', default=1,
                         help='Show details, can be stacked')
     if args.today:
-        mjd_today = int(Time.now().mjd)
+        mjd_today = int(Time.now().sjd)
         data_dir = '/data/spectro/{}/'.format(mjd_today)
     elif args.mjd:
         data_dir = '/data/spectro/{}/'.format(args.mjd)
     else:
-        raise s.GatlinError('No date specified')
+        raise Exception('No date specified')
 
     for path in Path(data_dir).rglob('sdR*.fit.gz'):
         print(path)

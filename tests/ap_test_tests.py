@@ -6,12 +6,13 @@ from bin import ap_test
 
 class TestAPTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.project = Path(__file__).parent.parent
+        self.project = Path(__file__).absolute().parent.parent
         class dummy(object):
             pass
         self.args = dummy()
-        self.args.mjds = [58900]
-        self.args.exps = [[33380025, 33380042, 33380071, 33380080]]
+        self.args.mjds = [59011]
+        self.args.exps = [[34490027, 34490042, 34490051, 34490056, 34490069]]
+        self.args.plot = False
 
     def test_known_date(self):
         self.atest = ap_test.ApogeeFlat(

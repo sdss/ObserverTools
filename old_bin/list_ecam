@@ -66,7 +66,7 @@ def main(argv=None):
 
     (opts,args) = parser.parse_args(args=argv)
 
-    mjd=opts.mjd
+    mjd=opts.sjd
     fNames = '/data/ecam/%s/gimg-%s.fits' % (mjd, "*")
 
     title="Ecamera images:  %s" % fNames

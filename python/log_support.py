@@ -2,31 +2,21 @@
 STUI, but by bypassing STUI and directly accessing telemetry
 
 2020-01-28  dgatlin     Init, after just learning about telemetry queries
-"""
-import sys
 
-try:
-    import starcoder42 as s
-except ImportError:
-    sys.path.append('/Users/dylangatlin/python/')
-    sys.path.append('/home/gatlin/python/')
-    import starcoder42 as s
-try:
-    from astropy.time import Time
-except ImportError:
-    raise s.GatlinError('Astropy not found for interpreter\n'
-                        '{}'.format(sys.executable))
-from channelarchiver import Archiver
+TODO: Only offsets and scale works, the rest return really weird results, maybe
+ if I compare the times between sloan_log's hartmann queries and this hartmann's
+ queries, I'll find a timing error
+"""
+from astropy.time import Time
 import argparse
+from bin import epics_fetch
 
 
 class LogSupport:
     def __init__(self, tstart, tend):
         self.tstart = tstart
         self.tend = tend
-        self.telemetry = Archiver('http://sdss-telemetry.apo.nmsu.edu/'
-                                  'telemetry/cgi/ArchiveDataServer.cgi')
-        self.telemetry.scan_archives()
+        self.telemetry = epics_fetch.telemetry
 
         self.call_times = []
         self.offsets = ''
@@ -72,7 +62,8 @@ class LogSupport:
         for key in offsets_keys:
             off_data[key] = []
         for time in self.call_times:
-            self.query(offsets_keys, time.isot, time.isot, off_data)
+            self.query(offsets_keys, (time-0.25).isot, (time-0.25).isot,
+                       off_data)
 
         self.offsets += '=' * 80 + '\n'
         self.offsets += '{:^80}\n'.format(
@@ -284,7 +275,7 @@ def main():
         start = Time(mjd, format='mjd').iso.split('.')[0]
         end = Time(int(mjd) + 1, format='mjd').iso.split('.')[0]
     else:
-        raise s.GatlinError('Must provide -t or -m in arguments')
+        raise argparse.ArgumentError('Must provide -t or -m in arguments')
 
     print('Start: {}'.format(start))
     print('End: {}'.format(end))

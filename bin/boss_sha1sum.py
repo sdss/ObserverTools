@@ -16,7 +16,7 @@ Created by Stephen Bailey (LBNL) Fall 2011
 import hashlib
 from argparse import ArgumentParser
 from pathlib import Path
-import mjd
+import sjd
 
 __version__ = 3.0
 
@@ -41,7 +41,7 @@ def parseargs():
                                         'data, which is stored at the provided'
                                         'mjd. If no mjd is provided, then it is'
                                         'run for today.')
-    parser.add_argument('mjds', nargs='?', default=[mjd.mjd()],
+    parser.add_argument('mjds', nargs='?', default=[sjd.sjd()],
                         help='The mjd (or mjds) which you want to create a sum'
                              ' for')
     parser.add_argument('-f', '--file', 
