@@ -191,7 +191,8 @@ class DS9Window:
                 try:  # Handles the exists but unwritten issue
                     hdr = fitsio.read_header(fil)
                 except OSError:
-                    print('File is actively being written, trying again in 60s')
+                    print('File is actively being written, trying again in {}s'
+                          ''.format(args.interval))
                     return
 
                 # Handles the size issue
