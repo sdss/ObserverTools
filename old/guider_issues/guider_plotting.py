@@ -28,7 +28,7 @@ parser.add_argument('-m', '--mjd',
 def main():
     args = parser.parse_args()
     if args.today:
-        date = str(int(Time.now().mjd))
+        date = str(int(Time.now().sjd))
         print(date)
     elif args.mjd:
         date = args.mjd

@@ -1,27 +1,38 @@
 #!/usr/bin/env python3
 
 """
-A terminal tool to access the SDSS EPICS server using channelarchiver
+A terminal tool to access the SDSS EPICS server using channeltelemetry
 
-See this CA library  https://github.com/RobbieClarken/channelarchiver
+See this CA library  https://github.com/RobbieClarken/channeltelemetry
 
 """
 
 from channelarchiver import Archiver
 from argparse import ArgumentParser
 from astropy.time import Time
+import socket
 
-server = ('http://sdss-telemetry.apo.nmsu.edu/telemetry/cgi/'
-          'ArchiveDataServer.cgi')
-archiver = Archiver(server)
+try:
+    telemetry = Archiver('http://sdss-telemetry.apo.nmsu.edu/'
+                         'telemetry/cgi/ArchiveDataServer.cgi')
+    telemetry.scan_archives()
+except (socket.gaierror, ConnectionRefusedError):
+    try:
+        telemetry = Archiver('http://localhost:5080/'
+                             'telemetry/cgi/ArchiveDataServer.cgi')
+        telemetry.scan_archives()
+    except (socket.gaierror, ConnectionRefusedError) as e:
+        raise Exception('Cannot access EPICS Server, aborting, you should try\n'
+                        'ssh -L 5080:sdss4-telemetry.apo.nmsu.edu:80 observer@'
+                        'sdss-gateway.apo.nmsu.edu')
 
 
 def get_data(channel, start_time, end_time):
     """ Grabs the channel data. If a list is passed to channel, it will return
     a list of datasets"""
 
-    archiver.scan_archives()
-    data = archiver.get(channel, start_time, end_time, interpolation='raw')
+    telemetry.scan_archives()
+    data = telemetry.get(channel, start_time, end_time, interpolation='raw')
     data.times = Time(data.times, format='iso')
     return data
 
@@ -44,7 +55,7 @@ def print_datasets(datasets):
 
 
 def parse_args():
-    now = Time.now()
+    now = Time.now() + 0.25
     parser = ArgumentParser(description='A command line interface for the SDSS'
                                         'EPICS Server. Prints a simple table of'
                                         'data. If no time window is specified,'

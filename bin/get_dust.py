@@ -3,7 +3,7 @@
 import argparse
 import datetime
 from channelarchiver import Archiver
-import mjd
+import sjd
 from astropy.time import Time
 import numpy as np
 
@@ -19,15 +19,15 @@ bSjd = 86400.0
 
 
 def get_time_stamps(sjd):
-    startStamp = mjd.mjd_to_time(int(sjd + 0.3))
-    endStamp = mjd.mjd_to_time(int(sjd + 1 + 0.3))
+    startStamp = sjd.sjd_to_time(int(sjd + 0.3))
+    endStamp = sjd.sjd_to_time(int(sjd + 1 + 0.3))
     start = datetime.datetime.fromtimestamp(startStamp)
     end = datetime.datetime.fromtimestamp(endStamp)
     return start, end
 
 
 def parse_args():
-    today = mjd.mjd()
+    today = sjd.sjd()
     desc = 'integral dust calculation for one mjd'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-m', '--mjd', help='enter mjd, default is current mjd',

@@ -14,42 +14,11 @@ import argparse
 import glob
 import os
 import stat
-from bin import mjd
+from bin import sjd
 
-try:
-    from astropy.io import fits
-    from astropy.time import Time
-except ImportError:
-    print('Astropy not found')
-    import pyfits as fits
-
-
-    class Time:
-        """An awful workaround to avoid crashes when astropy is unavailable
-        """
-        def __init__(self, time):
-            self.in_time = time
-            if 'T' in time:
-                date, time = time.split('T')
-            else:
-                date, time = time.split()
-            self.yr, self.mo, self.da = date.split('-')
-            self.hr, self.mi, self.sec = time.split(':')
-            self.date = datetime.date(int(self.yr), int(self.mo),
-                                      int(self.da))
-            self.time = datetime.time(int(self.hr), int(self.mi),
-                                      int(self.sec.split('.')[0]))
-            self.mjd = str(self.date).split()
-
+from astropy.io import fits
+from astropy.time import Time
 # from pathlib import Path
-# try:
-#     import starcoder42 as s
-# except ImportError:
-#     import sys
-#     sys.path.append('/home/dylangatlin/python/')
-#     sys.path.append('/home/gatlin/python/')
-#     import starcoder42 as s
-
 
 class GuiderRaw:
     """A class to parse raw data from APOGEE. The purpose of collecting this
@@ -82,7 +51,7 @@ def main():
 
     args = parser.parse_args()
     if args.today:
-        mjd_today = mjd.curSjd()
+        mjd_today = sjd.curSjd()
         data_dir = '/data/gcam/{}/'.format(mjd_today)
         mjd_target = mjd_today
     elif args.mjd:

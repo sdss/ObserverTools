@@ -68,7 +68,7 @@ def main(argv=None):
              help='last file to list, default is the last file ',type=int)
     (opts,args) = parser.parse_args(args=argv)
 
-    mjd=opts.mjd
+    mjd=opts.sjd
     fNames = '/data/gcam/%s/gimg-%s.fits.gz' % (mjd, "*")
 
     title="GUIDER images:  %s" % fNames

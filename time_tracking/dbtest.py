@@ -35,10 +35,10 @@ def getPlateInfo(plateID):
         if len(exposures) > 0:
             mjd = 0
             for exposure in exposures:
-                print(exposure.exposure_no, exposure.mjd(),
+                print(exposure.exposure_no, exposure.sjd(),
                       exposure.flavor.label,
                       exposure.survey.label)
-                if exposure.mjd() > mjd: mjd = exposure.mjd()
+                if exposure.sjd() > mjd: mjd = exposure.sjd()
             if "Complete" == plate.calculatedCompletionStatus():
                 print("Complete on ", mjd)
         else:
@@ -66,9 +66,9 @@ def test1(plate_id):  # Brian
               ",   fscan=", pl.fscan_mjd, ",  percentDone=", pl.percentDone())
         # if any of it Good or
         for exp in pl.scienceExposures():
-            print("        ", exp.exposure_no, exp.mjd())
-            if exp.mjd() > mjd:
-                mjd = exp.mjd()
+            print("        ", exp.exposure_no, exp.sjd())
+            if exp.sjd() > mjd:
+                mjd = exp.sjd()
 
     print("plate=", plate.plate_id, "status=",
           plate.calculatedCompletionStatus(), "mjd_of_last_exposure=", mjd)

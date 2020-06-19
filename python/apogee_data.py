@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 import argparse
 from pathlib import Path
-from channelarchiver import Archiver
-import starcoder42 as s
-
-try:
-    from astropy.time import Time
-except ImportError:
-    raise s.GatlinError('Astropy is needed for this library')
+import sys
+from astropy.time import Time
 import fitsio
+sys.path.append(Path(__file__).absolute().parent.parent)
+from bin import epics_fetch
 
 
 class APOGEERaw:
@@ -18,10 +15,10 @@ class APOGEERaw:
     will hopefully help SDSS-V logging"""
 
     def __init__(self, fil, ext):
+        self.file = fil
+        self.ext = ext
         header = fitsio.read_header(fil, ext=ext)
-        self.telemetry = Archiver('http://sdss-telemetry.apo.nmsu.edu/'
-                                  'telemetry/cgi/ArchiveDataServer.cgi')
-        self.telemetry.scan_archives()
+        self.telemetry = epics_fetch.telemetry
         dithers = self.telemetry.get('25m:apogee:ditherNamedPositions',
                                      start=(Time.now() - 1 / 24 / 60 * 5).isot,
                                      end=Time.now().isot,
@@ -61,12 +58,12 @@ def main():
                         help='Show details, can be stacked')
     args = parser.parse_args()
     if args.today:
-        mjd_today = int(Time.now().mjd)
+        mjd_today = int(Time.now().sjd)
         data_dir = '/data/apogee/archive/{}/'.format(mjd_today)
     elif args.mjd:
         data_dir = '/data/apogee/archive/{}/'.format(args.mjd)
     else:
-        raise s.GatlinError('No date specified')
+        raise Exception('No date specified')
     print(data_dir)
     for path in Path(data_dir).rglob('apR*.apz'):
         print(path)
