@@ -377,11 +377,12 @@ class Logging:
                 (self.b_data['iCart'] == cart)
                 & (self.b_data['iDither'] == 'C')
                 & (self.b_data['iEType'] == 'Science')))
-            if len(self.b_data['iCart']):
+            if (len(self.b_data['iCart'])
+                    and np.sum(self.b_data['iEType'] == 'Science')):
                 self.cart_data['cBdt'].append(np.max(
                     self.b_data['idt'][(self.b_data['iCart'] == cart)
                                        & (self.b_data['iEType'] == 'Science')]
-            ))
+                ))
 
         for i, cart in enumerate(self.data['cCart']):
             """To determine the number of apogee a dithers per cart (cNAPA),
