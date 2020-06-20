@@ -576,7 +576,7 @@ class Logging:
                           self.b_data['iDetector'],
                           self.b_data['idt'],
                           self.b_data['iHart']):
-            print('{:<5.0f} {:<8} {:>2.0f}-{:<5.0f} {:0>8.0f} {:<7} {:<4}'
+            print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:0>8.0f} {:<7} {:<4}'
                   ' {:<11}'
                   ' {:>5.0f} {:<5}'
                   ''.format(int(mjd), iso[12:19], cart, plate, exp_id,
@@ -588,8 +588,8 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('APOGEE Data Summary'))
         print('=' * 80)
-        print('{:<5} {:<8} {:<8} {:<8} {:<12} {:<4} {:<6} {:<9}'
-              ' {:<4}'.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type',
+        print('{:<5} {:<8} {:<8} {:<8} {:<12} {:<4} {:<6} {:<8}'
+              ' {:<6}'.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type',
                               'Dith', 'nReads', 'Pipeline',
                               'Seeing'))
         print('=' * 80)
@@ -604,10 +604,10 @@ class Logging:
             self.ap_data['iDetector'],
             self.ap_data['iSeeing']
         ):
-            print('{:<5.0f} {:<8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
+            print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
                   ' {:>6}'
-                  ' {:<9}'
-                  ' {:>4.1f}'.format(int(mjd), iso[12:19], cart, plate, exp_id,
+                  ' {:<8}'
+                  ' {:>6.1f}'.format(int(mjd), iso[12:19], cart, plate, exp_id,
                                      exp_type,
                                      dith, nread, detectors, see))
         print('\n')

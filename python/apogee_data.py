@@ -3,6 +3,7 @@ import argparse
 from pathlib import Path
 import sys
 from astropy.time import Time
+from scipy.optimize import leastsq
 import fitsio
 sys.path.append(Path(__file__).absolute().parent.parent)
 from bin import epics_fetch
@@ -44,6 +45,32 @@ class APOGEERaw:
             self.seeing = header['SEEING']
         else:
             self.seeing = 0.0
+
+    def compute_offset(self, fiber=30, w0=939, dw=40, sigma=1.2745):
+        """This is based off of apogeeThar.OneFileFitting written by Elena. It
+        is supposed to generate a float for the pixel offsets of an APOGEE
+        ThAr cal."""
+        mjd = self.file.absolute.parent.name
+        quickred_file = (self.file.absolute().parent.parent.parent
+            / 'quickred/{}/ap1D-a-{}.fits.fz'.format(self.mjd, self.exp_id))
+        try:
+            if not self.data:
+                self.data = fitsio.read(quickred_file, 0)
+        except OSError:
+            return np.nan
+        p0 = np.array([53864., 939.646, 1.2745])
+        lower = w0 - dw // 2
+        upper = w0 + dw // 2
+        line = self.data[fiber, lower:upper]
+        
+        fit_func = lambda w, x: np.exp(-0.5*((x-w)/sigma)**2)
+        err_func = lambda w, x, y: fit_func(w, x) - y
+
+        w_model, success = leastsq(err_func, w0, args=(x, spectra))
+
+        diff = w_model - w0
+        return diff
+
 
 
 def main():
