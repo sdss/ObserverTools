@@ -71,7 +71,8 @@ class Logging:
                         'iSeeing': [], 'iDetector': [], 'iDither': [],
                         'iNRead': [], 'iEType': [], 'iCart': [], 'iPlate': [],
                         'dCart': [], 'dTime': [], 'dMissing': [], 'dFaint': [],
-                        'dNMissing': [], 'dNFaint': []}
+                        'dNMissing': [], 'dNFaint': [], 'aTime': [],
+                        'aOffset': [], 'aID': [], 'aLamp': []}
         self.b_data = {'cCart': [], 'cTime': [],
                        'iTime': [], 'iID': [],
                        'iDetector': [], 'iDither': [],
@@ -134,7 +135,7 @@ class Logging:
             print('Reading APOGEE Data')
             for image in tqdm(self.ap_images):
                 # print(image)
-                img = apogee_data.APOGEERaw(image, 1)
+                img = apogee_data.APOGEERaw(image, self.args, 1)
                 # img.parse_layer(1)
                 if not img.plate_id:  # If the first exposure is still
                     # writing, plate_id will be empty and without this if,
@@ -143,6 +144,20 @@ class Logging:
                 if (img.exp_type == 'Domeflat') and ('-b-' in img.file.name):
                     self.ap_test(img)
                     self.test_procs.append(img.cart_id)
+                elif ('Arc' in img.img_type) and ('-a-' in img.file.name):
+                    self.ap_data['aTime'].append(img.isot)
+                    self.ap_data['aID'].append(img.exp_id)
+                    if 'ThAr' in img.img_type:
+                        self.ap_data['aOffset'].append(
+                            img.compute_offset((30, 35), 939, 40, 1.27))
+                        self.ap_data['aLamp'].append('ThAr')
+                    elif 'UNe' in img.img_type:
+                        self.ap_data['aOffset'].append(
+                            img.compute_offset((30, 35), 1761, 20, 3))
+                        self.ap_data['aLamp'].append('UNe')
+                    else:
+                        print("Couldn't parse the arc image: {} with exposure"
+                              " type {}".format(img.file, img.img_type))
 
                 if img.cart_id not in self.data['cCart']:
                     self.data['cPlate'].append(img.plate_id)
@@ -320,6 +335,7 @@ class Logging:
             ap_cart_sorter = self.ap_data['cTime'].argsort()
             ap_img_sorter = self.ap_data['iTime'].argsort()
             ap_dome_sorter = self.ap_data['dTime'].argsort()
+            ap_arc_sorter = self.ap_data['aTime'].argsort()
             for key, item in self.ap_data.items():
                 if key[0] == 'c':
                     self.ap_data[key] = item[ap_cart_sorter]
@@ -327,6 +343,8 @@ class Logging:
                     self.ap_data[key] = item[ap_img_sorter]
                 elif key[0] == 'd':
                     self.ap_data[key] = item[ap_dome_sorter]
+                elif key[0] == 'a':
+                    self.ap_data[key] = item[ap_arc_sorter]
             if self.args.morning:
                 # TODO Redefine apogee values to within morning range
                 morning = self.ap_data['iTime'] > Time()
@@ -432,7 +450,7 @@ class Logging:
         output += 'SP1: {:>6.1f}, SP2: {:>6.1f}\n'.format(
             hart[6].values[-1], hart[7].values[-1])
         output += 'Spectrograph Temperatures:\n'
-        output += 'SP1: {:>6.1f}, SP2: {:>6.1f}\n'.format(
+        output += 'SP1: {:>6.1f}, SP2: {:>6.1f}'.format(
             hart[8].values[-1], hart[9].values[-1])
         return output
 
@@ -555,7 +573,7 @@ class Logging:
                     print()
                     print(t.iso)
                     print(self.hartmann_parse(hart))
-        print('\n')
+                print('\n')
 
     def p_boss(self):
         print('=' * 80)
@@ -610,12 +628,21 @@ class Logging:
                   ' {:>6.1f}'.format(int(mjd), iso[12:19], cart, plate, exp_id,
                                      exp_type,
                                      dith, nread, detectors, see))
+        # Usually, there are 4 ThAr and 4 UNe arcs in a night, and they're
+        # assumed to be alternating ThAr UNe ThAr UNe. When you grab every
+        # other, you'll have only one type, that's the first slicing, and the
+        # second slicing is that you only care about the diffs between two
+        # dithers taken back to back.
+        print('ThAr Offsets: {}'.format(['{:.3f}'.format(f) for f in np.diff(
+            self.ap_data['aOffset'][self.ap_data['aLamp'] == 'ThAr'])]))
+        print('UNe Offsets: {}'.format(['{:.3f}'.format(f) for f in np.diff(
+            self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])]))
         print('\n')
 
     def log_support(self):
         start = Time(self.args.mjd, format='mjd').isot
         end = Time(self.args.mjd + 1, format='mjd').isot
-        tel = log_support.LogSupport(start, end)
+        tel = log_support.LogSupport(start, end, self.args)
         tel.set_callbacks()
         tel.get_offsets()
         tel.get_focus()

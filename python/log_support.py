@@ -13,9 +13,10 @@ from bin import epics_fetch
 
 
 class LogSupport:
-    def __init__(self, tstart, tend):
-        self.tstart = tstart
-        self.tend = tend
+    def __init__(self, tstart, tend, args):
+        self.tstart = Time(tstart)
+        self.tend = Time(tend)
+        self.args = args
         self.telemetry = epics_fetch.telemetry
 
         self.call_times = []
@@ -38,15 +39,24 @@ class LogSupport:
     def set_callbacks(self):
         data = self.telemetry.get(['25m:sop:doMangaSequence_ditherSeq:index',
                                    '25m:sop:doApogeeMangaSequence_ditherSeq'
-                                   ':index'],
-                                  self.tstart,
-                                  self.tend, interpolation='raw',
+                                   ':index',
+                                   '25m:sop:doApogeeScience_index:index'],
+                                  (self.tstart - 0.25).isot,
+                                  (self.tend - 0.25).isot, interpolation='raw',
                                   scan_archives=False)
-        self.call_times = data[0].times + data[1].times
+        self.call_times = []
+        for dat in data:
+            self.call_times += dat.times
         self.call_times = Time(self.call_times)
         callback_sorter = self.call_times.argsort()
         self.call_times = self.call_times[callback_sorter]
-        filt = self.tstart < self.call_times
+
+        if self.args.verbose:
+            print('Callback start: {}'.format(self.tstart))
+            print('Callback end: {}'.format(self.tend))
+            print(self.call_times)
+
+        filt = self.tstart - 0.25 < self.call_times
         self.call_times = self.call_times[filt]
 
     def get_offsets(self):
@@ -109,7 +119,8 @@ class LogSupport:
         for key in focus_keys:
             foc_data[key] = []
         for time in self.call_times:
-            self.query(focus_keys, time.isot, time.isot, foc_data)
+            self.query(focus_keys,  (time-0.25).isot, (time-0.25).isot,
+                       foc_data)
 
         self.focus += '=' * 80 + '\n'
         self.focus += '{:^80}\n'.format('Telescope Focus')
@@ -153,7 +164,8 @@ class LogSupport:
         for key in weather_keys:
             weather_data[key] = []
         for time in self.call_times:
-            self.query(weather_keys, time.isot, time.isot, weather_data)
+            self.query(weather_keys, (time-0.25).isot, (time-0.25).isot,
+                       weather_data)
 
         self.weather = '=' * 80 + '\n'
         self.weather += '{:^80}\n'.format('Weather Log')
@@ -185,14 +197,16 @@ class LogSupport:
                                          weather_data[weather_keys[10]][i]))
 
     def get_hartmann(self):
-        data = self.telemetry.get('25m:hartmann:sp1Residuals:deg', self.tstart,
-                                  self.tend, interpolation='raw',
+
+        data = self.telemetry.get('25m:hartmann:sp1Residuals:deg',
+                                  (self.tstart - 0.25).isot,
+                                  (self.tend - 0.25).isot, interpolation='raw',
                                   scan_archives=False)
         hart_times = data.times
         hart_times = Time(hart_times)
         hart_sorter = hart_times.argsort()
         hart_times = hart_times[hart_sorter]
-        filt = self.tstart < hart_times
+        filt = self.tstart - 0.25 < hart_times
         hart_times = hart_times[filt]
         hartmann_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
                          '25m:guider:cartridgeLoaded:plateID',
@@ -263,25 +277,34 @@ def main():
                         help='Whether or not to print the weather log')
     parser.add_argument('--hartmann', action='store_true',
                         help='Whether or not to print the hartmann log')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Verbose outputs for debugging')
     args = parser.parse_args()
 
     if args.today:
         now = Time.now()
         mjd = int(now.mjd)
-        start = Time(mjd, format='mjd').iso.split('.')[0]
-        end = now.iso.split('.')[0]
+        start = Time(mjd, format='mjd')
+        end = now
     elif args.mjd:
         mjd = args.mjd
-        start = Time(mjd, format='mjd').iso.split('.')[0]
-        end = Time(int(mjd) + 1, format='mjd').iso.split('.')[0]
+        start = Time(mjd, format='mjd')
+        end = Time(int(mjd) + 1, format='mjd')
     else:
         raise argparse.ArgumentError('Must provide -t or -m in arguments')
 
-    print('Start: {}'.format(start))
-    print('End: {}'.format(end))
+    if args.print:
+        args.offsets = True
+        args.focus = True
+        args.weather = True
+        args.hartmann = True
+
+    if args.verbose:
+        print('Start: {}'.format(start))
+        print('End: {}'.format(end))
 
     if args.key:
-        tel = LogSupport(start, end)
+        tel = LogSupport(start, end, args)
         tel.set_callbacks()
         dummy_dic = {args.key: []}
         data = []
@@ -293,7 +316,7 @@ def main():
 
         print('Units: {}'.format(data.units))
 
-    tel = LogSupport(start, end)
+    tel = LogSupport(start, end, args)
     tel.set_callbacks()
 
     if args.offsets:
