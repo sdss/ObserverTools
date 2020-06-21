@@ -60,10 +60,10 @@ def print_datasets(datasets):
 def parse_args():
     now = Time.now() + 0.25
     parser = ArgumentParser(description='A command line interface for the SDSS'
-                                        'EPICS Server. Prints a simple table of'
-                                        'data. If no time window is specified,'
-                                        'it will print the most recent value'
-                                        'only.')
+                                        ' EPICS Server. Prints a simple table'
+                                        ' of data. If no time window is'
+                                        ' specified, it will print the most'
+                                        ' recent value only.')
 
     parser.add_argument('-c', '--channels', nargs='?',
                         default="25m:mcp:cwPositions",

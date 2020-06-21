@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
+"""
+Written by Elena, rewritten by Dylan. This script gets the dust counts in a
+ night and prints it
 
+Changelog:
+2020-06-20  DG  Moving main contents into a function for import functionality
+ """
 import argparse
 import datetime
 from channelarchiver import Archiver
@@ -18,9 +24,9 @@ aSjd = 40587.3
 bSjd = 86400.0
 
 
-def get_time_stamps(sjd):
-    startStamp = sjd.sjd_to_time(int(sjd + 0.3))
-    endStamp = sjd.sjd_to_time(int(sjd + 1 + 0.3))
+def get_time_stamps(mjd):
+    startStamp = sjd.sjd_to_time(int(mjd))
+    endStamp = sjd.sjd_to_time(int(mjd + 1))
     start = datetime.datetime.fromtimestamp(startStamp)
     end = datetime.datetime.fromtimestamp(endStamp)
     return start, end
@@ -38,11 +44,10 @@ def parse_args():
     return args
 
 
-def main():
-    args = parse_args()
-    start, end = get_time_stamps(args.mjd)
+def get_dust(mjd, args):
+    start, end = get_time_stamps(mjd)
     if args.verbose:
-        print("mjd= {}".format(today))
+        print("mjd= {}".format(mjd))
         print("MJD start/end times")
         print(start)
         print(end)
@@ -68,8 +73,13 @@ def main():
         if args.verbose:
             print("{} {:7.0f}    {:.0f}    {:10.0f}"
                   "".format(t, d, enclosure_state, dust_sum))
+    return dust_sum
 
-    print("Integrated Dust Counts: ~{:6.0f} dust-hrs".format(
+
+def main():
+    args = parse_args()
+    dust_sum = get_dust(args.mjd, args)
+    print("Integrated Dust Counts: ~{:<5.0f}dust-hrs".format(
           dust_sum - dust_sum % 100))
 
 

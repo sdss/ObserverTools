@@ -31,6 +31,7 @@ import sys
 import numpy as np
 import epics_fetch
 import ap_test
+import get_dust
 
 try:
     import fitsio
@@ -429,8 +430,8 @@ class Logging:
                 (self.b_data['iCart'] == cart)
                 & (self.b_data['iDither'] == 'C')
                 & (self.b_data['iEType'] == 'Science')))
-            if (len(self.b_data['iCart'])
-                    and np.sum(self.b_data['iEType'] == 'Science')):
+            if np.any((self.b_data['iCart'] == cart)
+                    & (self.b_data['iEType'] == 'Science')):
                 self.cart_data['cBdt'].append(np.max(
                     self.b_data['idt'][(self.b_data['iCart'] == cart)
                                        & (self.b_data['iEType'] == 'Science')]
@@ -463,9 +464,14 @@ class Logging:
                 self.cart_data['cBSummary'].append(
                     '{}xC'.format(self.cart_data['cNBC'][i]))
             if len(self.cart_data['cBdt']):
-                if self.cart_data['cBdt'][i] != 900:
-                    self.cart_data['cBSummary'][-1] += '@{}s'.format(
-                        self.cart_data['cBdt'][i])
+                try:
+                    if self.cart_data['cBdt'][i] != 900:
+                        self.cart_data['cBSummary'][-1] += '@{}s'.format(
+                            self.cart_data['cBdt'][i])
+                except IndexError:
+                    # Happens if there is no science frame yet with an exposure
+                    # time.
+                    pass
 
     @staticmethod
     def hartmann_parse(hart):
@@ -489,7 +495,6 @@ class Logging:
         return output
 
     def p_summary(self):
-        # TODO add dust
         print('=' * 80)
         print('{:^80}'.format('Observing Summary'))
         print('=' * 80)
@@ -506,6 +511,11 @@ class Logging:
                     self.ap_data['dNFaint'][j]))
             except IndexError:
                 pass
+        print('\n{:^80}'.format('Notes'))
+        print('='*80)
+        dust_sum = get_dust.get_dust(self.args.mjd, self.args)
+        print('- Integrated Dust Counts: ~{:5.0f} dust-hrs'.format(
+                dust_sum - dust_sum % 100))
         print('\n')
 
     @staticmethod
