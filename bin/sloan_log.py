@@ -144,20 +144,20 @@ class Logging:
                 if (img.exp_type == 'Domeflat') and ('-b-' in img.file.name):
                     self.ap_test(img)
                     self.test_procs.append(img.cart_id)
-                elif ('Arc' in img.img_type) and ('-a-' in img.file.name):
+                elif ('Arc' in img.exp_type) and ('-a-' in img.file.name):
                     self.ap_data['aTime'].append(img.isot)
                     self.ap_data['aID'].append(img.exp_id)
-                    if 'ThAr' in img.img_type:
+                    if 'ThAr' in img.exp_type:
                         self.ap_data['aOffset'].append(
                             img.compute_offset((30, 35), 939, 40, 1.27))
                         self.ap_data['aLamp'].append('ThAr')
-                    elif 'UNe' in img.img_type:
+                    elif 'UNe' in img.exp_type:
                         self.ap_data['aOffset'].append(
                             img.compute_offset((30, 35), 1761, 20, 3))
                         self.ap_data['aLamp'].append('UNe')
                     else:
                         print("Couldn't parse the arc image: {} with exposure"
-                              " type {}".format(img.file, img.img_type))
+                              " type {}".format(img.file, img.exp_type))
 
                 if img.cart_id not in self.data['cCart']:
                     self.data['cPlate'].append(img.plate_id)

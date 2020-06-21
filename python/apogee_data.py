@@ -40,18 +40,18 @@ class APOGEERaw:
         self.plate_id = header['PLATEID']
         self.cart_id = header['CARTID']
         self.exp_id = int(str(fil).split('-')[-1].split('.')[0])
-        if header['IMAGETYP'] == 'ArcLamp':
+        if header['EXPTYPE'].capitalize() == 'Arclamp':
             if header['LAMPUNE']:
-                self.img_type = 'UNe Arc'
+                self.exp_type = 'UNe Arc'
             elif header['LAMPTHAR']:
-                self.img_type = 'ThAr Arc'
+                self.exp_type = 'ThAr Arc'
             else:
-                print('Could not process image type of {}'.format(self.file))
+                print('Could not process exposure type of {}'.format(self.file))
         else:
-            self.img_type = header['IMAGETYP'].capitalize()
+            self.exp_type = header['EXPTYPE'].capitalize()
         self.n_read = header['NREAD']
         self.lead = header['PLATETYP']
-        self.exp_type = header['EXPTYPE'].capitalize()
+        self.img_type = header['IMAGETYP'].capitalize()
         if header['EXPTYPE'] == 'OBJECT':
             self.seeing = header['SEEING']
         else:
