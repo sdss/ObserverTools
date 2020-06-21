@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""A script to automate the bulk of logging and to replace log-function with
- a callback-free structure. This code is entirely dependent on raw images
- and their headers, unlike Log Function which is dependent on callbacks it
- catches while active, which are subject to crashes, unlike other files in
- time tracking with use the sdss python package
+"""A script to automate the bulk of logging and to replace various tools
+ like log function, log support, list_ap, list_m, and more. This code is
+ entirely dependent on raw images, their headers, and EPICS, unlike Log Function
+ which is dependent on callbacks it catches while open only and is subject to
+ crashes. It's inspired by some outputs from time tracking, but it avoids the
+ sdss python module and platedb
 
 The intent of this is to create a more future-proof tool for logging through
 Sloan V
@@ -50,22 +51,52 @@ if sys.version_info.major < 3:
 # For astropy
 warnings.filterwarnings('ignore', category=UserWarning, append=True)
 
-__version__ = 3.4
+__version__ = 3.5
 
 ap_dir = Path('/data/apogee/archive/')
 b_dir = Path('/data/spectro/')
 
 
 class Logging:
+    """
+    A tool to produce a ton of various outputs used for logging. This tool uses
+    the images in the /data directory and epics to build a nightlog that doesn't
+    require STUI output. It is best run as follow:
+
+    log = Logging(ap_images, b_images, args)
+    log.parse_images()
+    log.sort()
+    log.count_dithers()
+    log.p_summary()
+    log.p_data()
+    log.p_boss()
+    log.p_apogee()
+    log.log_support()
+
+    or via command line as
+
+    ./sloan_log.py -pt
+
+    or for a previous date
+
+    ./sloan_log.py -pm 59011
+
+    """
     def __init__(self, ap_images, m_images, args):
         self.ap_images = ap_images
         self.m_images = m_images
         self.args = args
-        # Variables that begin with carts have len of the number of carts in
-        # that night. Variables that begin with img have len nimages
+        # Dictionary keys that begin with c are of len(carts_in_a_night),
+        # keys that begin with i are of len(images_in_a_night), keys that begin
+        # with d are of len(dome_flats) (which is not always the same as carts,
+        # keys that begin with a are of len(apogee_arcs), which is usually 4 in
+        # a full night (morning and evening cals), keys that begin with h are of
+        # len(hartmanns), which is usually a few longer than len(carts). Each
+        # first letter is used to choose which sorting key to use. There must be
+        # a Time key for each new letter, and a new sorter argument must be
+        # added to self.sort. All of these dictionary items begin as lists,
+        # and are converted to np.arrays or astropy.time.Times in self.sort.
         self.data = {'cCart': [], 'cTime': [], 'cPlate': [], 'cLead': []}
-        # If there is a cart without dome flats, then dome data may not be
-        # of the same shape as cart data, so it needs its own prefix and dic
         self.ap_data = {'cCart': [], 'cTime': [],
                         'iTime': [], 'iID': [],
                         'iSeeing': [], 'iDetector': [], 'iDither': [],
@@ -79,7 +110,10 @@ class Logging:
                        'iEType': [], 'idt': [], 'iCart': [], 'iHart': [],
                        'iPlate': [], 'hHart': [], 'hTime': []}
         # These values are not known from the header and must be created
-        # after self.sort.
+        # after self.sort. N for number, AP or B for APOGEE or BOSS, and NSE
+        # for BOSS dithers, and AB for APOGEE dithers, dt for boss exposure
+        # time, since some boss carts use shorter exposures. All these are
+        # combined to fill Summary in self.count_dithers
         self.cart_data = {'cNAPA': [], 'cNAPB': [], 'cNBN': [], 'cNBS': [],
                           'cNBE': [], 'cNBC': [], 'cBdt': [],
                           'cAPSummary': [],
@@ -96,7 +130,7 @@ class Logging:
         """
         # This is from ap_test
         missing, faint = self.ap_tester.test_image(img)
-        # TODO Convert to ap_test
+        # TODO make sure ap_test works
         # test = sub.Popen((Path(__file__).absolute().parent.parent
         #                   / 'old_bin/aptest').__str__() + ' {} {}'
         #                  ''.format(self.args.mjd, img.exp_id), shell=True,
@@ -455,6 +489,7 @@ class Logging:
         return output
 
     def p_summary(self):
+        # TODO add dust
         print('=' * 80)
         print('{:^80}'.format('Observing Summary'))
         print('=' * 80)
@@ -488,6 +523,7 @@ class Logging:
         return window
 
     def p_data(self):
+        # TODO remove user comments from this section, move to its own section
         print('=' * 80)
         print('{:^80}'.format('Data Log'))
         print('=' * 80)
