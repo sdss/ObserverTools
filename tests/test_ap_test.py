@@ -7,8 +7,10 @@ from bin import ap_test
 class TestAPTest(unittest.TestCase):
     def setUp(self) -> None:
         self.project = Path(__file__).absolute().parent.parent
+
         class Dummy(object):
             pass
+
         self.args = Dummy()
         self.args.mjds = [59011]
         self.args.exps = [[34490027, 34490042, 34490051, 34490056, 34490069]]

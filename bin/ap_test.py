@@ -5,6 +5,7 @@ DG: A rewrite of Elena's aptest script.
 
 2020-06-18  DG  3.1  Most prints are under self.args.verbose, added fiber list
  to function returns to make it easier to use while imported in sloan_log.py
+ TODO: This usually doesn't work
 """
 
 import numpy as np
@@ -24,7 +25,7 @@ class ApogeeFlat:
         self.master_fiber_data = self.ap_bin(self.master_data)
         self.standard_path = Path('/data/apogee/archive/')
         if self.args.verbose:
-            print('Master={}'.format(master_path))
+            print('Master={}'.format(master_path.name))
 
     def run_inputs(self):
         for i, mjd in enumerate(self.args.mjds):
@@ -45,7 +46,7 @@ class ApogeeFlat:
         except ValueError:
             if self.args.verbose:
                 print('    Flat {}'. format(fil))
-        data = fitsio.read(fil, 0)
+        data = fitsio.read(fil, 1)
 
         fiber_data = self.red_1d(data)
 
@@ -89,8 +90,7 @@ class ApogeeFlat:
         # There are some science concerns about this algorithm's effectiveness
         # because it only uses a single column and doesn't account for dithers
         # well. This could be greatly improved.
-        print(arr.shape)
-        slce = arr[:, 2952]
+        slce = np.average(arr[:, 900:910], axis=1)
         binned_slce = self.ap_bin(slce)
         return binned_slce
 

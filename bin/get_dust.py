@@ -8,15 +8,12 @@ Changelog:
  """
 import argparse
 import datetime
-from channelarchiver import Archiver
 import sjd
 from astropy.time import Time
 import numpy as np
+import epics_fetch
 
-ss = 'http://sdss-telemetry.apo.nmsu.edu/telemetry/cgi/ArchiveDataServer.cgi'
-# ss='http://localhost:5080/telemetry/cgi/ArchiveDataServer.cgi'
-archiver = Archiver(ss)
-archiver.scan_archives()
+telemetry = epics_fetch.telemetry
 
 # TAI_UTC =34;
 TAI_UTC = 0
@@ -51,10 +48,10 @@ def get_dust(mjd, args):
         print("MJD start/end times")
         print(start)
         print(end)
-    dust_data = archiver.get('25m:apo:dustb', start, end, interpolation='raw',
-                             scan_archives=False)
-    enclosure_data = archiver.get('25m:apo:encl25m', start, end,
-                                  interpolation='raw', scan_archives=False)
+    dust_data = telemetry.get('25m:apo:dustb', start, end, interpolation='raw',
+                              scan_archives=False)
+    enclosure_data = telemetry.get('25m:apo:encl25m', start, end,
+                                   interpolation='raw', scan_archives=False)
     if args.verbose:
         print("         Enlosure open/close times")
         print(enclosure_data)
@@ -85,4 +82,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
