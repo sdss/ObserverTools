@@ -1,15 +1,18 @@
+#!/usr/bin/env python3
+
 """A logging tool that is meant to perform the function of LogSupport scripts in
 STUI, but by bypassing STUI and directly accessing telemetry
 
 2020-01-28  dgatlin     Init, after just learning about telemetry queries
-
-TODO: Only offsets and scale works, the rest return really weird results, maybe
- if I compare the times between sloan_log's hartmann queries and this hartmann's
- queries, I'll find a timing error
+2020-06-20  dgatlin     Changed some times around, it's very easy to mix up sjd
+    and mjd in channelarchiver
 """
 from astropy.time import Time
 import argparse
 from bin import epics_fetch
+
+
+__version__ = 3.1
 
 
 class LogSupport:

@@ -48,8 +48,41 @@ class TestSloanLog(unittest.TestCase):
         log.p_apogee()
         log.log_support()
 
+    def test_known_data_boss(self):
+        """Runs on an old dataset that I know used to run successfully, this one
+        only runs BOSS data summary
+        """
+
+        class Dummy(object):
+            pass
+
+        args = Dummy()
+        args.mjd = 59011
+        args.print = False
+        args.summary = False
+        args.data = False
+        args.boss = True
+        args.apogee = False
+        args.p_boss = True
+        args.p_apogee = False
+        args.log_support = False
+        args.morning = False
+        args.verbose = True
+
+        ap_data_dir = sloan_log.ap_dir / '{}'.format(args.mjd)
+        b_data_dir = sloan_log.b_dir / '{}'.format(args.mjd)
+        ap_images = list(Path(ap_data_dir).glob('apR-a*.apz'))
+        b_images = list(Path(b_data_dir).glob('sdR-r1*fit.gz'))
+        log = sloan_log.Logging(ap_images, b_images, args)
+        log.parse_images()
+        log.sort()
+        log.count_dithers()
+        log.p_boss()
+
     def test_known_data_apogee(self):
-        """Runs on an old dataset that I know used to run successfully"""
+        """Runs on an old dataset that I know used to run successfully, this one
+        only checks APOGEE and prints its summary
+        """
 
         class Dummy(object):
             pass
