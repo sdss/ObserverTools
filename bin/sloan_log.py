@@ -491,44 +491,45 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('Data Log'))
         print('=' * 80)
-        for cart in self.data['cCart']:
-            i = np.where(cart == self.ap_data['cCart'])[0][0]
-            print('# Cart {}, Plate {}, {}'.format(cart,
-                                                   self.data['cPlate'][i],
-                                                   self.data['cLead'][i]))
+        for i, cart in enumerate(self.data['cCart']):
+            print('### Cart {}, Plate {}, {}'.format(cart,
+                self.data['cPlate'][i], self.data['cLead'][i]))
             print('# GSOGTF, ===INSERT WEATHER CONDITIONS===')
-            print('# APOGEE')
-            print('{:<5} {:<8} {:<8} {:<12} {:<4} {:<6} {:<9}'
-                  ' {:<4}'.format('MJD', 'UTC', 'Exposure', 'Type',
-                                  'Dith', 'nReads', 'Pipeline',
-                                  'Seeing'))
-            print('=' * 80)
-            window = self.get_window(self.ap_data, i)
-            for (mjd, iso, exp_id, exp_type, dith, nread,
-                 detectors, see) in zip(
-                self.ap_data['iTime'][window].mjd,
-                self.ap_data['iTime'][window].iso,
-                self.ap_data['iID'][window],
-                self.ap_data['iEType'][window],
-                self.ap_data['iDither'][window],
-                self.ap_data['iNRead'][window],
-                self.ap_data['iDetector'][window],
-                self.ap_data['iSeeing'][window]
-            ):
-                print('{:<5.0f} {:0>8} {:<8.0f} {:<12} {:<4} {:>6} {:<9}'
-                      ' {:>4.1f}'.format(int(mjd), iso[12:19], exp_id,
-                                         exp_type,
-                                         dith, nread, detectors, see))
-            print()
-            if cart in self.ap_data['dCart']:
-                for j, dome in enumerate(self.ap_data['dCart']):
-                    if dome == cart:
-                        print(self.ap_data['dTime'][j].iso)
-                        print('Missing fibers: {}'.format(
-                            self.ap_data['dMissing'][j]))
-                        print('Faint fibers: {}'.format(
-                            self.ap_data['dFaint'][j]))
-                        print()
+            if cart in self.ap_data['cCart']:
+                k = np.where(cart == self.ap_data['cCart'])[0][0]
+                
+                print('# APOGEE')
+                print('{:<5} {:<8} {:<8} {:<12} {:<4} {:<6} {:<9}'
+                      ' {:<4}'.format('MJD', 'UTC', 'Exposure', 'Type',
+                                      'Dith', 'nReads', 'Pipeline',
+                                      'Seeing'))
+                print('=' * 80)
+                window = self.get_window(self.ap_data, k)
+                for (mjd, iso, exp_id, exp_type, dith, nread,
+                     detectors, see) in zip(
+                    self.ap_data['iTime'][window].mjd,
+                    self.ap_data['iTime'][window].iso,
+                    self.ap_data['iID'][window],
+                    self.ap_data['iEType'][window],
+                    self.ap_data['iDither'][window],
+                    self.ap_data['iNRead'][window],
+                    self.ap_data['iDetector'][window],
+                    self.ap_data['iSeeing'][window]
+                ):
+                    print('{:<5.0f} {:0>8} {:<8.0f} {:<12} {:<4} {:>6} {:<9}'
+                          ' {:>4.1f}'.format(int(mjd), iso[12:19], exp_id,
+                                             exp_type,
+                                             dith, nread, detectors, see))
+                print()
+                if cart in self.ap_data['dCart']:
+                    for j, dome in enumerate(self.ap_data['dCart']):
+                        if dome == cart:
+                            print(self.ap_data['dTime'][j].iso)
+                            print('Missing fibers: {}'.format(
+                                self.ap_data['dMissing'][j]))
+                            print('Faint fibers: {}'.format(
+                                self.ap_data['dFaint'][j]))
+                            print()
 
             if cart in self.b_data['cCart']:
                 print('# BOSS')
@@ -539,7 +540,7 @@ class Logging:
                 # i is an index for data, but it will disagree with b_data
                 # if there is an apogee-only cart
                 i = np.where(cart == self.b_data['cCart'])[0][0]
-                window = self.get_window(self.b_data, i)
+                window = self.get_window(self.b_data, k)
                 for (mjd, iso, exp_id, exp_type, dith,
                      detectors, etime, hart) in zip(
                     self.b_data['iTime'][window].mjd,
@@ -559,15 +560,15 @@ class Logging:
                                     hart))
                 try:
                     window = ((self.b_data['hTime']
-                               >= self.data['cTime'][i])
+                               >= self.data['cTime'][k])
                               & (self.b_data['hTime']
-                                 < self.data['cTime'][i + 1])
+                                 < self.data['cTime'][k + 1])
                               )
 
                 except IndexError:
                     window = ((self.b_data['hTime']
-                               >= self.data['cTime'][i])
-                              & (self.b_data['hTime'] < Time.now() + 0.25))
+                               >= self.data['cTime'][k])
+                              & (self.b_data['hTime'] < Time.now()))
                 for t, hart in zip(self.b_data['hTime'][window],
                                    self.b_data['hHart'][window]):
                     print()
