@@ -130,7 +130,8 @@ class Logging:
         future.
         """
         # This is from ap_test
-        missing, faint = self.ap_tester.test_image(img)
+        self.args.plot = False
+        missing, faint = self.ap_tester.test_image(img.file)
         # TODO make sure ap_test works
         # test = sub.Popen((Path(__file__).absolute().parent.parent
         #                   / 'old_bin/aptest').__str__() + ' {} {}'
@@ -142,6 +143,9 @@ class Logging:
         #     raise Exception(err)
         # missing = eval(lines[0].split('Missing fibers: ')[-1])
         # faint = eval(lines[1].split('Faint fibers:   ')[-1])
+        if self.args.verbose:
+            print('Exposure {}'.format(img.exp_id))
+            print(missing, faint)
         n_missing = 0
         n_faint = 0
         for miss in missing:
@@ -176,7 +180,7 @@ class Logging:
                     # writing, plate_id will be empty and without this if,
                     # it would fail. With this if, it will skip the plate
                     continue
-                if (img.exp_type == 'Domeflat') and ('-b-' in img.file.name):
+                if (img.exp_type == 'Domeflat') and ('-a-' in img.file.name):
                     self.ap_test(img)
                     self.test_procs.append(img.cart_id)
                 elif ('Arc' in img.exp_type) and ('-a-' in img.file.name):
@@ -528,8 +532,12 @@ class Logging:
                       )
 
         except IndexError:
-            window = ((data['iTime'] >= data['cTime'][i])
-                      & (data['iTime'] < Time.now() + 0.25))
+            try:
+                window = ((data['iTime'] >= data['cTime'][i])
+                          & (data['iTime'] < Time.now() + 0.25))
+            except IndexError:
+                window = np.array([False] * len(data['iTime']))
+
         return window
 
     def p_data(self):

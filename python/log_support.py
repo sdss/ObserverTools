@@ -75,7 +75,7 @@ class LogSupport:
         for key in offsets_keys:
             off_data[key] = []
         for time in self.call_times:
-            self.query(offsets_keys, (time-0.25).isot, (time-0.25).isot,
+            self.query(offsets_keys, (time).isot, (time).isot,
                        off_data)
 
         self.offsets += '=' * 80 + '\n'
@@ -84,8 +84,8 @@ class LogSupport:
         self.offsets += '=' * 80 + '\n'
         self.offsets += ('{:<5} {:<9} {:<6} {:<4} {:<6} {:<13} {:<8} {:<10}'
                          ' {:<8}\n'.format('Time', 'Cart', 'Az', 'Alt', 'Rot',
-                                           'objOff', 'guideRot', 'calibOff',
-                                           'guideRMS'))
+                                           '(\u03B4RA, \u03B4Dec)', 'guideRot',
+                                           'calibOff', 'guideRMS'))
         self.offsets += '=' * 80 + '\n'
         for i, time in enumerate(self.call_times):
             self.offsets += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>4.1f}'
@@ -122,7 +122,7 @@ class LogSupport:
         for key in focus_keys:
             foc_data[key] = []
         for time in self.call_times:
-            self.query(focus_keys,  (time-0.25).isot, (time-0.25).isot,
+            self.query(focus_keys,  (time).isot, (time).isot,
                        foc_data)
 
         self.focus += '=' * 80 + '\n'
@@ -167,7 +167,7 @@ class LogSupport:
         for key in weather_keys:
             weather_data[key] = []
         for time in self.call_times:
-            self.query(weather_keys, (time-0.25).isot, (time-0.25).isot,
+            self.query(weather_keys, (time).isot, (time).isot,
                        weather_data)
 
         self.weather = '=' * 80 + '\n'

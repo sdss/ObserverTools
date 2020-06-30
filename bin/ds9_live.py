@@ -20,6 +20,7 @@ import time
 import fitsio
 from astropy.time import Time, TimeDelta
 import os
+import tracemalloc
 
 default_dir = Path('/data/apogee/utr_cdr/')
 boss_cams = ['r1', 'r2', 'b1', 'b2']
@@ -314,12 +315,18 @@ def parseargs():
 
 
 def main():
+    tracemalloc.start()
     args = parseargs()
     # Start the display
     window = DS9Window(args.name, args.fits_dir, args.regex, args.scale,
                        args.zoom, args.verbose)
     while True:
         window.update()
+        if args.verbose:
+            snapshot = tracemalloc.take_snapshot()
+            top_stats = snapshot.statistics('lineno')
+            for stat in top_stats[:5]:
+                print(stat)
 
         time.sleep(args.interval)
 
