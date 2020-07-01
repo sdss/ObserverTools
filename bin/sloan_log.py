@@ -51,6 +51,8 @@ if sys.version_info.major < 3:
 
 # For astropy
 warnings.filterwarnings('ignore', category=UserWarning, append=True)
+# For numpy boolean arrays
+warnings.filterwarnings('ignore', category=FutureWarning, append=True)
 
 __version__ = 3.5
 
