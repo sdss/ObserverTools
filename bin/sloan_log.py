@@ -24,6 +24,7 @@ In order to run it locally, you will need to either have access to /data, or
 2020-06-01      dgatlin     Changed some methods to @staticmethods, moved to
     bin, refactored some names to more appropriately fit the role of logging.
 2020-06-17      dgatlin     Moved telemetry to epics_fetch
+2020-06-30      dgatlin     Added morning option for morning cals
 """
 import argparse
 import warnings
@@ -387,8 +388,25 @@ class Logging:
                 elif key[0] == 'a':
                     self.ap_data[key] = item[ap_arc_sorter]
             if self.args.morning:
-                # TODO Redefine apogee values to within morning range
-                morning = self.ap_data['iTime'] > Time()
+                was_dark = False
+                prev_time = 0
+                for t, reads, exp in zip(self.ap_data['iTime'],
+                        self.ap_data['iNRead'], self.ap_data['iEType']):
+                    if (reads == 60) and (exp == 'Dark'):
+                        if was_dark:
+                            lower = prev_time
+                            break
+                        else:
+                            was_dark = True
+                            prev_time = t
+                            if self.args.verbose:
+                                print('Morning lower limit: {}'.format(
+                                    prev_time))
+                    else:
+                        was_dark = False
+                upper = Time(self.args.mjd + 1, format='mjd')
+                self.morning_filter = ((lower <= self.ap_data['iTime'])
+                                      & (self.ap_data['iTime'] <= upper))
 
         if self.args.boss:
             for key, item in self.b_data.items():
@@ -563,7 +581,7 @@ class Logging:
                 window = self.get_window(self.ap_data, k)
                 for (mjd, iso, exp_id, exp_type, dith, nread,
                      detectors, see) in zip(
-                    self.ap_data['iTime'][window].mjd,
+                    self.ap_data['iTime'][window].mjd + 0.25,
                     self.ap_data['iTime'][window].iso,
                     self.ap_data['iID'][window],
                     self.ap_data['iEType'][window],
@@ -599,7 +617,7 @@ class Logging:
                 window = self.get_window(self.b_data, k)
                 for (mjd, iso, exp_id, exp_type, dith,
                      detectors, etime, hart) in zip(
-                    self.b_data['iTime'][window].mjd,
+                    self.b_data['iTime'][window].mjd + 0.25,
                     self.b_data['iTime'][window].iso,
                     self.b_data['iID'][window],
                     self.b_data['iEType'][window],
@@ -641,7 +659,7 @@ class Logging:
                         'Pipeline', 'ETime', 'Hart'))
         print('=' * 80)
         for (mjd, iso, cart, plate, exp_id, exp_type, dith, detectors, etime,
-             hart) in zip(self.b_data['iTime'].mjd,
+             hart) in zip(self.b_data['iTime'].mjd + 0.25,
                           self.b_data['iTime'].iso,
                           self.b_data['iCart'],
                           self.b_data['iPlate'],
@@ -668,23 +686,45 @@ class Logging:
                               'Dith', 'nReads', 'Pipeline',
                               'Seeing'))
         print('=' * 80)
-        for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
-             detectors, see) in zip(
-            self.ap_data['iTime'].mjd,
-            self.ap_data['iTime'].iso,
-            self.ap_data['iCart'],
-            self.ap_data['iPlate'],
-            self.ap_data['iID'], self.ap_data['iEType'],
-            self.ap_data['iDither'], self.ap_data['iNRead'],
-            self.ap_data['iDetector'],
-            self.ap_data['iSeeing']
-        ):
-            print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
-                  ' {:>6}'
-                  ' {:<8}'
-                  ' {:>6.1f}'.format(int(mjd), iso[12:19], cart, plate, exp_id,
-                                     exp_type,
-                                     dith, nread, detectors, see))
+        if self.args.morning:
+            for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
+                 detectors, see) in zip(
+                self.ap_data['iTime'].mjd[self.morning_filter] + 0.25,
+                self.ap_data['iTime'].iso[self.morning_filter],
+                self.ap_data['iCart'][self.morning_filter],
+                self.ap_data['iPlate'][self.morning_filter],
+                self.ap_data['iID'][self.morning_filter],
+                self.ap_data['iEType'][self.morning_filter],
+                self.ap_data['iDither'][self.morning_filter],
+                self.ap_data['iNRead'][self.morning_filter],
+                self.ap_data['iDetector'][self.morning_filter],
+                self.ap_data['iSeeing'][self.morning_filter]
+            ):
+                print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
+                      ' {:>6}'
+                      ' {:<8}'
+                      ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
+                                         exp_id, exp_type,
+                                         dith, nread, detectors, see))
+
+        else:
+            for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
+                 detectors, see) in zip(
+                self.ap_data['iTime'].mjd,
+                self.ap_data['iTime'].iso,
+                self.ap_data['iCart'],
+                self.ap_data['iPlate'],
+                self.ap_data['iID'], self.ap_data['iEType'],
+                self.ap_data['iDither'], self.ap_data['iNRead'],
+                self.ap_data['iDetector'],
+                self.ap_data['iSeeing']
+            ):
+                print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
+                      ' {:>6}'
+                      ' {:<8}'
+                      ' {:>6.1f}'.format(int(mjd), iso[12:19], cart, plate,
+                                         exp_id, exp_type,
+                                         dith, nread, detectors, see))
         # Usually, there are 4 ThAr and 4 UNe arcs in a night, and they're
         # assumed to be alternating ThAr UNe ThAr UNe. When you grab every
         # other, you'll have only one type, that's the first slicing, and the
@@ -781,6 +821,7 @@ def main():
 
     if args.morning:
         args.apogee = True
+        p_apogee = True
 
     if args.data:
         args.boss = True
