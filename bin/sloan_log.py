@@ -304,7 +304,7 @@ class Logging:
                     self.b_data['hTime'].append(img.isot)
                 m_detectors = []
                 # img_mjd = int(Time(img.isot).mjd)
-                if img.lead == 'eBOSS':
+                if 'BOSS' in img.lead:
                     red_dir = Path('/data/boss/sos/{}/'.format(self.args.mjd))
                     red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                         img.exp_id)
@@ -756,10 +756,11 @@ class Logging:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--today', action='store_true',
+    parser.add_argument('-t', '--today', action='store_true', default=True,
                         help="Whether or not you want to search for today's"
                              " data, whether or not the night is complete."
-                             " Note: must be run after 00:00Z")
+                             " Note: must be run after 18:00Z to get the"
+                             " correct sjd")
     parser.add_argument('-m', '--mjd', type=int,
                         help='If not today (-t), the mjd to search')
     parser.add_argument('-s', '--summary', help='Print the data summary',
@@ -787,13 +788,14 @@ def parse_args():
 
 def main():
     args = parse_args()
-    if args.today:
+    if args.mjd:
+        args.mjd = args.mjd
+    elif args.today:
         now = Time.now() + 0.25
         args.mjd = int(now.mjd)
-    elif args.mjd:
-        args.mjd = args.mjd
     else:
-        raise argparse.ArgumentError('Must provide -t or -m in arguments')
+        raise argparse.ArgumentError(args.mjd,
+                'Must provide -t or -m in arguments')
 
     ap_data_dir = ap_dir / '{}'.format(args.mjd)
     b_data_dir = b_dir / '{}'.format(args.mjd)
