@@ -13,6 +13,8 @@ from astropy.time import Time
 import numpy as np
 import epics_fetch
 
+__version__ = '3.2.1'
+
 telemetry = epics_fetch.telemetry
 
 # TAI_UTC =34;

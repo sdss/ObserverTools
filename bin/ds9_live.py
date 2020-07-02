@@ -27,7 +27,7 @@ boss_cams = ['r1', 'r2', 'b1', 'b2']
 file_sizes = {'APOGEE': 67115520, 'BOSS': 9e6, 'Guider': 4e5,
               'Engineering': 9e5}
 
-__version__ = 3.0
+__version__ = '3.1.0'
 
 
 class DS9Window:

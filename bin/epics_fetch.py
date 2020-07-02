@@ -26,6 +26,7 @@ except (socket.gaierror, ConnectionRefusedError):
                         'ssh -L 5080:sdss4-telemetry.apo.nmsu.edu:80 observer@'
                         'sdss-gateway.apo.nmsu.edu')
 
+__version__ = '3.1.1'
 
 def get_data(channel, start_time, end_time):
     """ Grabs the channel data. If a list is passed to channel, it will return

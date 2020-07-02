@@ -12,7 +12,7 @@ import argparse
 from bin import epics_fetch
 
 
-__version__ = 3.1
+__version__ = '3.1.0'
 
 
 class LogSupport:

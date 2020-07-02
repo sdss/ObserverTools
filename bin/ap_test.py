@@ -13,7 +13,7 @@ import fitsio
 from argparse import ArgumentParser
 from pathlib import Path
 
-__version__ = 3.1
+__version__ = '3.1.0'
 
 
 class ApogeeFlat:

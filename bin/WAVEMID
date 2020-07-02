@@ -9,6 +9,8 @@ from pathlib import Path
 import numpy as np
 import sys
 
+__version__ = '3.0.0'
+
 
 if not sys.argv[1:4]:
     print("    Usage:  WAVEMID  2036.0 2045.0 2043.0 2044.0  [ct] [plot] ")

@@ -7,7 +7,7 @@ If run as a script, it prints the Sloan Julian Date, which is mjd + 0.25, but
 """
 import time
 
-__version__ = 3.2
+__version__ = '3.2.0'
 
 TAI_UTC = 0  # TAI_UTC =34;
 aSjd = 40587.25

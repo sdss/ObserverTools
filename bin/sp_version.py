@@ -3,6 +3,8 @@
 
 import subprocess as sub
 
+__version__ = '3.0.0'
+
 
 def main():
     softwares, versions = [], []

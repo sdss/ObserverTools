@@ -1,4 +1,4 @@
-*.pyc  # Python
+*.pyc  # Python 2
 __pycache__/  # Python 3
 *.swp  # vim
 .idea  # For PyCharm
