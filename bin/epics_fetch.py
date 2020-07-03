@@ -5,6 +5,10 @@ A terminal tool to access the SDSS EPICS server using channeltelemetry
 
 See this CA library  https://github.com/RobbieClarken/channeltelemetry
 
+Changelog:
+2020-06-08  DG  Ported to Python 3 and ObserverTools, takes a series of keys or
+ just one.
+
 """
 
 from channelarchiver import Archiver
