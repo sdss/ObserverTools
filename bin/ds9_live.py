@@ -11,15 +11,14 @@ Changelog:
  3 and greatly improved PEP-8 compliance. Changed source of apogee data to work
  on any system
 """
-from pathlib import Path
-from argparse import ArgumentParser
+import tracemalloc
+
+import fitsio
 import hashlib
 import pyds9
 import time
-import fitsio
-from astropy.time import Time, TimeDelta
-import os
-import tracemalloc
+from argparse import ArgumentParser
+from pathlib import Path
 
 default_dir = Path('/data/apogee/utr_cdr/')
 boss_cams = ['r1', 'r2', 'b1', 'b2']
@@ -189,10 +188,9 @@ class DS9Window:
                 # happens when it's run on APOGEE outside of sdss-apogee
                 stats = fil.lstat()
                 try:  # Handles the exists but unwritten issue
-                    hdr = fitsio.read_header(fil)
+                    fitsio.read_header(fil)
                 except OSError:
-                    print('File is actively being written, trying again in {}s'
-                          ''.format(args.interval))
+                    print('File is actively being written, skipping.')
                     return
 
                 # Handles the size issue

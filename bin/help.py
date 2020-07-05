@@ -10,25 +10,25 @@ This is a file to pull the help for all programs in bin. Each script must be
 """
 import subprocess as sub
 from pathlib import Path
-import sys
-sys.path.append(Path(__file__).parent)
-import mjd
+import sjd
 import sp_version
 # import wave_mid
 # import x_mid
 
 argparsed = ['ap_test.py', 'boss_sha1sum.py', 'ds9_live.py', 'epics_fetch.py',
              'get_dust.py', 'sloan_log.py']
+non_argparsed = ['sjd.py', 'sp_version.py', 'wave_mid.py', 'x_mid.py']
+bin_dir = Path(__file__).parent
 
-non_argparsed = ['mjd.py', 'sp_version.py', 'wave_mid.py', 'x_mid.py']
 for arg in argparsed:
     print('{:=^80}'.format(arg))
-    bin = Path(__file__).parent
-    sub.call([bin / arg, '-h'])
+    sub.call([bin_dir / arg, '-h'])
     print()
 
-print(mjd.__doc__)
+print('{:=^80}'.format('sjd.py'))
+print(sjd.__doc__)
+print('{:=^80}'.format('sp_version.py'))
 print(sp_version.__doc__)
+
 # print(wave_mid.__doc__)
 # print(x_mid.__doc__)
-

@@ -32,6 +32,7 @@ except (socket.gaierror, ConnectionRefusedError):
 
 __version__ = '3.1.1'
 
+
 def get_data(channel, start_time, end_time):
     """ Grabs the channel data. If a list is passed to channel, it will return
     a list of datasets"""
