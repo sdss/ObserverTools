@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""A script to automate the bulk of logging and to replace various tools
+"""sloan_log.py
+
+A script to automate the bulk of logging and to replace various tools
  like log function, log support, list_ap, list_m, and more. This code is
  entirely dependent on raw images, their headers, and EPICS, unlike Log Function
  which is dependent on callbacks it catches while open only and is subject to

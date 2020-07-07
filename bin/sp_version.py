@@ -2,7 +2,8 @@
 """
 sp_version.py
 
-Outputs a list of software versions used that night.
+Outputs a list of software versions used that night. Rewritten by Dylan Gatlin
+ based on spVersion by Elena Malanushenko
 
 Changelog:
 2020-06-08  DG  Ported to ObserverTools in Python 3, replaced os with sub

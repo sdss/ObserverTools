@@ -6,6 +6,11 @@ This is a home for Python 3 tools which came from the sdss-hub:~/bin directory.
  
 ### Moderators
 Dylan Gatlin, Dmitry Bizyaev
+
+### Authors
+In addition to the moderators who maintain this repo, scripts were written by
+ the following authors: Elena Malanushenko, Jon Brinkmann, Viktor Malanushenko,
+ Kaike Pan, Stephen Bailey, 
  
 ## Structure
 Files that were once under sdss-hub:~/bin are now under old_bin, and Python 3

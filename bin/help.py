@@ -4,7 +4,7 @@ help.py
 
 This is a file to pull the help for all programs in bin. Each script must be
  added individually, some scripts use argparse, so -h is called, others do not,
- and so their __doc__ is printed.
+ and so their __doc__ is printed. Based on spHelp written by Elena.
 
 2020-06-08  DG  Init, based on spHelp
 """
