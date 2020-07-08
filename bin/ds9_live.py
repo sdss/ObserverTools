@@ -20,6 +20,7 @@ import time
 import fitsio
 from astropy.time import Time, TimeDelta
 import os
+import numpy as np
 import tracemalloc
 
 default_dir = Path('/data/apogee/utr_cdr/')
@@ -76,7 +77,8 @@ class DS9Window:
                       ' would you like to connect to it, close it, or create'
                       ' another window with a new name?'.format(ds9))
                 action = input('[connect]/close/change: ')
-                if action.lower() == 'connect':
+                if ((action.lower() == 'connect')
+                or (action.lower == '')):
                     self.name = ds9
                 elif action.lower() == 'close':
                     d = pyds9.DS9(ds9)
@@ -138,7 +140,8 @@ class DS9Window:
         fits_dir = self.latest_fits_dir()
 
         # print 'dir = ', dir
-
+        img_times = []
+        imgs = []
         for fil in Path(fits_dir).glob(pattern):
             fil = fil.absolute()
 
@@ -150,10 +153,25 @@ class DS9Window:
                 # Store the name and mtime of only the latest FITS file
 
                 mtime = Path(fil).stat().st_mtime
+                img_times.append(mtime)
+                imgs.append(fil)
                 # print max_time, file, mtime
-                if max_time < mtime:
-                    fits_filename = fil
-                    max_time = mtime
+                # if max_time < mtime:
+                    # fits_filename = fil
+                    # max_time = mtime
+        img_times = np.array(img_times)
+        imgs = np.array(imgs)
+        sorter = img_times.argsort()
+        imgs = imgs[sorter]
+        img_times = img_times[sorter]
+        # An attempt at making sure that if APOGEE isn't on the summary
+        # directory, it won't crash because it won't try to read an image
+        # that is still writing
+        if (('APOGEE' in self.name)
+        and ('summary' not in self.fits_dir.as_posix())):
+            fits_filename = imgs[-2].absolute()
+        else:
+            fits_filename = imgs[-1].absolute()
 
         return fits_filename
 
