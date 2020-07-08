@@ -5,6 +5,13 @@ A terminal tool to access the SDSS EPICS server using channeltelemetry
 
 See this CA library  https://github.com/RobbieClarken/channeltelemetry
 
+Based off of cafetch.py, written by Elena, with a few features removed to limit
+ dependencies.
+
+Changelog:
+2020-06-08  DG  Ported to Python 3 and ObserverTools, takes a series of keys or
+ just one.
+
 """
 
 from channelarchiver import Archiver
@@ -27,6 +34,7 @@ except (socket.gaierror, ConnectionRefusedError):
                         'sdss-gateway.apo.nmsu.edu')
 
 __version__ = '3.1.1'
+
 
 def get_data(channel, start_time, end_time):
     """ Grabs the channel data. If a list is passed to channel, it will return

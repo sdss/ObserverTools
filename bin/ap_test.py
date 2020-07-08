@@ -28,7 +28,7 @@ class ApogeeFlat:
             print('Master={}'.format(master_path.name))
 
     def run_inputs(self):
-        for i, mjd in enumerate(self.args.mjds):
+        for i, mjd in enumerate(self.args.sjds):
             self.test_mjd(mjd, self.args.exps[i])
 
     def test_mjd(self, mjd, exps):
@@ -45,7 +45,7 @@ class ApogeeFlat:
                 print('    Flat {}'.format(fil.relative_to(self.standard_path)))
         except ValueError:
             if self.args.verbose:
-                print('    Flat {}'. format(fil))
+                print('    Flat {}'.format(fil))
         data = fitsio.read(fil, 1)
 
         fiber_data = self.red_1d(data)
@@ -148,11 +148,13 @@ class ApogeeFlat:
 
 
 def parse_args():
-    parser = ArgumentParser('A script to test the transparency of an APOGEE'
-                            ' dome flat. It compares the flat to a known'
-                            ' master.')
+    parser = ArgumentParser(usage='ap_test.py <mjd> <exp_id> [<exp_id_2>]'
+                                  ' [<mjd_2> <exp_id>]',
+                            description='A script to test the transparency of'
+                                        ' an APOGEE dome flat. It compares the '
+                                        ' flat to a known master.')
     parser.add_argument('positionals', nargs='+',
-                        help='MJDs, followed by any dome flats in that night.'
+                        help='SJD, followed by any dome flats in that night.'
                              ' Multiple MJDs can be included, as long as the'
                              ' exposures follow the correct MJD')
     parser.add_argument('-p', '--plot', action='store_true',
@@ -162,13 +164,13 @@ def parse_args():
 
     # The end result of this section is that you end up with a 1D array of mjds
     # and a 2D list of shape mjd by exps of exp ids in that day.
-    args.mjds = []
+    args.sjds = []
     args.exps = [[]]
     for arg in args.positionals:
         if len(str(arg)) <= 5:
-            args.mjds.append(arg)
+            args.sjds.append(arg)
             args.exps.append([])
-            day_i = len(args.mjds) - 1
+            day_i = len(args.sjds) - 1
         else:
             try:
                 args.exps[day_i].append(arg)
@@ -176,7 +178,7 @@ def parse_args():
                 raise Exception('Must provide a 5-digit mjd before an 8-digit'
                                 ' exposure number')
 
-    args.mjds = args.mjds
+    args.sjds = args.sjds
     args.exps = args.exps
     return args
 

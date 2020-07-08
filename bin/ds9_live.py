@@ -3,17 +3,17 @@
 Description:	Opens and continuously updates ds9 with the latest file. Run
 ds9_live.py -h for details.
 
-History:
-Jun 21, 2011	Jon Brinkmann	Apache Point Observatory Created file from
-    spds9.py
-2020-05-31      Dylan Gatlin    Replaced almost every library for a python 3
-    upgrade. ds9 -> pyds9, os.path -> pathlib, optionparse -> argparse. Updated
-    syntax to Python 3 and greatly improved PEP-8 compliance. Changed source
-    of apogee data to work on any system
-
+Changelog:
+2011-06-11  JB 	Apache Point Observatory Created file from
+ spds9.py
+2020-05-31  DG  Replaced almost every library for a python 3 upgrade. ds9 ->
+ pyds9, os.path -> pathlib, optionparse -> argparse. Updated syntax to Python
+ 3 and greatly improved PEP-8 compliance. Changed source of apogee data to work
+ on any system
 """
-from pathlib import Path
-from argparse import ArgumentParser
+import tracemalloc
+
+import fitsio
 import hashlib
 import pyds9
 import time
@@ -21,7 +21,9 @@ import fitsio
 from astropy.time import Time, TimeDelta
 import os
 import numpy as np
-import tracemalloc
+# import tracemalloc
+from argparse import ArgumentParser
+from pathlib import Path
 
 default_dir = Path('/data/apogee/utr_cdr/')
 boss_cams = ['r1', 'r2', 'b1', 'b2']
@@ -208,10 +210,9 @@ class DS9Window:
                 # happens when it's run on APOGEE outside of sdss-apogee
                 stats = fil.lstat()
                 try:  # Handles the exists but unwritten issue
-                    hdr = fitsio.read_header(fil)
+                    fitsio.read_header(fil)
                 except OSError:
-                    print('File is actively being written, trying again in {}s'
-                          ''.format(args.interval))
+                    print('File is actively being written, skipping.')
                     return
 
                 # Handles the size issue
@@ -242,9 +243,9 @@ def parseargs():
     # Define command line options
 
     parser = ArgumentParser(description='A tool to leave running continuously'
-                                        'that will display the most current'
-                                        'apogee exposure. By default, it will'
-                                        'run every 60 seconds.')
+                                        ' that will display the most current'
+                                        ' apogee exposure. By default, it will'
+                                        ' run every 60 seconds.')
     parser.add_argument('-a', '--apogee', action='store_true',
                         help='If included, will display APOGEE images.'
                              ' Overrides most arguments')
@@ -254,8 +255,8 @@ def parseargs():
     parser.add_argument('-d', '--directory', dest='fits_dir',
                         default=default_dir, type=str,
                         help='Set FITS data directory. It needs to be a'
-                             'directory of dated folders, where the newest'
-                             'folder has the newest data.'
+                             ' directory of dated folders, where the newest'
+                             ' folder has the newest data.'
                              ' Default is {}'.format(default_dir))
 
     parser.add_argument('-e', '--ecam', action='store_true',
