@@ -80,7 +80,7 @@ class DS9Window:
                       ' another window with a new name?'.format(ds9))
                 action = input('[connect]/close/change: ')
                 if ((action.lower() == 'connect')
-                or (action.lower == '')):
+                or (action.lower() == '')):
                     self.name = ds9
                 elif action.lower() == 'close':
                     d = pyds9.DS9(ds9)
@@ -169,11 +169,14 @@ class DS9Window:
         # An attempt at making sure that if APOGEE isn't on the summary
         # directory, it won't crash because it won't try to read an image
         # that is still writing
-        if (('APOGEE' in self.name)
-        and ('summary' not in self.fits_dir.as_posix())):
-            fits_filename = imgs[-2].absolute()
-        else:
-            fits_filename = imgs[-1].absolute()
+        try:
+            if (('APOGEE' in self.name)
+            and ('summary' not in self.fits_dir.as_posix())):
+                fits_filename = imgs[-2].absolute()
+            else:
+                fits_filename = imgs[-1].absolute()
+        except IndexError:
+            return None
 
         return fits_filename
 
@@ -197,6 +200,9 @@ class DS9Window:
         """Update the display"""
 
         fil = self.latest_fits_file(self.regex)
+        if fil is None:
+            print("No files found in today's folder, skipping.")
+            return
         if self.verbose:
             print('Latest fits file ={}\nLast fits file   ={}'
                   ''.format(fil, self.last_file))
@@ -206,11 +212,10 @@ class DS9Window:
             try:
                 # In case the file is incomplete, it won't crash ds9. This
                 # can happen if it is either size 0 (just made), or it is made,
-                # but it hasn't been populated by the first exposure. This only
-                # happens when it's run on APOGEE outside of sdss-apogee
+                # but it hasn't been populated by the first exposure.
                 stats = fil.lstat()
                 try:  # Handles the exists but unwritten issue
-                    fitsio.read_header(fil)
+                    fitsio.read(fil)
                 except OSError:
                     print('File is actively being written, skipping.')
                     return
@@ -334,18 +339,21 @@ def parseargs():
 
 
 def main():
-    tracemalloc.start()
+    # tracemalloc.start()
     args = parseargs()
     # Start the display
     window = DS9Window(args.name, args.fits_dir, args.regex, args.scale,
                        args.zoom, args.verbose)
     while True:
         window.update()
+        # This loop is for tracing memory allocation to track memory leaks, none
+        # were found, so this count is hidden to avoid cluttering verbose
         if args.verbose:
-            snapshot = tracemalloc.take_snapshot()
-            top_stats = snapshot.statistics('lineno')
-            for stat in top_stats[:5]:
-                print(stat)
+            pass
+            # snapshot = tracemalloc.take_snapshot()
+            # top_stats = snapshot.statistics('lineno')
+            # for stat in top_stats[:5]:
+                # print(stat)
 
         time.sleep(args.interval)
 
