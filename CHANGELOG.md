@@ -28,4 +28,6 @@
 
 - Added several symlinks to scripts to preserve old naming support, this won't
  work for all scripts though
+ 
+- Added BSD 3 Clause License
 
