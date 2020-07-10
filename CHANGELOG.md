@@ -18,4 +18,14 @@
 ### Changed
 
 - Improved authorship credit in bin, included authors from old_bin into README
-- 
+
+## [3.2.2] - 2020-07-09
+
+### Changed
+
+- ds9_live.py now reads the previous image if it's APOGEE and not on the APOGEE
+ virtual machine. This eliminates all known crashes.
+
+- Added several symlinks to scripts to preserve old naming support, this won't
+ work for all scripts though
+
