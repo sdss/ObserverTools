@@ -31,3 +31,5 @@
  
 - Added BSD 3 Clause License
 
+- Added some PyCharm files and fits files to gitignore properly
+

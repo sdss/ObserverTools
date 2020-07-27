@@ -7,3 +7,5 @@ __pycache__/  # Python 3
 *.bak  # For 2to3
 *.sha1sum
 
+/.idea/
+/old_bin/apRaw-03720068.fits
