@@ -41,4 +41,5 @@
 - If the APOGEE dither position is not A or B, it still formats well in the
  list_ap table
 
+- Added some PyCharm files and fits files to gitignore properly
 
