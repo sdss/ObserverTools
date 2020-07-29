@@ -38,6 +38,7 @@ If a script is moved to bin, it should have a test file in tests that will run
  - A help tool needs to be written to print various documentation tools for
  observers to read easily.
  - Add Travis CI to GitHub
+ - Hide info panel and magnifier in ds9_live
   
 ## TimeTracking
 Originally under sdss-hub:~/bin/time_tracking, it contains scripts designed for
