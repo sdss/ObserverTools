@@ -407,8 +407,11 @@ class Logging:
                     else:
                         was_dark = False
                 upper = Time(self.args.mjd + 1, format='mjd')
-                self.morning_filter = ((lower <= self.ap_data['iTime'])
-                                      & (self.ap_data['iTime'] <= upper))
+                try:
+                    self.morning_filter = ((lower <= self.ap_data['iTime'])
+                                          & (self.ap_data['iTime'] <= upper))
+                except UnboundLocalError as e:
+                    raise Exception('Morning cals not completed for this date')
 
         if self.args.boss:
             for key, item in self.b_data.items():

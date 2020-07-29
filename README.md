@@ -38,7 +38,7 @@ If a script is moved to bin, it should have a test file in tests that will run
  - A help tool needs to be written to print various documentation tools for
  observers to read easily.
  - Add Travis CI to GitHub
- 
+  
 ## TimeTracking
 Originally under sdss-hub:~/bin/time_tracking, it contains scripts designed for
  time tracking. These tools should generally be considered separate from the

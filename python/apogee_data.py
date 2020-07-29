@@ -34,7 +34,7 @@ class APOGEERaw:
         elif (header['DITHPIX'] - dithers.values[-1][1]) < 0.05:
             self.dither = 'B'
         else:
-            self.dither = header['DITHPIX']
+            self.dither = '{:.1f}'.format(header['DITHPIX'])
         self.exp_time = header['EXPTIME']
         self.isot = Time(header['DATE-OBS'])  # Local
         self.plate_id = header['PLATEID']

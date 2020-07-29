@@ -31,3 +31,14 @@
  
 - Added BSD 3 Clause License
 
+## [3.2.3] - 2020-07-29
+
+### Changed
+
+- sloan_log.py now returns a clear warning when you try to get morning cals that
+ don't exist yet
+
+- If the APOGEE dither position is not A or B, it still formats well in the
+ list_ap table
+
+
