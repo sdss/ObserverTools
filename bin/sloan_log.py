@@ -29,11 +29,13 @@ In order to run it locally, you will need to either have access to /data, or
 2020-06-30      dgatlin     Added morning option for morning cals
 """
 import argparse
-import warnings
 import sys
+import warnings
+
 import numpy as np
+
+# import ap_test
 import epics_fetch
-import ap_test
 import get_dust
 
 try:
@@ -46,8 +48,12 @@ from pathlib import Path
 from tqdm import tqdm
 from astropy.time import Time
 
-sys.path.append(Path(__file__).absolute().parent.parent)
-from python import apogee_data, boss_data, log_support
+try:
+    import apogee_data
+    import boss_data
+    import log_support
+except ImportError:
+    raise ImportError('Please add ObserverTools/python to your PYTHONPATH')
 
 if sys.version_info.major < 3:
     raise Exception('Interpretter must be python 3 or newer')
@@ -88,6 +94,7 @@ class Logging:
     ./sloan_log.py -pm 59011
 
     """
+
     def __init__(self, ap_images, m_images, args):
         self.ap_images = ap_images
         self.m_images = m_images
@@ -109,7 +116,8 @@ class Logging:
                         'iNRead': [], 'iEType': [], 'iCart': [], 'iPlate': [],
                         'dCart': [], 'dTime': [], 'dMissing': [], 'dFaint': [],
                         'dNMissing': [], 'dNFaint': [], 'aTime': [],
-                        'aOffset': [], 'aID': [], 'aLamp': []}
+                        'aOffset': [], 'aID': [], 'aLamp': [], 'oOffset': [],
+                        'oDither': []}
         self.b_data = {'cCart': [], 'cTime': [],
                        'iTime': [], 'iID': [],
                        'iDetector': [], 'iDither': [],
@@ -126,9 +134,15 @@ class Logging:
                           'cBSummary': []}
         self.test_procs = []
         self.telemetry = epics_fetch.telemetry
-        self.ap_tester = ap_test.ApogeeFlat(
-            Path(__file__).absolute().parent.parent
-            / 'dat/ap_master_flat_col_array.dat', self.args)
+        # Commented out to test the apogee_data.APOGEERaw.ap_test method
+        # self.ap_tester = ap_test.ApogeeFlat(
+        #     Path(__file__).absolute().parent.parent
+        #     / 'dat/ap_master_flat_col_array.dat', self.args)
+        master_data = fitsio.read('/data/apogee/quickred/59011/ap1D-a-34490027'
+                                  '.fits.fz')
+        self.ap_master = np.average(master_data[:, 900:910], axis=1)
+
+        self.morning_filter = None
 
     def ap_test(self, img):
         """Calls aptest on hub, this could certainly be replaced in the near
@@ -136,7 +150,7 @@ class Logging:
         """
         # This is from ap_test
         self.args.plot = False
-        missing, faint = self.ap_tester.test_image(img.file)
+        missing, faint = img.ap_test((900, 910), self.ap_master)
         # TODO make sure ap_test works
         # test = sub.Popen((Path(__file__).absolute().parent.parent
         #                   / 'old_bin/aptest').__str__() + ' {} {}'
@@ -155,12 +169,18 @@ class Logging:
         n_faint = 0
         for miss in missing:
             if isinstance(miss, bytes) or isinstance(miss, str):
-                n_missing += abs(eval(miss))
+                if 'bundle' in miss:
+                    n_missing += 30
+                else:
+                    n_missing += abs(eval(miss))
             else:
                 n_missing += 1
         for fain in faint:
             if isinstance(fain, bytes) or isinstance(fain, str):
-                n_faint += np.abs(eval(fain))
+                if 'bundle' in fain:
+                    n_faint += 30
+                else:
+                    n_faint += np.abs(eval(fain))
             else:
                 n_faint += 1
         # return (n_missing, n_faint, missing, faint, img.cart_id,
@@ -199,6 +219,12 @@ class Logging:
                         self.ap_data['aOffset'].append(
                             img.compute_offset((30, 35), 1761, 20, 3))
                         self.ap_data['aLamp'].append('UNe')
+                    elif 'Object' in img.exp_type:
+                        # TODO check an object image for a good FWHM (last
+                        #  input)
+                        self.ap_data['oOffset'].append(
+                            img.compute_offset((30, 35), 1090, 40, 2))
+                        self.ap_data['oDither'].append(img.dither)
                     else:
                         print("Couldn't parse the arc image: {} with exposure"
                               " type {}".format(img.file, img.exp_type))
@@ -392,8 +418,10 @@ class Logging:
             if self.args.morning:
                 was_dark = False
                 prev_time = 0
+                lower = None
                 for t, reads, exp in zip(self.ap_data['iTime'],
-                        self.ap_data['iNRead'], self.ap_data['iEType']):
+                                         self.ap_data['iNRead'],
+                                         self.ap_data['iEType']):
                     if (reads == 60) and (exp == 'Dark'):
                         if was_dark:
                             lower = prev_time
@@ -407,11 +435,10 @@ class Logging:
                     else:
                         was_dark = False
                 upper = Time(self.args.mjd + 1, format='mjd')
-                try:
-                    self.morning_filter = ((lower <= self.ap_data['iTime'])
-                                          & (self.ap_data['iTime'] <= upper))
-                except UnboundLocalError as e:
+                if lower is None:
                     raise Exception('Morning cals not completed for this date')
+                self.morning_filter = ((lower <= self.ap_data['iTime'])
+                                       & (self.ap_data['iTime'] <= upper))
 
         if self.args.boss:
             for key, item in self.b_data.items():
@@ -460,7 +487,7 @@ class Logging:
                 & (self.b_data['iDither'] == 'C')
                 & (self.b_data['iEType'] == 'Science')))
             if np.any((self.b_data['iCart'] == cart)
-                    & (self.b_data['iEType'] == 'Science')):
+                      & (self.b_data['iEType'] == 'Science')):
                 self.cart_data['cBdt'].append(np.max(
                     self.b_data['idt'][(self.b_data['iCart'] == cart)
                                        & (self.b_data['iEType'] == 'Science')]
@@ -541,10 +568,10 @@ class Logging:
             except IndexError:
                 pass
         print('\n{:^80}'.format('Notes'))
-        print('='*80)
+        print('=' * 80)
         dust_sum = get_dust.get_dust(self.args.mjd, self.args)
         print('- Integrated Dust Counts: ~{:5.0f} dust-hrs'.format(
-                dust_sum - dust_sum % 100))
+            dust_sum - dust_sum % 100))
         print('\n')
 
     @staticmethod
@@ -572,18 +599,19 @@ class Logging:
         print('=' * 80)
         for i, cart in enumerate(self.data['cCart']):
             print('### Cart {}, Plate {}, {}'.format(cart,
-                self.data['cPlate'][i], self.data['cLead'][i]))
+                                                     self.data['cPlate'][i],
+                                                     self.data['cLead'][i]))
             print('# GSOGTF, ===INSERT WEATHER CONDITIONS===')
             if cart in self.ap_data['cCart']:
-                k = np.where(cart == self.ap_data['cCart'])[0][0]
-                
+                ap_cart = np.where(cart == self.ap_data['cCart'])[0][0]
+
                 print('# APOGEE')
                 print('{:<5} {:<8} {:<8} {:<12} {:<4} {:<6} {:<9}'
                       ' {:<4}'.format('MJD', 'UTC', 'Exposure', 'Type',
                                       'Dith', 'nReads', 'Pipeline',
                                       'Seeing'))
                 print('=' * 80)
-                window = self.get_window(self.ap_data, k)
+                window = self.get_window(self.ap_data, ap_cart)
                 for (mjd, iso, exp_id, exp_type, dith, nread,
                      detectors, see) in zip(
                     self.ap_data['iTime'][window].mjd + 0.25,
@@ -618,8 +646,8 @@ class Logging:
                 print('=' * 80)
                 # i is an index for data, but it will disagree with b_data
                 # if there is an apogee-only cart
-                i = np.where(cart == self.b_data['cCart'])[0][0]
-                window = self.get_window(self.b_data, k)
+                b_cart = np.where(cart == self.b_data['cCart'])[0][0]
+                window = self.get_window(self.b_data, b_cart)
                 for (mjd, iso, exp_id, exp_type, dith,
                      detectors, etime, hart) in zip(
                     self.b_data['iTime'][window].mjd + 0.25,
@@ -639,14 +667,14 @@ class Logging:
                                     hart))
                 try:
                     window = ((self.b_data['hTime']
-                               >= self.data['cTime'][k])
+                               >= self.data['cTime'][i])
                               & (self.b_data['hTime']
-                                 < self.data['cTime'][k + 1])
+                                 < self.data['cTime'][i + 1])
                               )
 
                 except IndexError:
                     window = ((self.b_data['hTime']
-                               >= self.data['cTime'][k])
+                               >= self.data['cTime'][i])
                               & (self.b_data['hTime'] < Time.now()))
                 for t, hart in zip(self.b_data['hTime'][window],
                                    self.b_data['hHart'][window]):
@@ -739,6 +767,14 @@ class Logging:
             self.ap_data['aOffset'][self.ap_data['aLamp'] == 'ThAr'])]))
         print('UNe Offsets: {}'.format(['{:.3f}'.format(f) for f in np.diff(
             self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])]))
+        obj_offsets = []
+        prev_dither = None
+        prev_f = 0.
+        for d, f in zip(self.ap_data['oDither'], self.ap_data['oOffset']):
+            if d != prev_dither:
+                obj_offsets.append(f - prev_f)
+            prev_f = f
+        print('Object Offsets: {}'.format(obj_offsets))
         print('\n')
 
     def log_support(self):
@@ -800,7 +836,7 @@ def main():
         args.mjd = int(now.mjd)
     else:
         raise argparse.ArgumentError(args.mjd,
-                'Must provide -t or -m in arguments')
+                                     'Must provide -t or -m in arguments')
 
     ap_data_dir = ap_dir / '{}'.format(args.mjd)
     b_data_dir = b_dir / '{}'.format(args.mjd)

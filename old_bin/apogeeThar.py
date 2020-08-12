@@ -78,6 +78,7 @@ def OneFileFitting(data1, fiber, pRef):
     # select zone around line  center
     x1 = p0[0][1] - zone
     x2 = p0[0][1] + zone
+    print(x1, x2)
     x = np.arange(data1.shape[1])[x1:x2]  # x-axis array in pix
     spe = data1[fiber, x1:x2]  # read spectrum in the line range
 
