@@ -12,7 +12,7 @@ import argparse
 from bin import epics_fetch
 
 
-__version__ = 3.1
+__version__ = '3.1.0'
 
 
 class LogSupport:
@@ -75,18 +75,18 @@ class LogSupport:
         for key in offsets_keys:
             off_data[key] = []
         for time in self.call_times:
-            self.query(offsets_keys, (time).isot, (time).isot,
+            self.query(offsets_keys, time.isot, time.isot,
                        off_data)
 
         self.offsets += '=' * 80 + '\n'
         self.offsets += '{:^80}\n'.format(
             'Telescope Offsets and Scale (arcsec)')
-        self.offsets += '=' * 80 + '\n'
+        self.offsets += '=' * 80 + '\n\n'
         self.offsets += ('{:<5} {:<9} {:<6} {:<4} {:<6} {:<13} {:<8} {:<10}'
                          ' {:<8}\n'.format('Time', 'Cart', 'Az', 'Alt', 'Rot',
                                            '(\u03B4RA, \u03B4Dec)', 'guideRot',
                                            'calibOff', 'guideRMS'))
-        self.offsets += '=' * 80 + '\n'
+        self.offsets += '-' * 80 + '\n'
         for i, time in enumerate(self.call_times):
             self.offsets += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>4.1f}'
                              ' {:>6.1f} ({:>5.1f},{:>5.1f}) {:>8.1f}'
@@ -122,18 +122,18 @@ class LogSupport:
         for key in focus_keys:
             foc_data[key] = []
         for time in self.call_times:
-            self.query(focus_keys,  (time).isot, (time).isot,
+            self.query(focus_keys, time.isot, time.isot,
                        foc_data)
 
         self.focus += '=' * 80 + '\n'
         self.focus += '{:^80}\n'.format('Telescope Focus')
-        self.focus += '=' * 80 + '\n'
+        self.focus += '=' * 80 + '\n\n'
         self.focus += ('{:<5} {:<9} {:<6} {:<5} {:<5} {:<5} {:<6} {:<5}'
                        ' {:<5} {:<4} {:<3}'
                        ' {:<4}\n'.format('Time', 'Cart', 'Scale', 'M1', 'M2',
                                          'Focus', 'Az', 'Alt', 'Temp',
                                          'Wind', 'Dir', 'FWHM'))
-        self.focus += '=' * 80 + '\n'
+        self.focus += '-' * 80 + '\n'
         for i, time in enumerate(self.call_times):
             self.focus += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>5.0f}'
                            ' {:>5.0f}'
@@ -167,18 +167,18 @@ class LogSupport:
         for key in weather_keys:
             weather_data[key] = []
         for time in self.call_times:
-            self.query(weather_keys, (time).isot, (time).isot,
+            self.query(weather_keys, time.isot, time.isot,
                        weather_data)
 
         self.weather = '=' * 80 + '\n'
         self.weather += '{:^80}\n'.format('Weather Log')
-        self.weather += '=' * 80 + '\n'
+        self.weather += '=' * 80 + '\n\n'
         self.weather += ('{:<5} {:<9} {:<5} {:<5} {:<4} {:<5} {:<4} {:<3}'
                          ' {:<6} {:<7} {:<5}'
                          '\n'.format('Time', 'Cart', 'Temp', 'DP', 'Diff',
                                      'Humid', 'Wind', 'Dir', '1\u03BCmDst',
                                      'IRSC\u03C3', 'IRSC\u03BC'))
-        self.weather += '=' * 80 + '\n'
+        self.weather += '-' * 80 + '\n'
         for i, time in enumerate(self.call_times):
             self.weather += ('{:>5} {:>2}-{:0>5}{:>1} {:>5.1f} {:>5.1f}'
                              ' {:>4.1f} {:>5}'
@@ -232,13 +232,13 @@ class LogSupport:
 
         self.hartmann += '=' * 80 + '\n'
         self.hartmann += '{:^80}\n'.format('Hartmann Log')
-        self.hartmann += '=' * 80 + '\n'
+        self.hartmann += '=' * 80 + '\n\n'
         self.hartmann += ('{:<5} {:<9} {:<5} {:<5} {:<5} {:<7} {:<4} {:<5}'
                           ' {:<5} {:<5} {:<7} {:<4}'
                           '\n'.format('Time', 'Cart', 'R1', 'B1', 'Move1',
                                       'B1Resid', 'TSP1', 'R2', 'B2', 'Move2',
                                       'B2Resid', 'TSP2'))
-        self.hartmann += '=' * 80 + '\n'
+        self.hartmann += '-' * 80 + '\n'
         for i, time in enumerate(hart_times):
             self.hartmann += ('{:>5} {:>2}-{:0>5}{:<1} {:>5.0f} {:>5.1f}'
                               ' {:>5.0f} {:>7.1f} {:>4.1f} {:>5.0f}'
@@ -294,7 +294,8 @@ def main():
         start = Time(mjd, format='mjd')
         end = Time(int(mjd) + 1, format='mjd')
     else:
-        raise argparse.ArgumentError('Must provide -t or -m in arguments')
+        raise argparse.ArgumentError(args.mjd,
+                                     'Must provide -t or -m in arguments')
 
     if args.print:
         args.offsets = True

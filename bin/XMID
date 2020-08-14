@@ -1,13 +1,23 @@
-#!/usr/bin/env python 
-#  Filename : XMID,   EM 03/27/2011
-#  XMID  2036.0 2045.0 2043.0 2044.0   10
-#         (copy and past wavemids from sos)
-#  EM 05/04/2011 added plot
+#!/usr/bin/env python3
+"""
+XMID
+EM 09/04/2010
 
+usage:
+XMID 4908.6 7984.0 4999.9 8058.3 pro[plot]
+
+The above line doesn't need to be typed and is designed to be copied straight
+from SOS/DOS
+
+"""
 import matplotlib.pyplot as plt
 from pathlib import Path
 import numpy as np
 import sys
+
+
+__version__ = '3.0.0'
+
 
 if not sys.argv[1:4]:
     print("    Usage:  XMID  2036.0 2045.0 2043.0 2044.0  [ct]")

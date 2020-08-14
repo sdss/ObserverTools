@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
-# EM 09/04/2010
-#  usage:
-#  wmidRes  4908.6   7984.0	 4999.9	 8058.3  (copy and past wavemids from sos)
+"""
+WAVEMID
+EM 09/04/2010
 
-# pl:  from pylab import *
+usage:
+WAVEMID 4908.6 7984.0 4999.9 8058.3 pro[plot]
+
+The above line doesn't need to be typed and is designed to be copied straight
+from SOS/DOS
+
+"""
 import matplotlib.pyplot as plt
 from pathlib import Path
 import numpy as np
 import sys
+
+
+__version__ = '3.0.0'
 
 
 if not sys.argv[1:4]:

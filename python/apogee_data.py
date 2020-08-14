@@ -1,23 +1,29 @@
 #!/usr/bin/env python
 import argparse
 from pathlib import Path
-import sys
 from astropy.time import Time
 from scipy.optimize import leastsq
 import fitsio
 import numpy as np
-
-sys.path.append(Path(__file__).absolute().parent.parent)
 from bin import epics_fetch
+
+__version__ = '3.2.0'
 
 
 class APOGEERaw:
-    """A class to parse raw data from APOGEE. The purpose of collecting this
-    raw data is to future-proof things that need these ouptuts in case
-    things like sdss.autoscheduler changes, which many libraries depend on. This
-    will hopefully help SDSS-V logging"""
+    """A class to parse raw data from APOGEE. The purpose of this class is to
+    read raw image files from /data/apogee/archive, regardless of any future
+    changes in SDSS. This
+    will hopefully help SDSS-V logging.
 
-    def __init__(self, fil, args, ext=1,):
+    Methods:
+        compute_offets: Returns the offsets of an arc/object to compute the
+        relative dither
+
+        ap_test: Returns a list of faint fibers and missing fibers from a flat
+        """
+
+    def __init__(self, fil, args, ext=1, ):
         self.file = Path(fil)
         self.ext = ext
         self.args = args
@@ -34,7 +40,7 @@ class APOGEERaw:
         elif (header['DITHPIX'] - dithers.values[-1][1]) < 0.05:
             self.dither = 'B'
         else:
-            self.dither = header['DITHPIX']
+            self.dither = '{:.1f}'.format(header['DITHPIX'])
         self.exp_time = header['EXPTIME']
         self.isot = Time(header['DATE-OBS'])  # Local
         self.plate_id = header['PLATEID']
@@ -57,7 +63,8 @@ class APOGEERaw:
         else:
             self.seeing = 0.0
 
-        self.data = np.array([[]])
+        self.quickred_data = np.array([[]])
+        self.quickred_file = ''
 
     # noinspection PyTupleAssignmentBalance,PyTypeChecker
     def compute_offset(self, fibers=(30, 35), w0=939, dw=40, sigma=1.2745):
@@ -81,21 +88,22 @@ class APOGEERaw:
         w0 = int(w0)
         dw = int(dw)
         mjd = self.file.absolute().parent.name
-        quickred_file = (self.file.absolute().parent.parent.parent
-                         / 'quickred/{}/ap1D-a-{}.fits.fz'.format(mjd,
-                                                                  self.exp_id))
+        self.quickred_file = (self.file.absolute().parent.parent.parent
+                              / 'quickred/{}/ap1D-a-{}.fits.fz'
+                                ''.format(mjd, self.exp_id))
         try:
-            if not self.data:
-                self.data = fitsio.read(quickred_file, 1)
+            if not self.quickred_data:
+                self.quickred_data = fitsio.read(self.quickred_file, 1)
         except OSError as e:
             if self.args.verbose:
                 print('Offsets for {} produced this error\n{}'.format(self.file,
-                      e))
+                                                                      e))
             return np.nan
         lower = w0 - dw // 2
         upper = w0 + dw // 2
-        line_inds = np.arange(self.data.shape[1])[lower:upper]
-        line = np.average(self.data[fibers[0]:fibers[1], lower:upper], axis=0)
+        line_inds = np.arange(self.quickred_data.shape[1])[lower:upper]
+        line = np.average(self.quickred_data[fibers[0]:fibers[1], lower:upper],
+                          axis=0)
 
         def fit_func(w, x):
             return np.exp(-0.5 * ((x - w) / sigma) ** 2)
@@ -107,6 +115,100 @@ class APOGEERaw:
 
         diff = w_model[0] - w0
         return diff
+
+    def ap_test(self, ws=(900, 910), master_col=None, plot=False):
+        if master_col is None:
+            raise ValueError("APTest didn't receive a valid master_col: {}"
+                             "".format(master_col))
+        if self.quickred_data.size == 0:
+            mjd = self.file.absolute().parent.name
+            self.quickred_file = (self.file.absolute().parent.parent.parent
+                                  / 'quickred/{}/ap1D-a-{}.fits.fz'
+                                    ''.format(mjd, self.exp_id))
+            try:
+                self.quickred_data = fitsio.read(self.quickred_file, 1)
+            except OSError as e:
+                if self.args.verbose:
+                    print('APTest for {} produced this error\n{}'.format(
+                        self.file, e))
+                return ''
+        slc = np.average(self.quickred_data[:, ws[0]:ws[1]], axis=1)
+        flux_ratio = slc / master_col
+        missing = flux_ratio < 0.2
+        faint = (flux_ratio < 0.7) & (0.2 <= flux_ratio)
+        bright = ~missing & ~faint
+        i_missing = np.where(missing)[0].astype(int)
+        i_faint = np.where(faint)[0].astype(int)
+        i_bright = np.where(bright)[0]
+        missing_bundles = self.create_bundles(i_missing)
+        faint_bundles = self.create_bundles(i_faint)
+        if self.args.verbose:
+            print('Missing Fibers: {}'.format(missing_bundles))
+            print('Faint Fibers: {}'.format(faint_bundles))
+            print()
+
+        if plot:
+            import matplotlib.pyplot as plt
+            fig = plt.figure(figsize=(9, 4))
+            ax = fig.gca()
+            x = np.arange(len(flux_ratio)) + 1
+            ax.plot(x[i_bright], flux_ratio[i_bright], 'o', c=(0, 0.6, 0.533))
+            ax.plot(x[i_faint], flux_ratio[i_faint], 'o', c=(0.933, 0.466, 0.2))
+            ax.plot(x[i_missing], flux_ratio[i_missing], 'o',
+                    c=(0.8, 0.2, 0.066))
+            ax.set_xlabel('Fiber ID')
+            ax.set_ylabel('Throughput Efficiency')
+            ax.axis([1, 300, -0.2, 1.35])
+            ax.grid(True)
+            ax.axhline(0.7, c=(0, 0.6, 0.533))
+            ax.axhline(0.2, c=(0.933, 0.466, 0.2))
+            ax.set_title('APOGEE Fiber Relative Intensity {}'.format(
+                self.exp_id), size=15)
+            fig.show()
+
+        return missing_bundles, faint_bundles
+
+    @staticmethod
+    def create_bundles(subset):
+        """This method converts an array of ints into a list of strings that
+        describe a large series of fibers and ints for lone fibers.
+
+        Ex: [1, 2, 3, 5] -> ['1 - 3', 5]
+
+        """
+        if len(subset) == 0:
+            return []
+        bundles = [subset[0]]
+        b = 0
+        for fib in subset[1:]:
+            if isinstance(bundles[b], np.int64):
+                if bundles[b] + 1 == fib:
+                    if fib % 30 == 0:
+                        bundles.append(fib)
+                        b += 1
+                    else:
+                        # All strings are created here
+                        bundles[b] = '{} - {}'.format(bundles[b], fib)
+                else:
+                    bundles.append(fib)
+                    b += 1
+            elif isinstance(bundles[b], str):
+                if int(bundles[b].split()[-1]) + 1 == fib:
+                    if fib % 30 == 1:
+                        bundles.append(fib)
+                        b += 1
+                    else:
+                        bundles[b] = '{} - {}'.format(
+                            bundles[b].split()[0], fib)
+                else:
+                    bundles.append(fib)
+                    b += 1
+        # for i, bundle in enumerate(bundles):
+        #     if isinstance(bundle, str):
+        #         low, high = np.array(bundle.split(' - ')).astype(int)
+        #         if ((low - 1) // 30) == ((high - 1) // 30):
+        #             bundles[i] = '{} bundle'.format(low)
+        return bundles
 
 
 def main():

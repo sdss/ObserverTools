@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""A script to automate the bulk of logging and to replace various tools
+"""sloan_log.py
+
+A script to automate the bulk of logging and to replace various tools
  like log function, log support, list_ap, list_m, and more. This code is
  entirely dependent on raw images, their headers, and EPICS, unlike Log Function
  which is dependent on callbacks it catches while open only and is subject to
@@ -24,13 +26,17 @@ In order to run it locally, you will need to either have access to /data, or
 2020-06-01      dgatlin     Changed some methods to @staticmethods, moved to
     bin, refactored some names to more appropriately fit the role of logging.
 2020-06-17      dgatlin     Moved telemetry to epics_fetch
+2020-06-30      dgatlin     Added morning option for morning cals
+2020-08-12      dgatlin     Added apogee object offsets and a quickred aptest
 """
 import argparse
-import warnings
 import sys
+import warnings
+
 import numpy as np
+
+# import ap_test
 import epics_fetch
-import ap_test
 import get_dust
 
 try:
@@ -43,8 +49,12 @@ from pathlib import Path
 from tqdm import tqdm
 from astropy.time import Time
 
-sys.path.append(Path(__file__).absolute().parent.parent)
-from python import apogee_data, boss_data, log_support
+try:
+    import apogee_data
+    import boss_data
+    import log_support
+except ImportError:
+    raise ImportError('Please add ObserverTools/python to your PYTHONPATH')
 
 if sys.version_info.major < 3:
     raise Exception('Interpretter must be python 3 or newer')
@@ -54,7 +64,7 @@ warnings.filterwarnings('ignore', category=UserWarning, append=True)
 # For numpy boolean arrays
 warnings.filterwarnings('ignore', category=FutureWarning, append=True)
 
-__version__ = 3.5
+__version__ = '3.6.0'
 
 ap_dir = Path('/data/apogee/archive/')
 b_dir = Path('/data/spectro/')
@@ -85,6 +95,7 @@ class Logging:
     ./sloan_log.py -pm 59011
 
     """
+
     def __init__(self, ap_images, m_images, args):
         self.ap_images = ap_images
         self.m_images = m_images
@@ -106,7 +117,8 @@ class Logging:
                         'iNRead': [], 'iEType': [], 'iCart': [], 'iPlate': [],
                         'dCart': [], 'dTime': [], 'dMissing': [], 'dFaint': [],
                         'dNMissing': [], 'dNFaint': [], 'aTime': [],
-                        'aOffset': [], 'aID': [], 'aLamp': []}
+                        'aOffset': [], 'aID': [], 'aLamp': [], 'oOffset': [],
+                        'oDither': []}
         self.b_data = {'cCart': [], 'cTime': [],
                        'iTime': [], 'iID': [],
                        'iDetector': [], 'iDither': [],
@@ -123,9 +135,15 @@ class Logging:
                           'cBSummary': []}
         self.test_procs = []
         self.telemetry = epics_fetch.telemetry
-        self.ap_tester = ap_test.ApogeeFlat(
-            Path(__file__).absolute().parent.parent
-            / 'dat/ap_master_flat_col_array.dat', self.args)
+        # Commented out to test the apogee_data.APOGEERaw.ap_test method
+        # self.ap_tester = ap_test.ApogeeFlat(
+        #     Path(__file__).absolute().parent.parent
+        #     / 'dat/ap_master_flat_col_array.dat', self.args)
+        master_data = fitsio.read('/data/apogee/quickred/59011/ap1D-a-34490027'
+                                  '.fits.fz')
+        self.ap_master = np.average(master_data[:, 900:910], axis=1)
+
+        self.morning_filter = None
 
     def ap_test(self, img):
         """Calls aptest on hub, this could certainly be replaced in the near
@@ -133,8 +151,7 @@ class Logging:
         """
         # This is from ap_test
         self.args.plot = False
-        missing, faint = self.ap_tester.test_image(img.file)
-        # TODO make sure ap_test works
+        missing, faint = img.ap_test((900, 910), self.ap_master)
         # test = sub.Popen((Path(__file__).absolute().parent.parent
         #                   / 'old_bin/aptest').__str__() + ' {} {}'
         #                  ''.format(self.args.mjd, img.exp_id), shell=True,
@@ -152,12 +169,18 @@ class Logging:
         n_faint = 0
         for miss in missing:
             if isinstance(miss, bytes) or isinstance(miss, str):
-                n_missing += abs(eval(miss))
+                if 'bundle' in miss:
+                    n_missing += 30
+                else:
+                    n_missing += abs(eval(miss))
             else:
                 n_missing += 1
         for fain in faint:
             if isinstance(fain, bytes) or isinstance(fain, str):
-                n_faint += np.abs(eval(fain))
+                if 'bundle' in fain:
+                    n_faint += 30
+                else:
+                    n_faint += np.abs(eval(fain))
             else:
                 n_faint += 1
         # return (n_missing, n_faint, missing, faint, img.cart_id,
@@ -196,6 +219,12 @@ class Logging:
                         self.ap_data['aOffset'].append(
                             img.compute_offset((30, 35), 1761, 20, 3))
                         self.ap_data['aLamp'].append('UNe')
+                    elif 'Object' in img.exp_type:
+                        # TODO check an object image for a good FWHM (last
+                        #  input)
+                        self.ap_data['oOffset'].append(
+                            img.compute_offset((30, 35), 1090, 40, 2))
+                        self.ap_data['oDither'].append(img.dither)
                     else:
                         print("Couldn't parse the arc image: {} with exposure"
                               " type {}".format(img.file, img.exp_type))
@@ -221,7 +250,7 @@ class Logging:
                 detectors = []
                 red_dir = Path('/data/apogee/quickred/{}/'.format(
                     self.args.mjd))
-                red_fil = red_dir / 'ap2D-a-{}.fits.fz'.format(img.exp_id)
+                red_fil = red_dir / 'ap1D-a-{}.fits.fz'.format(img.exp_id)
                 if red_fil.exists():
                     detectors.append('a')
                 else:
@@ -303,7 +332,7 @@ class Logging:
                     self.b_data['hTime'].append(img.isot)
                 m_detectors = []
                 # img_mjd = int(Time(img.isot).mjd)
-                if img.lead == 'eBOSS':
+                if 'BOSS' in img.lead:
                     red_dir = Path('/data/boss/sos/{}/'.format(self.args.mjd))
                     red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                         img.exp_id)
@@ -387,8 +416,29 @@ class Logging:
                 elif key[0] == 'a':
                     self.ap_data[key] = item[ap_arc_sorter]
             if self.args.morning:
-                # TODO Redefine apogee values to within morning range
-                morning = self.ap_data['iTime'] > Time()
+                was_dark = False
+                prev_time = 0
+                lower = None
+                for t, reads, exp in zip(self.ap_data['iTime'],
+                                         self.ap_data['iNRead'],
+                                         self.ap_data['iEType']):
+                    if (reads == 60) and (exp == 'Dark'):
+                        if was_dark:
+                            lower = prev_time
+                            break
+                        else:
+                            was_dark = True
+                            prev_time = t
+                            if self.args.verbose:
+                                print('Morning lower limit: {}'.format(
+                                    prev_time))
+                    else:
+                        was_dark = False
+                upper = Time(self.args.mjd + 1, format='mjd')
+                if lower is None:
+                    raise Exception('Morning cals not completed for this date')
+                self.morning_filter = ((lower <= self.ap_data['iTime'])
+                                       & (self.ap_data['iTime'] <= upper))
 
         if self.args.boss:
             for key, item in self.b_data.items():
@@ -437,7 +487,7 @@ class Logging:
                 & (self.b_data['iDither'] == 'C')
                 & (self.b_data['iEType'] == 'Science')))
             if np.any((self.b_data['iCart'] == cart)
-                    & (self.b_data['iEType'] == 'Science')):
+                      & (self.b_data['iEType'] == 'Science')):
                 self.cart_data['cBdt'].append(np.max(
                     self.b_data['idt'][(self.b_data['iCart'] == cart)
                                        & (self.b_data['iEType'] == 'Science')]
@@ -517,12 +567,17 @@ class Logging:
                     self.ap_data['dNFaint'][j]))
             except IndexError:
                 pass
-        print('\n{:^80}'.format('Notes'))
-        print('='*80)
+        print()
+        print('### Notes:\n')
         dust_sum = get_dust.get_dust(self.args.mjd, self.args)
         print('- Integrated Dust Counts: ~{:5.0f} dust-hrs'.format(
-                dust_sum - dust_sum % 100))
+            dust_sum - dust_sum % 100))
         print('\n')
+
+        print('=' * 80)
+        print('{:^80}'.format('Comments Timeline'))
+        print('=' * 80)
+        print()
 
     @staticmethod
     def get_window(data, i):
@@ -543,27 +598,26 @@ class Logging:
         return window
 
     def p_data(self):
-        # TODO remove user comments from this section, move to its own section
         print('=' * 80)
         print('{:^80}'.format('Data Log'))
-        print('=' * 80)
+        print('=' * 80 + '\n')
         for i, cart in enumerate(self.data['cCart']):
-            print('### Cart {}, Plate {}, {}'.format(cart,
-                self.data['cPlate'][i], self.data['cLead'][i]))
-            print('# GSOGTF, ===INSERT WEATHER CONDITIONS===')
+            print('### Cart {}, Plate {}, {}\n'.format(cart,
+                                                     self.data['cPlate'][i],
+                                                     self.data['cLead'][i]))
             if cart in self.ap_data['cCart']:
-                k = np.where(cart == self.ap_data['cCart'])[0][0]
-                
+                ap_cart = np.where(cart == self.ap_data['cCart'])[0][0]
+
                 print('# APOGEE')
                 print('{:<5} {:<8} {:<8} {:<12} {:<4} {:<6} {:<9}'
                       ' {:<4}'.format('MJD', 'UTC', 'Exposure', 'Type',
                                       'Dith', 'nReads', 'Pipeline',
                                       'Seeing'))
-                print('=' * 80)
-                window = self.get_window(self.ap_data, k)
+                print('-' * 80)
+                window = self.get_window(self.ap_data, ap_cart)
                 for (mjd, iso, exp_id, exp_type, dith, nread,
                      detectors, see) in zip(
-                    self.ap_data['iTime'][window].mjd,
+                    self.ap_data['iTime'][window].mjd + 0.25,
                     self.ap_data['iTime'][window].iso,
                     self.ap_data['iID'][window],
                     self.ap_data['iEType'][window],
@@ -592,14 +646,14 @@ class Logging:
                 print('{:<5} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
                       ''.format('MJD', 'UTC', 'Exposure', 'Type',
                                 'Dith', 'Pipeline', 'ETime', 'Hart'))
-                print('=' * 80)
+                print('-' * 80)
                 # i is an index for data, but it will disagree with b_data
                 # if there is an apogee-only cart
-                i = np.where(cart == self.b_data['cCart'])[0][0]
-                window = self.get_window(self.b_data, k)
+                b_cart = np.where(cart == self.b_data['cCart'])[0][0]
+                window = self.get_window(self.b_data, b_cart)
                 for (mjd, iso, exp_id, exp_type, dith,
                      detectors, etime, hart) in zip(
-                    self.b_data['iTime'][window].mjd,
+                    self.b_data['iTime'][window].mjd + 0.25,
                     self.b_data['iTime'][window].iso,
                     self.b_data['iID'][window],
                     self.b_data['iEType'][window],
@@ -616,14 +670,14 @@ class Logging:
                                     hart))
                 try:
                     window = ((self.b_data['hTime']
-                               >= self.data['cTime'][k])
+                               >= self.data['cTime'][i])
                               & (self.b_data['hTime']
-                                 < self.data['cTime'][k + 1])
+                                 < self.data['cTime'][i + 1])
                               )
 
                 except IndexError:
                     window = ((self.b_data['hTime']
-                               >= self.data['cTime'][k])
+                               >= self.data['cTime'][i])
                               & (self.b_data['hTime'] < Time.now()))
                 for t, hart in zip(self.b_data['hTime'][window],
                                    self.b_data['hHart'][window]):
@@ -635,13 +689,13 @@ class Logging:
     def p_boss(self):
         print('=' * 80)
         print('{:^80}'.format('BOSS Data Summary'))
-        print('=' * 80)
+        print('=' * 80 + '\n')
         print('{:<5} {:<8} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
               ''.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type', 'Dith',
                         'Pipeline', 'ETime', 'Hart'))
-        print('=' * 80)
+        print('-' * 80)
         for (mjd, iso, cart, plate, exp_id, exp_type, dith, detectors, etime,
-             hart) in zip(self.b_data['iTime'].mjd,
+             hart) in zip(self.b_data['iTime'].mjd + 0.25,
                           self.b_data['iTime'].iso,
                           self.b_data['iCart'],
                           self.b_data['iPlate'],
@@ -662,29 +716,51 @@ class Logging:
     def p_apogee(self):
         print('=' * 80)
         print('{:^80}'.format('APOGEE Data Summary'))
-        print('=' * 80)
+        print('=' * 80 + '\n')
         print('{:<5} {:<8} {:<8} {:<8} {:<12} {:<4} {:<6} {:<8}'
               ' {:<6}'.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type',
                               'Dith', 'nReads', 'Pipeline',
                               'Seeing'))
-        print('=' * 80)
-        for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
-             detectors, see) in zip(
-            self.ap_data['iTime'].mjd,
-            self.ap_data['iTime'].iso,
-            self.ap_data['iCart'],
-            self.ap_data['iPlate'],
-            self.ap_data['iID'], self.ap_data['iEType'],
-            self.ap_data['iDither'], self.ap_data['iNRead'],
-            self.ap_data['iDetector'],
-            self.ap_data['iSeeing']
-        ):
-            print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
-                  ' {:>6}'
-                  ' {:<8}'
-                  ' {:>6.1f}'.format(int(mjd), iso[12:19], cart, plate, exp_id,
-                                     exp_type,
-                                     dith, nread, detectors, see))
+        print('-' * 80)
+        if self.args.morning:
+            for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
+                 detectors, see) in zip(
+                self.ap_data['iTime'].mjd[self.morning_filter] + 0.25,
+                self.ap_data['iTime'].iso[self.morning_filter],
+                self.ap_data['iCart'][self.morning_filter],
+                self.ap_data['iPlate'][self.morning_filter],
+                self.ap_data['iID'][self.morning_filter],
+                self.ap_data['iEType'][self.morning_filter],
+                self.ap_data['iDither'][self.morning_filter],
+                self.ap_data['iNRead'][self.morning_filter],
+                self.ap_data['iDetector'][self.morning_filter],
+                self.ap_data['iSeeing'][self.morning_filter]
+            ):
+                print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
+                      ' {:>6}'
+                      ' {:<8}'
+                      ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
+                                         exp_id, exp_type,
+                                         dith, nread, detectors, see))
+
+        else:
+            for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
+                 detectors, see) in zip(
+                self.ap_data['iTime'].mjd,
+                self.ap_data['iTime'].iso,
+                self.ap_data['iCart'],
+                self.ap_data['iPlate'],
+                self.ap_data['iID'], self.ap_data['iEType'],
+                self.ap_data['iDither'], self.ap_data['iNRead'],
+                self.ap_data['iDetector'],
+                self.ap_data['iSeeing']
+            ):
+                print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
+                      ' {:>6}'
+                      ' {:<8}'
+                      ' {:>6.1f}'.format(int(mjd), iso[12:19], cart, plate,
+                                         exp_id, exp_type,
+                                         dith, nread, detectors, see))
         # Usually, there are 4 ThAr and 4 UNe arcs in a night, and they're
         # assumed to be alternating ThAr UNe ThAr UNe. When you grab every
         # other, you'll have only one type, that's the first slicing, and the
@@ -694,6 +770,14 @@ class Logging:
             self.ap_data['aOffset'][self.ap_data['aLamp'] == 'ThAr'])]))
         print('UNe Offsets: {}'.format(['{:.3f}'.format(f) for f in np.diff(
             self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])]))
+        obj_offsets = []
+        prev_dither = None
+        prev_f = 0.
+        for d, f in zip(self.ap_data['oDither'], self.ap_data['oOffset']):
+            if d != prev_dither:
+                obj_offsets.append(f - prev_f)
+            prev_f = f
+        print('Object Offsets: {}'.format(obj_offsets))
         print('\n')
 
     def log_support(self):
@@ -716,10 +800,11 @@ class Logging:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--today', action='store_true',
+    parser.add_argument('-t', '--today', action='store_true', default=True,
                         help="Whether or not you want to search for today's"
                              " data, whether or not the night is complete."
-                             " Note: must be run after 00:00Z")
+                             " Note: must be run after 18:00Z to get the"
+                             " correct sjd")
     parser.add_argument('-m', '--mjd', type=int,
                         help='If not today (-t), the mjd to search')
     parser.add_argument('-s', '--summary', help='Print the data summary',
@@ -747,13 +832,14 @@ def parse_args():
 
 def main():
     args = parse_args()
-    if args.today:
+    if args.mjd:
+        args.mjd = args.mjd
+    elif args.today:
         now = Time.now() + 0.25
         args.mjd = int(now.mjd)
-    elif args.mjd:
-        args.mjd = args.mjd
     else:
-        raise argparse.ArgumentError('Must provide -t or -m in arguments')
+        raise argparse.ArgumentError(args.mjd,
+                                     'Must provide -t or -m in arguments')
 
     ap_data_dir = ap_dir / '{}'.format(args.mjd)
     b_data_dir = b_dir / '{}'.format(args.mjd)
@@ -781,6 +867,7 @@ def main():
 
     if args.morning:
         args.apogee = True
+        p_apogee = True
 
     if args.data:
         args.boss = True

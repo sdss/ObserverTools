@@ -3,31 +3,34 @@
 Description:	Opens and continuously updates ds9 with the latest file. Run
 ds9_live.py -h for details.
 
-History:
-Jun 21, 2011	Jon Brinkmann	Apache Point Observatory Created file from
-    spds9.py
-2020-05-31      Dylan Gatlin    Replaced almost every library for a python 3
-    upgrade. ds9 -> pyds9, os.path -> pathlib, optionparse -> argparse. Updated
-    syntax to Python 3 and greatly improved PEP-8 compliance. Changed source
-    of apogee data to work on any system
-
+Changelog:
+2011-06-11  JB 	Apache Point Observatory Created file from
+ spds9.py
+2020-05-31  DG  Replaced almost every library for a python 3 upgrade. ds9 ->
+ pyds9, os.path -> pathlib, optionparse -> argparse. Updated syntax to Python
+ 3 and greatly improved PEP-8 compliance. Changed source of apogee data to work
+ on any system
 """
-from pathlib import Path
-from argparse import ArgumentParser
+import tracemalloc
+
+import fitsio
 import hashlib
 import pyds9
 import time
 import fitsio
 from astropy.time import Time, TimeDelta
 import os
-import tracemalloc
+import numpy as np
+# import tracemalloc
+from argparse import ArgumentParser
+from pathlib import Path
 
 default_dir = Path('/data/apogee/utr_cdr/')
 boss_cams = ['r1', 'r2', 'b1', 'b2']
 file_sizes = {'APOGEE': 67115520, 'BOSS': 9e6, 'Guider': 4e5,
               'Engineering': 9e5}
 
-__version__ = 3.0
+__version__ = '3.1.1'
 
 
 class DS9Window:
@@ -76,7 +79,8 @@ class DS9Window:
                       ' would you like to connect to it, close it, or create'
                       ' another window with a new name?'.format(ds9))
                 action = input('[connect]/close/change: ')
-                if action.lower() == 'connect':
+                if ((action.lower() == 'connect')
+                or (action.lower() == '')):
                     self.name = ds9
                 elif action.lower() == 'close':
                     d = pyds9.DS9(ds9)
@@ -138,7 +142,8 @@ class DS9Window:
         fits_dir = self.latest_fits_dir()
 
         # print 'dir = ', dir
-
+        img_times = []
+        imgs = []
         for fil in Path(fits_dir).glob(pattern):
             fil = fil.absolute()
 
@@ -150,10 +155,28 @@ class DS9Window:
                 # Store the name and mtime of only the latest FITS file
 
                 mtime = Path(fil).stat().st_mtime
+                img_times.append(mtime)
+                imgs.append(fil)
                 # print max_time, file, mtime
-                if max_time < mtime:
-                    fits_filename = fil
-                    max_time = mtime
+                # if max_time < mtime:
+                    # fits_filename = fil
+                    # max_time = mtime
+        img_times = np.array(img_times)
+        imgs = np.array(imgs)
+        sorter = img_times.argsort()
+        imgs = imgs[sorter]
+        img_times = img_times[sorter]
+        # An attempt at making sure that if APOGEE isn't on the summary
+        # directory, it won't crash because it won't try to read an image
+        # that is still writing
+        try:
+            if (('APOGEE' in self.name)
+            and ('summary' not in self.fits_dir.as_posix())):
+                fits_filename = imgs[-2].absolute()
+            else:
+                fits_filename = imgs[-1].absolute()
+        except IndexError:
+            return None
 
         return fits_filename
 
@@ -177,6 +200,9 @@ class DS9Window:
         """Update the display"""
 
         fil = self.latest_fits_file(self.regex)
+        if fil is None:
+            print("No files found in today's folder, skipping.")
+            return
         if self.verbose:
             print('Latest fits file ={}\nLast fits file   ={}'
                   ''.format(fil, self.last_file))
@@ -186,14 +212,12 @@ class DS9Window:
             try:
                 # In case the file is incomplete, it won't crash ds9. This
                 # can happen if it is either size 0 (just made), or it is made,
-                # but it hasn't been populated by the first exposure. This only
-                # happens when it's run on APOGEE outside of sdss-apogee
+                # but it hasn't been populated by the first exposure.
                 stats = fil.lstat()
                 try:  # Handles the exists but unwritten issue
-                    hdr = fitsio.read_header(fil)
+                    fitsio.read(fil)
                 except OSError:
-                    print('File is actively being written, trying again in {}s'
-                          ''.format(args.interval))
+                    print('File is actively being written, skipping.')
                     return
 
                 # Handles the size issue
@@ -224,9 +248,9 @@ def parseargs():
     # Define command line options
 
     parser = ArgumentParser(description='A tool to leave running continuously'
-                                        'that will display the most current'
-                                        'apogee exposure. By default, it will'
-                                        'run every 60 seconds.')
+                                        ' that will display the most current'
+                                        ' apogee exposure. By default, it will'
+                                        ' run every 60 seconds.')
     parser.add_argument('-a', '--apogee', action='store_true',
                         help='If included, will display APOGEE images.'
                              ' Overrides most arguments')
@@ -236,8 +260,8 @@ def parseargs():
     parser.add_argument('-d', '--directory', dest='fits_dir',
                         default=default_dir, type=str,
                         help='Set FITS data directory. It needs to be a'
-                             'directory of dated folders, where the newest'
-                             'folder has the newest data.'
+                             ' directory of dated folders, where the newest'
+                             ' folder has the newest data.'
                              ' Default is {}'.format(default_dir))
 
     parser.add_argument('-e', '--ecam', action='store_true',
@@ -315,18 +339,21 @@ def parseargs():
 
 
 def main():
-    tracemalloc.start()
+    # tracemalloc.start()
     args = parseargs()
     # Start the display
     window = DS9Window(args.name, args.fits_dir, args.regex, args.scale,
                        args.zoom, args.verbose)
     while True:
         window.update()
+        # This loop is for tracing memory allocation to track memory leaks, none
+        # were found, so this count is hidden to avoid cluttering verbose
         if args.verbose:
-            snapshot = tracemalloc.take_snapshot()
-            top_stats = snapshot.statistics('lineno')
-            for stat in top_stats[:5]:
-                print(stat)
+            pass
+            # snapshot = tracemalloc.take_snapshot()
+            # top_stats = snapshot.statistics('lineno')
+            # for stat in top_stats[:5]:
+                # print(stat)
 
         time.sleep(args.interval)
 

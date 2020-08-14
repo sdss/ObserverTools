@@ -18,7 +18,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 import sjd
 
-__version__ = 3.0
+__version__ = '3.0.0'
 
 
 def create_hash_line(file):
@@ -37,10 +37,10 @@ def write_hashes(path, output_file):
 
 def parseargs():
     parser = ArgumentParser(description='Creates a file with a list of sha1'
-                                        'hashes in the same directory as the'
-                                        'data, which is stored at the provided'
-                                        'mjd. If no mjd is provided, then it is'
-                                        'run for today.')
+                                        ' hashes in the same directory as the'
+                                        ' data, which is stored at the provided'
+                                        ' mjd. If no mjd is provided, then it'
+                                        ' is run for today.')
     parser.add_argument('mjds', nargs='?', default=[sjd.sjd()],
                         help='The mjd (or mjds) which you want to create a sum'
                              ' for')
