@@ -27,6 +27,7 @@ In order to run it locally, you will need to either have access to /data, or
     bin, refactored some names to more appropriately fit the role of logging.
 2020-06-17      dgatlin     Moved telemetry to epics_fetch
 2020-06-30      dgatlin     Added morning option for morning cals
+2020-08-12      dgatlin     Added apogee object offsets and a quickred aptest
 """
 import argparse
 import sys
@@ -63,7 +64,7 @@ warnings.filterwarnings('ignore', category=UserWarning, append=True)
 # For numpy boolean arrays
 warnings.filterwarnings('ignore', category=FutureWarning, append=True)
 
-__version__ = '3.5.1'
+__version__ = '3.6.0'
 
 ap_dir = Path('/data/apogee/archive/')
 b_dir = Path('/data/spectro/')
@@ -151,7 +152,6 @@ class Logging:
         # This is from ap_test
         self.args.plot = False
         missing, faint = img.ap_test((900, 910), self.ap_master)
-        # TODO make sure ap_test works
         # test = sub.Popen((Path(__file__).absolute().parent.parent
         #                   / 'old_bin/aptest').__str__() + ' {} {}'
         #                  ''.format(self.args.mjd, img.exp_id), shell=True,
@@ -250,7 +250,7 @@ class Logging:
                 detectors = []
                 red_dir = Path('/data/apogee/quickred/{}/'.format(
                     self.args.mjd))
-                red_fil = red_dir / 'ap2D-a-{}.fits.fz'.format(img.exp_id)
+                red_fil = red_dir / 'ap1D-a-{}.fits.fz'.format(img.exp_id)
                 if red_fil.exists():
                     detectors.append('a')
                 else:
@@ -567,12 +567,17 @@ class Logging:
                     self.ap_data['dNFaint'][j]))
             except IndexError:
                 pass
-        print('\n{:^80}'.format('Notes'))
-        print('=' * 80)
+        print()
+        print('### Notes:\n')
         dust_sum = get_dust.get_dust(self.args.mjd, self.args)
         print('- Integrated Dust Counts: ~{:5.0f} dust-hrs'.format(
             dust_sum - dust_sum % 100))
         print('\n')
+
+        print('=' * 80)
+        print('{:^80}'.format('Comments Timeline'))
+        print('=' * 80)
+        print()
 
     @staticmethod
     def get_window(data, i):
@@ -593,15 +598,13 @@ class Logging:
         return window
 
     def p_data(self):
-        # TODO remove user comments from this section, move to its own section
         print('=' * 80)
         print('{:^80}'.format('Data Log'))
-        print('=' * 80)
+        print('=' * 80 + '\n')
         for i, cart in enumerate(self.data['cCart']):
-            print('### Cart {}, Plate {}, {}'.format(cart,
+            print('### Cart {}, Plate {}, {}\n'.format(cart,
                                                      self.data['cPlate'][i],
                                                      self.data['cLead'][i]))
-            print('# GSOGTF, ===INSERT WEATHER CONDITIONS===')
             if cart in self.ap_data['cCart']:
                 ap_cart = np.where(cart == self.ap_data['cCart'])[0][0]
 
@@ -610,7 +613,7 @@ class Logging:
                       ' {:<4}'.format('MJD', 'UTC', 'Exposure', 'Type',
                                       'Dith', 'nReads', 'Pipeline',
                                       'Seeing'))
-                print('=' * 80)
+                print('-' * 80)
                 window = self.get_window(self.ap_data, ap_cart)
                 for (mjd, iso, exp_id, exp_type, dith, nread,
                      detectors, see) in zip(
@@ -643,7 +646,7 @@ class Logging:
                 print('{:<5} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
                       ''.format('MJD', 'UTC', 'Exposure', 'Type',
                                 'Dith', 'Pipeline', 'ETime', 'Hart'))
-                print('=' * 80)
+                print('-' * 80)
                 # i is an index for data, but it will disagree with b_data
                 # if there is an apogee-only cart
                 b_cart = np.where(cart == self.b_data['cCart'])[0][0]
@@ -686,11 +689,11 @@ class Logging:
     def p_boss(self):
         print('=' * 80)
         print('{:^80}'.format('BOSS Data Summary'))
-        print('=' * 80)
+        print('=' * 80 + '\n')
         print('{:<5} {:<8} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
               ''.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type', 'Dith',
                         'Pipeline', 'ETime', 'Hart'))
-        print('=' * 80)
+        print('-' * 80)
         for (mjd, iso, cart, plate, exp_id, exp_type, dith, detectors, etime,
              hart) in zip(self.b_data['iTime'].mjd + 0.25,
                           self.b_data['iTime'].iso,
@@ -713,12 +716,12 @@ class Logging:
     def p_apogee(self):
         print('=' * 80)
         print('{:^80}'.format('APOGEE Data Summary'))
-        print('=' * 80)
+        print('=' * 80 + '\n')
         print('{:<5} {:<8} {:<8} {:<8} {:<12} {:<4} {:<6} {:<8}'
               ' {:<6}'.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type',
                               'Dith', 'nReads', 'Pipeline',
                               'Seeing'))
-        print('=' * 80)
+        print('-' * 80)
         if self.args.morning:
             for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
                  detectors, see) in zip(

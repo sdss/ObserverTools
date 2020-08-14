@@ -43,3 +43,12 @@
 
 - Added some PyCharm files and fits files to gitignore properly
 
+## [3.3.0] - 2020-08-12
+
+### Changed
+
+- sloan_log.py uses the ap_test in apogee_data instead of ap_test. It will be
+ more like the actual APOGEE reduction since it uses the quickred files.
+ 
+- 
+

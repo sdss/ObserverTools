@@ -19,7 +19,7 @@ class TestAPTest(unittest.TestCase):
 
     def test_known_date(self):
         self.atest = ap_test.ApogeeFlat(
-            self.project / 'dat/ap_master_flat_col_array.dat', self.args)
+            '/data/apogee/quickred/58021/ap1D-a-24590019.fits.fz', self.args)
         self.atest.run_inputs()
 
     def test_directory(self):
@@ -31,7 +31,7 @@ class TestAPTest(unittest.TestCase):
         """Tests the plotting routine"""
         self.args.plot = True
         self.atest = ap_test.ApogeeFlat(
-            self.project / 'dat/ap_master_flat_col_array.dat', self.args)
+            '/data/apogee/quickred/58021/ap1D-a-24590019.fits.fz', self.args)
         self.atest.run_inputs()
 
 

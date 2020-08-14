@@ -7,12 +7,21 @@ import fitsio
 import numpy as np
 from bin import epics_fetch
 
+__version__ = '3.2.0'
+
 
 class APOGEERaw:
-    """A class to parse raw data from APOGEE. The purpose of collecting this
-    raw data is to future-proof things that need these ouptuts in case
-    things like sdss.autoscheduler changes, which many libraries depend on. This
-    will hopefully help SDSS-V logging"""
+    """A class to parse raw data from APOGEE. The purpose of this class is to
+    read raw image files from /data/apogee/archive, regardless of any future
+    changes in SDSS. This
+    will hopefully help SDSS-V logging.
+
+    Methods:
+        compute_offets: Returns the offsets of an arc/object to compute the
+        relative dither
+
+        ap_test: Returns a list of faint fibers and missing fibers from a flat
+        """
 
     def __init__(self, fil, args, ext=1, ):
         self.file = Path(fil)
@@ -111,7 +120,7 @@ class APOGEERaw:
         if master_col is None:
             raise ValueError("APTest didn't receive a valid master_col: {}"
                              "".format(master_col))
-        if not self.quickred_data:
+        if self.quickred_data.size == 0:
             mjd = self.file.absolute().parent.name
             self.quickred_file = (self.file.absolute().parent.parent.parent
                                   / 'quickred/{}/ap1D-a-{}.fits.fz'
@@ -126,10 +135,10 @@ class APOGEERaw:
         slc = np.average(self.quickred_data[:, ws[0]:ws[1]], axis=1)
         flux_ratio = slc / master_col
         missing = flux_ratio < 0.2
-        faint = (0.2 <= flux_ratio) & (flux_ratio < 0.7)
+        faint = (flux_ratio < 0.7) & (0.2 <= flux_ratio)
         bright = ~missing & ~faint
-        i_missing = np.where(missing)[0]
-        i_faint = np.where(faint)[0]
+        i_missing = np.where(missing)[0].astype(int)
+        i_faint = np.where(faint)[0].astype(int)
         i_bright = np.where(bright)[0]
         missing_bundles = self.create_bundles(i_missing)
         faint_bundles = self.create_bundles(i_faint)
@@ -153,22 +162,38 @@ class APOGEERaw:
             ax.grid(True)
             ax.axhline(0.7, c=(0, 0.6, 0.533))
             ax.axhline(0.2, c=(0.933, 0.466, 0.2))
-            ax.set_title('APOGEE Fiber Relative Intensity', size=15)
+            ax.set_title('APOGEE Fiber Relative Intensity {}'.format(
+                self.exp_id), size=15)
             fig.show()
 
         return missing_bundles, faint_bundles
 
     @staticmethod
     def create_bundles(subset):
-        # print(subset.shape)
-        bundles = [subset]
+        """This method converts an array of ints into a list of strings that
+        describe a large series of fibers and ints for lone fibers.
+
+        Ex: [1, 2, 3, 5] -> ['1 - 3', 5]
+
+        """
+        if len(subset) == 0:
+            return []
+        bundles = [subset[0]]
         b = 0
-        for fib in subset:
-            if bundles[b].size > 0:
-                # print(bundles)
-                # print(b)
-                # print(bundles[b])
+        for fib in subset[1:]:
+            if isinstance(bundles[b], np.int64):
                 if bundles[b] + 1 == fib:
+                    if fib % 30 == 0:
+                        bundles.append(fib)
+                        b += 1
+                    else:
+                        # All strings are created here
+                        bundles[b] = '{} - {}'.format(bundles[b], fib)
+                else:
+                    bundles.append(fib)
+                    b += 1
+            elif isinstance(bundles[b], str):
+                if int(bundles[b].split()[-1]) + 1 == fib:
                     if fib % 30 == 1:
                         bundles.append(fib)
                         b += 1
@@ -178,11 +203,11 @@ class APOGEERaw:
                 else:
                     bundles.append(fib)
                     b += 1
-        for i, bundle in enumerate(bundles):
-            if isinstance(bundle, str):
-                low, high = np.array(bundle.split(' - ')).astype(int)
-                if ((low - 1) // 30) == ((high - 1) // 30):
-                    bundles[i] = '{} bundle'.format(low)
+        # for i, bundle in enumerate(bundles):
+        #     if isinstance(bundle, str):
+        #         low, high = np.array(bundle.split(' - ')).astype(int)
+        #         if ((low - 1) // 30) == ((high - 1) // 30):
+        #             bundles[i] = '{} bundle'.format(low)
         return bundles
 
 
