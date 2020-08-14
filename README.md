@@ -60,7 +60,8 @@ These libraries were needed on Ubuntu 20.04
 ```bash
 sudo apt install libxt-dev libbz2-dev saods9
 
+```
+
 ## License
 ObserverTools is licensed under a 3-clause BSD style license - see the
  LICENSE.md file.
-```

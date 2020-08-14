@@ -50,5 +50,9 @@
 - sloan_log.py uses the ap_test in apogee_data instead of ap_test. It will be
  more like the actual APOGEE reduction since it uses the quickred files.
  
-- 
+- Removed several TODOs related to ap_test, now passes unittests
+
+- Changed the apogee quickred flat file to one of the oldest available at APO,
+ this is not a permanent solution, the original file's quickred version should
+ be used once found.
 
