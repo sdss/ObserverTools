@@ -9,7 +9,7 @@ STUI, but by bypassing STUI and directly accessing telemetry
 """
 from astropy.time import Time
 import argparse
-from bin import epics_fetch
+import epics_fetch
 
 
 __version__ = '3.1.0'

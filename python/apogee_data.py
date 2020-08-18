@@ -5,7 +5,7 @@ from astropy.time import Time
 from scipy.optimize import leastsq
 import fitsio
 import numpy as np
-from bin import epics_fetch
+import epics_fetch
 
 __version__ = '3.2.0'
 
