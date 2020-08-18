@@ -53,8 +53,9 @@ try:
     import apogee_data
     import boss_data
     import log_support
-except ImportError:
-    raise ImportError('Please add ObserverTools/python to your PYTHONPATH')
+except ImportError as e:
+    raise ImportError('Please add ObserverTools/python to your PYTHONPATH:\n'
+                      '    {}'.format(e))
 
 if sys.version_info.major < 3:
     raise Exception('Interpretter must be python 3 or newer')
