@@ -33,7 +33,8 @@ def get_time_stamps(mjd):
 
 def parse_args():
     today = sjd.sjd()
-    desc = 'integral dust calculation for one mjd'
+    desc = ('Integrates the dust accumulated in a night using TRON and prints it'
+            '. Needs no args for the current date.')
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-m', '--mjd', help='enter mjd, default is current mjd',
                         default=today, type=int)

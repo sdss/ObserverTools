@@ -5,9 +5,14 @@ from astropy.time import Time
 from scipy.optimize import leastsq
 import fitsio
 import numpy as np
-import epics_fetch
 
-__version__ = '3.2.0'
+try:
+    import epics_fetch
+except ImportError as e:
+    raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
+                      '    {}'.format(e))
+
+__version__ = '3.2.1'
 
 
 class APOGEERaw:
@@ -114,6 +119,11 @@ class APOGEERaw:
         w_model, success = leastsq(err_func, w0, args=(line_inds, line))
 
         diff = w_model[0] - w0
+        if np.abs(diff) > 10:
+            raise Warning('A large dither was reported for exposure {}: {:.3f}'
+                          '\n  This may mean the zero point needs to be'
+                          ' adjusted, currently it is {}'
+                          ''.format(self.exp_id, diff, w0))
         return diff
 
     def ap_test(self, ws=(900, 910), master_col=None, plot=False):

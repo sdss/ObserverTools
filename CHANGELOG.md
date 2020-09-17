@@ -55,4 +55,19 @@
 - Changed the apogee quickred flat file to one of the oldest available at APO,
  this is not a permanent solution, the original file's quickred version should
  be used once found.
+ 
+## [3.3.1] - 2020-08-17
+
+### Changed
+
+- help.py now includes WAVEMID and XMID
+
+- Tests for XMID and WAVEMID now in tests
+
+- WAVEMID and XMID are now symlinked to x_mid.py and wave_mid.py for import
+ (this usually won't work, but it gives some flexibility)
+ 
+- ds9_live.py should support 2-camera modes and should only open 2 ds9 tiles
+
+- help text has been updated in several argparses
 

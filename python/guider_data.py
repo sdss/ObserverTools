@@ -9,16 +9,23 @@ identify anomolous lurches in guiding, first identified around 2019-10-30.
                                 table to help find lurch events.
 """
 import numpy as np
-import datetime
 import argparse
 import glob
 import os
 import stat
-from bin import sjd
+
+try:
+    import sjd
+except ImportError as e:
+    raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
+                      '    {}'.format(e))
 
 from astropy.io import fits
 from astropy.time import Time
 # from pathlib import Path
+
+__version__ = '3.0.1'
+
 
 class GuiderRaw:
     """A class to parse raw data from APOGEE. The purpose of collecting this

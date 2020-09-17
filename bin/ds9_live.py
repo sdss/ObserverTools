@@ -11,15 +11,15 @@ Changelog:
  3 and greatly improved PEP-8 compliance. Changed source of apogee data to work
  on any system
 """
-import tracemalloc
+# import tracemalloc
 
-import fitsio
+# import fitsio
 import hashlib
 import pyds9
 import time
 import fitsio
-from astropy.time import Time, TimeDelta
-import os
+# from astropy.time import Time, TimeDelta
+# import os
 import numpy as np
 # import tracemalloc
 from argparse import ArgumentParser
@@ -80,7 +80,7 @@ class DS9Window:
                       ' another window with a new name?'.format(ds9))
                 action = input('[connect]/close/change: ')
                 if ((action.lower() == 'connect')
-                or (action.lower() == '')):
+                        or (action.lower() == '')):
                     self.name = ds9
                 elif action.lower() == 'close':
                     d = pyds9.DS9(ds9)
@@ -134,9 +134,6 @@ class DS9Window:
     def latest_fits_file(self, pattern):
         """Returns the latest FITS file matching <pattern>"""
 
-        max_time = -1
-        fits_filename = ''
-
         # Obtain the files in the directory and add the full path to them
 
         fits_dir = self.latest_fits_dir()
@@ -151,7 +148,6 @@ class DS9Window:
             # file
 
             if self.is_fits(fil):
-
                 # Store the name and mtime of only the latest FITS file
 
                 mtime = Path(fil).stat().st_mtime
@@ -159,19 +155,19 @@ class DS9Window:
                 imgs.append(fil)
                 # print max_time, file, mtime
                 # if max_time < mtime:
-                    # fits_filename = fil
-                    # max_time = mtime
+                # fits_filename = fil
+                # max_time = mtime
         img_times = np.array(img_times)
         imgs = np.array(imgs)
         sorter = img_times.argsort()
         imgs = imgs[sorter]
-        img_times = img_times[sorter]
+        # img_times = img_times[sorter]
         # An attempt at making sure that if APOGEE isn't on the summary
         # directory, it won't crash because it won't try to read an image
         # that is still writing
         try:
             if (('APOGEE' in self.name)
-            and ('summary' not in self.fits_dir.as_posix())):
+                    and ('summary' not in self.fits_dir.as_posix())):
                 fits_filename = imgs[-2].absolute()
             else:
                 fits_filename = imgs[-1].absolute()
@@ -186,7 +182,7 @@ class DS9Window:
     def display(self, fil, frame):
         """Display <file> in <frame> with optional scaling and zoom"""
 
-        if frame >= 0 and fil != '':
+        if frame >= 0 and fil.exists():
             self.ds9.set('frame {}'.format(frame))
             self.ds9.set('file {}'.format(fil))
 
@@ -195,6 +191,8 @@ class DS9Window:
 
             if self.scale:
                 self.ds9.set('scale {}'.format(self.scale))
+        else:
+            return
 
     def update(self):
         """Update the display"""
@@ -249,8 +247,10 @@ def parseargs():
 
     parser = ArgumentParser(description='A tool to leave running continuously'
                                         ' that will display the most current'
-                                        ' apogee exposure. By default, it will'
-                                        ' run every 60 seconds.')
+                                        ' exposure. By default, it will'
+                                        ' run every 60 seconds. Can be run for'
+                                        ' any camera. Previously called ads9,'
+                                        ' spds9, gds9, etc.')
     parser.add_argument('-a', '--apogee', action='store_true',
                         help='If included, will display APOGEE images.'
                              ' Overrides most arguments')
@@ -310,7 +310,6 @@ def parseargs():
         else:
             args.fits_dir = Path('/data/apogee/utr_cdr/')
         args.name = 'APOGEE'
-        # TODO set these to better values
         args.scale = args.scale
         args.zoom = args.zoom
 
@@ -353,7 +352,7 @@ def main():
             # snapshot = tracemalloc.take_snapshot()
             # top_stats = snapshot.statistics('lineno')
             # for stat in top_stats[:5]:
-                # print(stat)
+            # print(stat)
 
         time.sleep(args.interval)
 

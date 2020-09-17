@@ -32,6 +32,7 @@ In order to run it locally, you will need to either have access to /data, or
 import argparse
 import sys
 import warnings
+import textwrap
 
 import numpy as np
 
@@ -118,8 +119,8 @@ class Logging:
                         'iNRead': [], 'iEType': [], 'iCart': [], 'iPlate': [],
                         'dCart': [], 'dTime': [], 'dMissing': [], 'dFaint': [],
                         'dNMissing': [], 'dNFaint': [], 'aTime': [],
-                        'aOffset': [], 'aID': [], 'aLamp': [], 'oOffset': [],
-                        'oDither': []}
+                        'aOffset': [], 'aID': [], 'aLamp': [], 'oTime': [],
+                        'oOffset': [], 'oDither': []}
         self.b_data = {'cCart': [], 'cTime': [],
                        'iTime': [], 'iID': [],
                        'iDetector': [], 'iDither': [],
@@ -220,15 +221,16 @@ class Logging:
                         self.ap_data['aOffset'].append(
                             img.compute_offset((30, 35), 1761, 20, 3))
                         self.ap_data['aLamp'].append('UNe')
-                    elif 'Object' in img.exp_type:
-                        # TODO check an object image for a good FWHM (last
-                        #  input)
-                        self.ap_data['oOffset'].append(
-                            img.compute_offset((30, 35), 1090, 40, 2))
-                        self.ap_data['oDither'].append(img.dither)
                     else:
                         print("Couldn't parse the arc image: {} with exposure"
                               " type {}".format(img.file, img.exp_type))
+                elif ('Object' in img.exp_type) and ('-a-' in img.file.name):
+                    # TODO check an object image for a good FWHM (last
+                    #  input)
+                    self.ap_data['oTime'].append(img.isot)
+                    self.ap_data['oOffset'].append(
+                        img.compute_offset((30, 35), 1090, 40, 2))
+                    self.ap_data['oDither'].append(img.dither)
 
                 if img.cart_id not in self.data['cCart']:
                     self.data['cPlate'].append(img.plate_id)
@@ -407,6 +409,7 @@ class Logging:
             ap_img_sorter = self.ap_data['iTime'].argsort()
             ap_dome_sorter = self.ap_data['dTime'].argsort()
             ap_arc_sorter = self.ap_data['aTime'].argsort()
+            ap_obj_sorter = self.ap_data['oTime'].argsort()
             for key, item in self.ap_data.items():
                 if key[0] == 'c':
                     self.ap_data[key] = item[ap_cart_sorter]
@@ -416,6 +419,8 @@ class Logging:
                     self.ap_data[key] = item[ap_dome_sorter]
                 elif key[0] == 'a':
                     self.ap_data[key] = item[ap_arc_sorter]
+                elif key[0] == 'o':
+                    self.ap_data[key] = item[ap_obj_sorter]
             if self.args.morning:
                 was_dark = False
                 prev_time = 0
@@ -776,9 +781,11 @@ class Logging:
         prev_f = 0.
         for d, f in zip(self.ap_data['oDither'], self.ap_data['oOffset']):
             if d != prev_dither:
-                obj_offsets.append(f - prev_f)
+                obj_offsets.append('{:.3f}'.format(f - prev_f))
+            prev_dither = d
             prev_f = f
-        print('Object Offsets: {}'.format(obj_offsets))
+        print('Object Offsets:\n{}'.format(textwrap.fill(str(
+            obj_offsets), 80)))
         print('\n')
 
     def log_support(self):
@@ -815,7 +822,7 @@ def parse_args():
     parser.add_argument('-p', '--print', action='store_true',
                         help='Print all possible outputs')
     parser.add_argument('-b', '--boss', action='store_true',
-                        help='Print MaANGA Summary')
+                        help='Print BOSS Summary')
     parser.add_argument('-a', '--apogee', action='store_true',
                         help='Print APOGEE Summary')
     parser.add_argument('-l', '--log-support', action='store_true',
