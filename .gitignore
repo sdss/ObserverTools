@@ -1,17 +1,15 @@
 *.pyc  # Python 2
 *.swp  # vim
-.idea  # For PyCharm
 *.outfile
 *.fit*  # Usually too large for GitHub to handle well
 *.bak  # For 2to3
 *.sha1sum  # For bosssha1sum
 
 
-/.idea/
-/old_bin/apRaw-03720068.fits
+/.idea/  # For PyCharm
 /ObserverTools.egg-info/
 /dist/
-build/
-old_bin/__pycache__/
-python/__pycache__/
-bin/__pycache__/
+/build/
+/old_bin/__pycache__/
+/python/__pycache__/
+/bin/__pycache__/
