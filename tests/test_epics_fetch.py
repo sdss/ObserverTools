@@ -9,7 +9,8 @@ class TestEPICSFetch(unittest.TestCase):
     def test_known_date(self):
         t = Time('2020-06-07T00:00', format='isot')
         t - 1.
-        data = epics_fetch.get_data('25m:mcp:cwPositions', t.isot, (t-1).isot)
+        data = epics_fetch.get_data('25m:mcp:cwPositions', t.datetime,
+                                    (t-1).datetime)
         epics_fetch.print_data(data)
 
     def test_archive(self):

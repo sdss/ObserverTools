@@ -16,7 +16,7 @@ Created by Stephen Bailey (LBNL) Fall 2011
 import hashlib
 from argparse import ArgumentParser
 from pathlib import Path
-import sjd
+from bin import sjd
 
 __version__ = '3.0.0'
 

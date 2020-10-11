@@ -9,10 +9,14 @@ STUI, but by bypassing STUI and directly accessing telemetry
 """
 from astropy.time import Time
 import argparse
-from bin import epics_fetch
 
+try:
+    import epics_fetch
+except ImportError as e:
+    raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
+                      '    {}'.format(e))
 
-__version__ = '3.1.0'
+__version__ = '3.1.1'
 
 
 class LogSupport:
@@ -44,8 +48,8 @@ class LogSupport:
                                    '25m:sop:doApogeeMangaSequence_ditherSeq'
                                    ':index',
                                    '25m:sop:doApogeeScience_index:index'],
-                                  (self.tstart - 0.25).isot,
-                                  (self.tend - 0.25).isot, interpolation='raw',
+                                  (self.tstart - 0.25).datetime,
+                                  (self.tend - 0.25).datetime, interpolation='raw',
                                   scan_archives=False)
         self.call_times = []
         for dat in data:
@@ -75,7 +79,7 @@ class LogSupport:
         for key in offsets_keys:
             off_data[key] = []
         for time in self.call_times:
-            self.query(offsets_keys, time.isot, time.isot,
+            self.query(offsets_keys, time.datetime, time.datetime,
                        off_data)
 
         self.offsets += '=' * 80 + '\n'
@@ -122,7 +126,7 @@ class LogSupport:
         for key in focus_keys:
             foc_data[key] = []
         for time in self.call_times:
-            self.query(focus_keys, time.isot, time.isot,
+            self.query(focus_keys, time.datetime, time.datetime,
                        foc_data)
 
         self.focus += '=' * 80 + '\n'
@@ -167,7 +171,7 @@ class LogSupport:
         for key in weather_keys:
             weather_data[key] = []
         for time in self.call_times:
-            self.query(weather_keys, time.isot, time.isot,
+            self.query(weather_keys, time.datetime, time.datetime,
                        weather_data)
 
         self.weather = '=' * 80 + '\n'
@@ -202,8 +206,8 @@ class LogSupport:
     def get_hartmann(self):
 
         data = self.telemetry.get('25m:hartmann:sp1Residuals:deg',
-                                  (self.tstart - 0.25).isot,
-                                  (self.tend - 0.25).isot, interpolation='raw',
+                                  (self.tstart - 0.25).datetime,
+                                  (self.tend - 0.25).datetime, interpolation='raw',
                                   scan_archives=False)
         hart_times = data.times
         hart_times = Time(hart_times)
@@ -226,8 +230,8 @@ class LogSupport:
         for key in hartmann_keys:
             hart_data[key] = []
         for time in hart_times:
-            self.query(hartmann_keys, (time + 3 / 24 / 60).isot,
-                       (time + 3 / 24 / 60).isot,
+            self.query(hartmann_keys, (time + 3 / 24 / 60).datetime,
+                       (time + 3 / 24 / 60).datetime,
                        hart_data)
 
         self.hartmann += '=' * 80 + '\n'
@@ -315,7 +319,7 @@ def main():
         print('Key: {}'.format(args.key))
         print('Time: Value')
         for time in tel.call_times:
-            data = tel.query(args.key, time.isot, time.isot, dummy_dic)
+            data = tel.query(args.key, time.datetime, time.datetime, dummy_dic)
             print('{}: {}'.format(data.times[0], data.values[0]))
 
         print('Units: {}'.format(data.units))

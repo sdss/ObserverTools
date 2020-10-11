@@ -5,9 +5,14 @@ from astropy.time import Time
 from scipy.optimize import leastsq
 import fitsio
 import numpy as np
-from bin import epics_fetch
 
-__version__ = '3.2.0'
+try:
+    from bin import epics_fetch
+except ImportError as e:
+    raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
+                      '    {}'.format(e))
+
+__version__ = '3.2.1'
 
 
 class APOGEERaw:
@@ -30,8 +35,8 @@ class APOGEERaw:
         header = fitsio.read_header(fil, ext=ext)
         self.telemetry = epics_fetch.telemetry
         dithers = self.telemetry.get('25m:apogee:ditherNamedPositions',
-                                     start=(Time.now() - 1 / 24 / 60 * 5).isot,
-                                     end=Time.now().isot,
+                                     start=(Time.now() - 5 / 24 / 60).datetime,
+                                     end=Time.now().datetime,
                                      scan_archives=False, interpolation='raw')
         # layer = self.image[layer_ind]
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
@@ -114,6 +119,11 @@ class APOGEERaw:
         w_model, success = leastsq(err_func, w0, args=(line_inds, line))
 
         diff = w_model[0] - w0
+        if np.abs(diff) > 10:
+            raise Warning('A large dither was reported for exposure {}: {:.3f}'
+                          '\n  This may mean the zero point needs to be'
+                          ' adjusted, currently it is {}'
+                          ''.format(self.exp_id, diff, w0))
         return diff
 
     def ap_test(self, ws=(900, 910), master_col=None, plot=False):

@@ -50,5 +50,45 @@
 - sloan_log.py uses the ap_test in apogee_data instead of ap_test. It will be
  more like the actual APOGEE reduction since it uses the quickred files.
  
-- 
+- Removed several TODOs related to ap_test, now passes unittests
 
+- Changed the apogee quickred flat file to one of the oldest available at APO,
+ this is not a permanent solution, the original file's quickred version should
+ be used once found.
+ 
+## [3.3.1] - 2020-08-17
+
+### Changed
+
+- help.py now includes WAVEMID and XMID
+
+- Tests for XMID and WAVEMID now in tests
+
+- WAVEMID and XMID are now symlinked to x_mid.py and wave_mid.py for import
+ (this usually won't work, but it gives some flexibility)
+ 
+- ds9_live.py should support 2-camera modes and should only open 2 ds9 tiles
+
+- help text has been updated in several argparses
+
+## [3.4.0] - 2020-10-10
+
+### Changed
+
+- Added setup.py, requirements, and a modulefile, both of which could be used to
+ setup an environment, although if you need to setup an Anaconda environment,
+ modules cannot do that, but an Anaconda environment can set up sdss-obstools
+ via setuptools
+
+- Replaced conda_env.yml with the minimum requirements
+
+- Replaced all import _____ from the project to from ___ import _____ which is
+ better for setuptools
+
+- Commented out pyds9's test module because it takes forever.
+
+- For all channelarchiver input times, .isot was replaced with .datetime because
+ their string parsing algorithm has an internal bug that can be bypassed when
+ .datetime is given as input.
+
+- Installable via PyPI via `pip install sdss-obstools==3.4.0`

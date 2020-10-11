@@ -8,12 +8,11 @@ Changelog:
  """
 import argparse
 import datetime
-import sjd
 from astropy.time import Time
 import numpy as np
-import epics_fetch
+from bin import sjd, epics_fetch
 
-__version__ = '3.2.1'
+__version__ = '3.2.2'
 
 telemetry = epics_fetch.telemetry
 
@@ -33,7 +32,8 @@ def get_time_stamps(mjd):
 
 def parse_args():
     today = sjd.sjd()
-    desc = 'integral dust calculation for one mjd'
+    desc = ('Integrates the dust accumulated in a night using TRON and prints it'
+            '. Needs no args for the current date.')
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-m', '--mjd', help='enter mjd, default is current mjd',
                         default=today, type=int)
