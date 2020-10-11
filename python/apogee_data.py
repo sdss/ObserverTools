@@ -7,7 +7,7 @@ import fitsio
 import numpy as np
 
 try:
-    import epics_fetch
+    from bin import epics_fetch
 except ImportError as e:
     raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
                       '    {}'.format(e))
@@ -35,8 +35,8 @@ class APOGEERaw:
         header = fitsio.read_header(fil, ext=ext)
         self.telemetry = epics_fetch.telemetry
         dithers = self.telemetry.get('25m:apogee:ditherNamedPositions',
-                                     start=(Time.now() - 1 / 24 / 60 * 5).isot,
-                                     end=Time.now().isot,
+                                     start=(Time.now() - 5 / 24 / 60).datetime,
+                                     end=Time.now().datetime,
                                      scan_archives=False, interpolation='raw')
         # layer = self.image[layer_ind]
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499

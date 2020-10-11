@@ -11,9 +11,7 @@ Changelog:
  3 and greatly improved PEP-8 compliance. Changed source of apogee data to work
  on any system
 """
-# import tracemalloc
 
-# import fitsio
 import hashlib
 import pyds9
 import time
@@ -45,7 +43,7 @@ class DS9Window:
     verbose: A debugging tool
     """
 
-    def __init__(self, name, fits_dir, regex, scale, zoom, verbose):
+    def __init__(self, name, fits_dir, regex, scale, zoom, verbose, info):
 
         # Constants and variables
 
@@ -58,6 +56,7 @@ class DS9Window:
         self.scale = scale
         self.zoom = zoom
         self.verbose = verbose
+        self.info = info
 
         hsh = hashlib.sha1(''.join(self.name + str(self.fits_dir) + self.regex
                                    + self.scale).encode())
@@ -94,6 +93,12 @@ class DS9Window:
         self.ds9 = pyds9.DS9(self.name)
         if 'BOSS' in self.name:
             self.ds9.set('tile yes')
+
+        if not self.info:
+            self.ds9.set('view info no')
+            self.ds9.set('view panner no')
+            self.ds9.set('view magnifier no')
+            self.ds9.set('view buttons no')
 
     @staticmethod  # This means it doesn't take self as an argument
     def is_fits(filename):
@@ -270,6 +275,10 @@ def parseargs():
     parser.add_argument('-g', '--guider', action='store_true',
                         help='If included, will display guider images.'
                              ' Overrides most arguments.')
+    parser.add_argument('--info', dest='info',action='store_true',
+                        help='If included, it will show the info panel like a' 
+                             ' normal DS9 window. Without info, it will be more' 
+                             ' compact and may easily fit on the monitor')
     parser.add_argument('-i', '--interval', dest='interval', default=60,
                         type=int, help='Set the refresh rate.	Default is 5'
                                        'seconds. Refreshes will be this '

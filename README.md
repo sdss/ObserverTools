@@ -10,7 +10,7 @@ Dylan Gatlin, Dmitry Bizyaev
 ### Authors
 In addition to the moderators who maintain this repo, scripts were written by
  the following authors: Elena Malanushenko, Jon Brinkmann, Viktor Malanushenko,
- Kaike Pan, Stephen Bailey, 
+ Kaike Pan, Stephen Bailey, Bernie
  
 ## Structure
 Files that were once under sdss-hub:~/bin are now under old_bin, and Python 3
@@ -34,10 +34,10 @@ If a script is moved to bin, it should have a test file in tests that will run
  are critical for us maintaining code dependability.
 
 ## TODO
- - This package should be installable on hub using a setup.py or EUPS.
- - A help tool needs to be written to print various documentation tools for
- observers to read easily.
+ - This package should be installable on hub using a setuptools or module
+ 
  - Add Travis CI to GitHub
+ 
  - Hide info panel and magnifier in ds9_live
   
 ## TimeTracking
@@ -58,7 +58,7 @@ conda create -f conda_env.yml
 ### Ubuntu
 These libraries were needed on Ubuntu 20.04
 ```bash
-sudo apt install libxt-dev libbz2-dev saods9
+sudo apt install libxt-dev libbz2-dev saods9 xpa-tools
 
 ```
 

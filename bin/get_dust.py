@@ -8,12 +8,11 @@ Changelog:
  """
 import argparse
 import datetime
-import sjd
 from astropy.time import Time
 import numpy as np
-import epics_fetch
+from bin import sjd, epics_fetch
 
-__version__ = '3.2.1'
+__version__ = '3.2.2'
 
 telemetry = epics_fetch.telemetry
 

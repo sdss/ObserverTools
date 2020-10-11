@@ -37,8 +37,16 @@ import textwrap
 import numpy as np
 
 # import ap_test
-import epics_fetch
-import get_dust
+try:
+    import epics_fetch
+    import get_dust
+except ImportError as e:
+    try:
+        from bin import epics_fetch, get_dust
+    except ImportError as e:
+        raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
+                          '\n    {}'.format(e))
+
 
 try:
     import fitsio
@@ -55,8 +63,11 @@ try:
     import boss_data
     import log_support
 except ImportError as e:
-    raise ImportError('Please add ObserverTools/python to your PYTHONPATH:\n'
-                      '    {}'.format(e))
+    try:
+        from python import apogee_data, boss_data, log_support
+    except ImportError as e:
+        raise ImportError('Please add ObserverTools/python to your PYTHONPATH:'
+                          '\n    {}'.format(e))
 
 if sys.version_info.major < 3:
     raise Exception('Interpretter must be python 3 or newer')
@@ -312,8 +323,8 @@ class Logging:
                 if img.hartmann == 'Left':
                     # Note that times are sent in UTC and received in local, yet
                     # those times are marked as UTC
-                    tstart = Time(img.isot).isot
-                    tend = (Time(img.isot) + 1 / 24 / 60 * 5).isot
+                    tstart = Time(img.isot).datetime
+                    tend = (Time(img.isot) + 5 / 24 / 60).datetime
                     hart = self.telemetry.get([
                         '25m:hartmann:r1PistonMove',
                         '25m:hartmann:r2PistonMove',

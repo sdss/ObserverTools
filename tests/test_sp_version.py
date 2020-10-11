@@ -10,8 +10,7 @@ class TestSPVersion(unittest.TestCase):
         for line in output.stderr.read().decode('utf-8').splitlines():
             print(line)
             self.assertNotIn('not found', line,
-                             msg='Either EUPS or the package to set up is not'
-                                 ' found')
+                             msg='Package manager or package not found')
 
 
 if __name__ == '__main__':

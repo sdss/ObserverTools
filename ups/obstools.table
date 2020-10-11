@@ -1,4 +1,0 @@
-
-envAppend(PATH, ${PRODUCT_DIR}/bin)
-envPrepend(PYTHONPATH, ${PRODUCT_DIR}/bin)
-endPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
