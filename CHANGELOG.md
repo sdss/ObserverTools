@@ -90,3 +90,5 @@
 - For all channelarchiver input times, .isot was replaced with .datetime because
  their string parsing algorithm has an internal bug that can be bypassed when
  .datetime is given as input.
+
+- Installable via PyPI via `pip install sdss-obstools==3.4.0`

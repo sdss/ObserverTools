@@ -12,6 +12,18 @@ In addition to the moderators who maintain this repo, scripts were written by
  the following authors: Elena Malanushenko, Jon Brinkmann, Viktor Malanushenko,
  Kaike Pan, Stephen Bailey, Bernie
  
+## Installation
+For observers at on their personal laptops, they can install these scripts via
+ `pip install sdss-obstools`. The pip page can be found
+ [here](https://pypi.org/project/sdss-obstools/). This will install the scripts 
+ in your current pip
+ environment, but most scripts won't work unless you also setup a telemetry
+ tunnel via
+
+```bash
+ssh -L 5080:sdss4-telemetry.apo.nmsu.edu:80 observer@ sdss-gateway.apo.nmsu.edu
+```
+ 
 ## Structure
 Files that were once under sdss-hub:~/bin are now under old_bin, and Python 3
  scripts are now under bin. Any non-user tools are stored under python. All
