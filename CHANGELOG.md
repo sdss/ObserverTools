@@ -91,4 +91,23 @@
  their string parsing algorithm has an internal bug that can be bypassed when
  .datetime is given as input.
 
-- Installable via PyPI via `pip install sdss-obstools==3.4.0`
+- Installable via PyPI via `pip install sdss-obstools==3.4.0
+
+## [3.4.1] - 2020-10-11
+
+### Changed
+
+- Removed `python=3.7.8` from requirements.txt because that breaks the pip
+ install
+
+## [3.4.2] - 2020-10-11
+
+### Changed
+
+- Added MANIFEST.in to include CHNAGELOG and LICENSE for installation
+
+## [3.4.3] - 2020-10-11
+
+### Changed
+
+- Added requirements.txt to MANIFEST.in
