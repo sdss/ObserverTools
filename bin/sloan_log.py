@@ -346,7 +346,7 @@ class Logging:
                     self.b_data['hTime'].append(img.isot)
                 m_detectors = []
                 # img_mjd = int(Time(img.isot).mjd)
-                if 'BOSS' in img.lead:
+                if ('BOSS' in img.lead) or ('BHM' in img.lead):
                     red_dir = Path('/data/boss/sos/{}/'.format(self.args.mjd))
                     red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                         img.exp_id)
