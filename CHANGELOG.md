@@ -131,6 +131,15 @@
 ### Changed
 
 - log_support has a new keyword based on the changes made to actorkeys today
-(note: the new keyword will not work until there has been a sequence using that
-keyword.)
+ (note: the new keyword will not work until there has been a sequence using that
+ keyword.)
+
+- Changed a raise Warning in apogee_data.py to a print so it doesn't cause
+ the program to exit, encountered in img 35780004
+ 
+## [3.4.6] - 2020-10-18
+
+- ds9_live.py has args.info incorporated throughout (also in the tests)
+
+- sloan_log.py now looks for sos directory when BHM is lead.
 

@@ -275,7 +275,7 @@ def parseargs():
     parser.add_argument('-g', '--guider', action='store_true',
                         help='If included, will display guider images.'
                              ' Overrides most arguments.')
-    parser.add_argument('--info', dest='info',action='store_true',
+    parser.add_argument('--info', dest='info', action='store_true',
                         help='If included, it will show the info panel like a' 
                              ' normal DS9 window. Without info, it will be more' 
                              ' compact and may easily fit on the monitor')
@@ -351,7 +351,7 @@ def main():
     args = parseargs()
     # Start the display
     window = DS9Window(args.name, args.fits_dir, args.regex, args.scale,
-                       args.zoom, args.verbose)
+                       args.zoom, args.verbose, args.info)
     while True:
         window.update()
         # This loop is for tracing memory allocation to track memory leaks, none

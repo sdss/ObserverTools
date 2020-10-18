@@ -4,10 +4,10 @@
 *.fit*  # Usually too large for GitHub to handle well
 *.bak  # For 2to3
 *.sha1sum  # For bosssha1sum
+/old_bin/apRaw-03720068.fits
 
-
-/.idea/  # For PyCharm
-/sdss-obstools.egg-info/
+/.idea/**  # For PyCharm
+/sdss-obstools.egg-info/**
 /dist/
 /build/
-/*/__pycache__/
+/**/__pycache__/

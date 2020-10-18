@@ -120,7 +120,7 @@ class APOGEERaw:
 
         diff = w_model[0] - w0
         if np.abs(diff) > 10:
-            raise Warning('A large dither was reported for exposure {}: {:.3f}'
+            print('A large dither was reported for exposure {}: {:.3f}'
                           '\n  This may mean the zero point needs to be'
                           ' adjusted, currently it is {}'
                           ''.format(self.exp_id, diff, w0))

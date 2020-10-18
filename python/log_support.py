@@ -55,7 +55,7 @@ class LogSupport:
                                   (self.tstart - 0.3).datetime,
                                   (self.tend - 0.3).datetime,
                                   interpolation='raw',
-                                  scan_archives=True)
+                                  scan_archives=False)
         self.call_times = []
         for dat in data:
             self.call_times += dat.times
