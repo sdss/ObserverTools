@@ -644,7 +644,7 @@ class Logging:
                     self.ap_data['iSeeing'][window]
                 ):
                     print('{:<5.0f} {:0>8} {:<8.0f} {:<12} {:<4} {:>6} {:<9}'
-                          ' {:>4.1f}'.format(int(mjd), iso[12:19], exp_id,
+                          ' {:>4.1f}'.format(int(mjd), iso[11:19], exp_id,
                                              exp_type,
                                              dith, nread, detectors, see))
                 print()
@@ -681,7 +681,7 @@ class Logging:
                 ):
                     print('{:<5.0f} {:0>8} {:0>8.0f} {:<7} {:<4} {:<11}'
                           ' {:>5.0f} {:<5}'
-                          ''.format(int(mjd), iso[12:19], exp_id,
+                          ''.format(int(mjd), iso[11:19], exp_id,
                                     exp_type.strip(),
                                     dith.strip(), detectors, etime,
                                     hart))
@@ -725,7 +725,7 @@ class Logging:
             print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:0>8.0f} {:<7} {:<4}'
                   ' {:<11}'
                   ' {:>5.0f} {:<5}'
-                  ''.format(int(mjd), iso[12:19], cart, plate, exp_id,
+                  ''.format(int(mjd), iso[11:19], cart, plate, exp_id,
                             exp_type.strip(),
                             dith.strip(), detectors, etime, hart))
         print()
@@ -775,7 +775,7 @@ class Logging:
                 print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
                       ' {:>6}'
                       ' {:<8}'
-                      ' {:>6.1f}'.format(int(mjd), iso[12:19], cart, plate,
+                      ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
                                          exp_id, exp_type,
                                          dith, nread, detectors, see))
         # Usually, there are 4 ThAr and 4 UNe arcs in a night, and they're
