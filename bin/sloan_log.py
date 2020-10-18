@@ -608,7 +608,7 @@ class Logging:
         except IndexError:
             try:
                 window = ((data['iTime'] >= data['cTime'][i])
-                          & (data['iTime'] < Time.now() + 0.25))
+                          & (data['iTime'] < Time.now() + 0.3))
             except IndexError:
                 window = np.array([False] * len(data['iTime']))
 
@@ -634,7 +634,7 @@ class Logging:
                 window = self.get_window(self.ap_data, ap_cart)
                 for (mjd, iso, exp_id, exp_type, dith, nread,
                      detectors, see) in zip(
-                    self.ap_data['iTime'][window].mjd + 0.25,
+                    self.ap_data['iTime'][window].mjd + 0.3,
                     self.ap_data['iTime'][window].iso,
                     self.ap_data['iID'][window],
                     self.ap_data['iEType'][window],
@@ -670,7 +670,7 @@ class Logging:
                 window = self.get_window(self.b_data, b_cart)
                 for (mjd, iso, exp_id, exp_type, dith,
                      detectors, etime, hart) in zip(
-                    self.b_data['iTime'][window].mjd + 0.25,
+                    self.b_data['iTime'][window].mjd + 0.3,
                     self.b_data['iTime'][window].iso,
                     self.b_data['iID'][window],
                     self.b_data['iEType'][window],
@@ -712,7 +712,7 @@ class Logging:
                         'Pipeline', 'ETime', 'Hart'))
         print('-' * 80)
         for (mjd, iso, cart, plate, exp_id, exp_type, dith, detectors, etime,
-             hart) in zip(self.b_data['iTime'].mjd + 0.25,
+             hart) in zip(self.b_data['iTime'].mjd + 0.3,
                           self.b_data['iTime'].iso,
                           self.b_data['iCart'],
                           self.b_data['iPlate'],
@@ -742,7 +742,7 @@ class Logging:
         if self.args.morning:
             for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
                  detectors, see) in zip(
-                self.ap_data['iTime'].mjd[self.morning_filter] + 0.25,
+                self.ap_data['iTime'].mjd[self.morning_filter] + 0.3,
                 self.ap_data['iTime'].iso[self.morning_filter],
                 self.ap_data['iCart'][self.morning_filter],
                 self.ap_data['iPlate'][self.morning_filter],
@@ -783,10 +783,15 @@ class Logging:
         # other, you'll have only one type, that's the first slicing, and the
         # second slicing is that you only care about the diffs between two
         # dithers taken back to back.
-        print('ThAr Offsets: {}'.format(['{:.3f}'.format(f) for f in np.diff(
-            self.ap_data['aOffset'][self.ap_data['aLamp'] == 'ThAr'])]))
-        print('UNe Offsets: {}'.format(['{:.3f}'.format(f) for f in np.diff(
-            self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])]))
+        wrapper = textwrap.TextWrapper(80)
+        thar_str = 'ThAr Offsets: {}'.format(
+            ['{:.3f}'.format(f) for f in np.diff(
+                self.ap_data['aOffset'][self.ap_data['aLamp'] == 'ThAr'])])
+        print('\n'.join(wrapper.wrap(thar_str)))
+        une_str = 'UNe Offsets: {}'.format(
+            ['{:.3f}'.format(f) for f in np.diff(
+                self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])])
+        print('\n'.join(wrapper.wrap(une_str)))
         obj_offsets = []
         prev_dither = None
         prev_f = 0.
@@ -795,8 +800,8 @@ class Logging:
                 obj_offsets.append('{:.3f}'.format(f - prev_f))
             prev_dither = d
             prev_f = f
-        print('Object Offsets:\n{}'.format(textwrap.fill(str(
-            obj_offsets), 80)))
+        obj_str = 'Object Offsets: {}'.format(obj_offsets)
+        print('\n'.join(wrapper.wrap(obj_str)))
         print('\n')
 
     def log_support(self):
@@ -854,7 +859,7 @@ def main():
     if args.mjd:
         args.mjd = args.mjd
     elif args.today:
-        now = Time.now() + 0.25
+        now = Time.now() + 0.3
         args.mjd = int(now.mjd)
     else:
         raise argparse.ArgumentError(args.mjd,

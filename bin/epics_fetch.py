@@ -67,7 +67,7 @@ def print_datasets(datasets):
 
 
 def parse_args():
-    now = Time.now() + 0.25
+    now = Time.now() + 0.3
     parser = ArgumentParser(description='A command line interface for the SDSS'
                                         ' EPICS Server. Prints a simple table'
                                         ' of data. If no time window is'

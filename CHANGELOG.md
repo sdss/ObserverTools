@@ -111,3 +111,26 @@
 ### Changed
 
 - Added requirements.txt to MANIFEST.in
+
+## [3.4.4] - 2020-10-12
+
+### Changed
+
+- Offset outputs now print using textwrap more efficiently
+
+- Changed requirements.txt from >= to ~=
+
+- Added a pypi long_description
+
+- Fixed sjd from 0.25 to 0.3
+
+- Added authors, author email, and license to setup.py
+
+## [3.4.5] - 2020-10-17
+
+### Changed
+
+- log_support has a new keyword based on the changes made to actorkeys today
+(note: the new keyword will not work until there has been a sequence using that
+keyword.)
+

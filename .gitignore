@@ -7,9 +7,7 @@
 
 
 /.idea/  # For PyCharm
-/ObserverTools.egg-info/
+/sdss-obstools.egg-info/
 /dist/
 /build/
-/old_bin/__pycache__/
-/python/__pycache__/
-/bin/__pycache__/
+/*/__pycache__/

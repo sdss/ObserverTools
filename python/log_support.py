@@ -16,7 +16,7 @@ except ImportError as e:
     raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
                       '    {}'.format(e))
 
-__version__ = '3.1.1'
+__version__ = '3.2.0'
 
 
 class LogSupport:
@@ -44,13 +44,18 @@ class LogSupport:
         return data
 
     def set_callbacks(self):
-        data = self.telemetry.get(['25m:sop:doMangaSequence_ditherSeq:index',
-                                   '25m:sop:doApogeeMangaSequence_ditherSeq'
-                                   ':index',
+        data = self.telemetry.get([  # '25m:sop:doApogeeBossScience_nDither'
+                                   # ':nDitherDone',
+                                   '25m:sop:doBossScience_nExp'
+                                   ':nExpDone',
+                                   '25m:sop:doMangaSequence_ditherSeq:index',
+                                   '25m:sop:doApogeeMangaSequence_ditherSeq:'
+                                   'index',
                                    '25m:sop:doApogeeScience_index:index'],
-                                  (self.tstart - 0.25).datetime,
-                                  (self.tend - 0.25).datetime, interpolation='raw',
-                                  scan_archives=False)
+                                  (self.tstart - 0.3).datetime,
+                                  (self.tend - 0.3).datetime,
+                                  interpolation='raw',
+                                  scan_archives=True)
         self.call_times = []
         for dat in data:
             self.call_times += dat.times
@@ -63,7 +68,7 @@ class LogSupport:
             print('Callback end: {}'.format(self.tend))
             print(self.call_times)
 
-        filt = self.tstart - 0.25 < self.call_times
+        filt = self.tstart - 0.3 < self.call_times
         self.call_times = self.call_times[filt]
 
     def get_offsets(self):
@@ -206,14 +211,15 @@ class LogSupport:
     def get_hartmann(self):
 
         data = self.telemetry.get('25m:hartmann:sp1Residuals:deg',
-                                  (self.tstart - 0.25).datetime,
-                                  (self.tend - 0.25).datetime, interpolation='raw',
+                                  (self.tstart - 0.3).datetime,
+                                  (self.tend - 0.3).datetime,
+                                  interpolation='raw',
                                   scan_archives=False)
         hart_times = data.times
         hart_times = Time(hart_times)
         hart_sorter = hart_times.argsort()
         hart_times = hart_times[hart_sorter]
-        filt = self.tstart - 0.25 < hart_times
+        filt = self.tstart - 0.3 < hart_times
         hart_times = hart_times[filt]
         hartmann_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
                          '25m:guider:cartridgeLoaded:plateID',
