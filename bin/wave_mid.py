@@ -20,19 +20,16 @@ import sys
 __version__ = '3.0.0'
 
 
-if not sys.argv[1:4]:
-    print("    Usage:  WAVEMID  2036.0 2045.0 2043.0 2044.0  [ct] [plot] ")
+if not sys.argv[1:2]:
+    print("    Usage:  WAVEMID  2036.0 2045.0 2043.0 2044.0  [ct]")
     print("    ct - optional cart number, 0 - sos nominal")
     print("    plot - to plot ")
     sys.exit("Error: program requires at least 4 arguments, exit")
 nPar = len(sys.argv)
 # print " "
 
-# read sos xmids arguments  
-# for i in range(1,len(sys.argv)):
-sosWmid = np.zeros(4, dtype=float)
-for i in range(4):
-    sosWmid[i] = float(sys.argv[i + 1])
+# read sosWmids arguments
+sosWmid = np.array(sys.argv[1:]).astype(float)
 
 # read sosCart & plot options
 sosCart = 0
@@ -98,14 +95,13 @@ else:
 # print "tblCart=", tblCart[tblInd]
 
 # select line for requested cart and calulate the difference 
-tblWmidC = tblWmid[tblInd, 0:4]  # requested cart parameters from table
+tblWmidC = tblWmid[tblInd, 0:len(sosWmid)]  # requested cart parameters from table
 difWmid = sosWmid - tblWmidC  # difference between sos and table for requested
 # cart
 
 # print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
 print(" " * 13, "  b1     r1     b2     r2")
-print("current     : {:6.1f} {:6.1f} {:6.1f} {:6.1f}".format(
-      sosWmid[0], sosWmid[1], sosWmid[2], sosWmid[3]))
+print("current     :" + (" {:6.1f}" * len(sosWmid)).format(*sosWmid))
 
 # print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
 # print "tblCart=", tblCart[tblInd]
@@ -113,12 +109,11 @@ print("current     : {:6.1f} {:6.1f} {:6.1f} {:6.1f}".format(
 # print "nominal  : %6.1f %6.1f %6.1f %6.1f" % (tblWmidC[0],tblWmidC[1],
 # tblWmidC[2],tblWmidC[3])
 
-print("nominal[%2i] : %6.1f %6.1f %6.1f %6.1f" % (
-    tblCart[tblInd], tblWmidC[0], tblWmidC[1], tblWmidC[2], tblWmidC[3]))
+print("nominal  {:2.0f} :".format(tblCart[tblInd])
+      + (" {:6.1f}" * len(sosWmid)).format(*tblWmidC))
 # print "difference : %6.1f %6.1f %6.1f %6.1f" % (difWmid[0], difWmid[1],
 # difWmid[2],difWmid[3])
-print("WAVEMID spec: %6.1f %6.1f %6.1f %6.1f" % (
-    difWmid[0], difWmid[1], difWmid[2], difWmid[3]))
+print("WAVEMID spec:" + ("{:6.1f}" * len(difWmid)).format(*difWmid))
 print("-------------- ")
 
 # a=-b; c=0
@@ -126,9 +121,12 @@ print("-------------- ")
 # WAVEMID by 1.36 A.
 step = 31.0
 sp1 = round((difWmid[0] + difWmid[1] / 1.36) / 2.0 * step)
-sp2 = round((difWmid[2] + difWmid[3] / 1.36) / 2.0 * step)
 print("boss moveColl spec=sp1 a=%i b=%i c=0" % (-sp1, sp1))
-print("boss moveColl spec=sp2 a=%i b=%i c=0" % (-sp2, sp2))
+try:
+    sp2 = round((difWmid[2] + difWmid[3] / 1.36) / 2.0 * step)
+    print("boss moveColl spec=sp2 a=%i b=%i c=0" % (-sp2, sp2))
+except IndexError:
+    pass
 print("-------------")
 print("Tolerance: b,r +/-10(yellow);  b +/-15(red);  r +/-20(red)")
 # print " "

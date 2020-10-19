@@ -28,6 +28,7 @@ In order to run it locally, you will need to either have access to /data, or
 2020-06-17      dgatlin     Moved telemetry to epics_fetch
 2020-06-30      dgatlin     Added morning option for morning cals
 2020-08-12      dgatlin     Added apogee object offsets and a quickred aptest
+2020-10-18      dgatlin     Made some minor changes to support SDSS-V
 """
 import argparse
 import sys

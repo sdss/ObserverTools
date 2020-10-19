@@ -20,18 +20,17 @@ import sys
 __version__ = '3.0.0'
 
 
-if not sys.argv[1:4]:
+if not sys.argv[1:2]:
     print("    Usage:  XMID  2036.0 2045.0 2043.0 2044.0  [ct]")
     print("    ct - optional cart number, 0 - sos nominal")
+    print("    plot - to plot ")
     sys.exit("Error: program requires at least 4 arguments, exit")
+
 nPar = len(sys.argv)
 # print " "
 
 # read sosXmids arguments  
-# for i in range(1,len(sys.argv)):
-sosXmid = np.zeros(4, dtype=float)
-for i in range(4):
-    sosXmid[i] = float(sys.argv[i + 1])
+sosXmid = np.array(sys.argv[1:]).astype(float)
 
 # read sosCart & plot options
 sosCart = 0
@@ -46,6 +45,8 @@ if nPar >= 7:
         plotQ = True
     else:
         sosCart = int(sys.argv[6])
+# print "sosCart=", sosCart
+# print "plotQ=",plotQ
 
 # check if Kaike's table exist on disk
 fPath = Path('.')
@@ -96,29 +97,29 @@ else:
 # print "tblCart=", tblCart[tblInd]
 
 # select line for rewuested cart and calulate the difference 
-tblXmidC = tblXmid[tblInd, 0:4]  # requested cart parameters from table
+tblXmidC = tblXmid[tblInd, 0:len(sosXmid)]  # requested cart parameters from table
 difXmidC = sosXmid - tblXmidC  # difference between sos and table for requested
 # cart
 
 # print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
 print(" " * 13, "  b1     r1     b2     r2")
-print("current     : {:6.1f} {:6.1f} {:6.1f} {:6.1f}".format(
-      sosXmid[0], sosXmid[1], sosXmid[2], sosXmid[3]))
-print("nominal [{:2.0f}]: {:6.1f} {:6.1f} {:6.1f} {:6.1f}".format(
-      tblCart[tblInd], tblXmidC[0], tblXmidC[1], tblXmidC[2], tblXmidC[3]))
-print("XMID spec   : {:6.1f} {:6.1f} {:6.1f} {:6.1f}".format(
-    difXmidC[0], difXmidC[1], difXmidC[2], difXmidC[3]))
-# print "difference: %6.1f %6.1f %6.1f %6.1f" % (difXmidC[0], difXmidC[1],
-# difXmidC[2],difXmidC[3])
+print("current     :" + (" {:6.1f}" * len(sosXmid)).format(*sosXmid))
+print("nominal {:2.0f}  :".format(tblCart[tblInd])
+      + (" {:6.1f}" * len(tblXmidC)).format(*tblXmidC))
+print("XMID spec   :" + (" {:6.1f}" * len(difXmidC)).format(*difXmidC))
 print("-" * 40)
 
 # -a=-b=c
 # boss moveColl spec=sp1 a=-63 b=-63 c=63  # +1
 step = 63.0
 sp1 = round((difXmidC[0] + difXmidC[1]) / 2.0 * step)
-sp2 = round((difXmidC[2] + difXmidC[3]) / 2.0 * step)
 print("boss moveColl spec=sp1 a=%i b=%i c=%i" % (sp1, sp1, -sp1))
-print("boss moveColl spec=sp2 a=%i b=%i c=%i" % (sp2, sp2, -sp2))
+try:
+    sp2 = round((difXmidC[2] + difXmidC[3]) / 2.0 * step)
+    print("boss moveColl spec=sp2 a=%i b=%i c=%i" % (sp2, sp2, -sp2))
+except IndexError:
+    pass
+
 print("-" * 40)
 print("The tolerance is +/- 8 pixels (yellow), +/- 12 pixel (red)")
 # print ""
@@ -132,8 +133,7 @@ if not plotQ:
 print("Plotting, close window with plot to exit")
 
 tblXmidN = np.zeros([n, 4])
-tblXmidN[:, 0:4] = tblXmid[:, 0:4] - tblXmid[0,
-                                     0:4]  # tbl minus tbl sos nominal
+tblXmidN[:, 0:4] = tblXmid[:, 0:] - tblXmid[0, 0:]  # tbl minus tbl sos nominal
 
 sosXmidN = np.zeros([4])
 sosXmidN[:] = sosXmid[:] - tblXmid[0, :]  # sos minus tbl sos nominal

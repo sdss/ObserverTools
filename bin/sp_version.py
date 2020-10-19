@@ -49,6 +49,12 @@ def main():
     softwares.append('mangadrp')
     versions.append(mangadrp.stdout.read().decode('utf-8').strip('\n'))
 
+    sdss_obstools = sub.Popen('pip list | grep sdss-obstools', shell=True,
+                              stdout=sub.PIPE).stdout.read().decode(
+        'utf-8').strip('\n')
+    softwares.append(sdss_obstools.split()[0])
+    versions.append(sdss_obstools.split()[-1])
+
     print('{:-^42}'.format('Other Versions'))
     for s, v in zip(softwares, versions):
         print('{:<20}: {:<20}'.format(s, v))

@@ -5,35 +5,38 @@
 from telnetlib import Telnet
 from traceback import format_exc
 
-def mirrors () :
-	'''Get the mirror numbers'''
-	HOST = 'sdss4-host2.apo.nmsu.edu'
-	PORT = 2001
 
-#	Open the network connection
-	try :
-		tn = Telnet (HOST, PORT)
-	except :
-		print('Telnet connection to %s:%d failed: %s' % (HOST, PORT, format_exc()))
-		return -1
+def mirrors():
+    """Get the mirror numbers"""
+    HOST = 'sdss4-host2.apo.nmsu.edu'
+    PORT = 2001
 
-#	Read the data
+    # Open the network connection
+    try:
+        tn = Telnet(HOST, PORT)
+    except Exception:
+        print('Telnet connection to %s:%d failed: %s' % (
+            HOST, PORT, format_exc()))
+        return -1
 
-	try:
-		tn.write ('\n')
-	except :
-		print('Telnet write to %s:%d failed: %s' % (HOST, PORT, format_exc()))
-		return -1
+    # Read the data
 
-	try:
-		reply = tn.read_all ()
-	except :
-		print('Telnet read from %s:%d failed: %s' % (HOST, PORT, format_exc()))
-		return -1
+    try:
+        tn.write('\n')
+    except Exception:
+        print('Telnet write to %s:%d failed: %s' % (HOST, PORT, format_exc()))
+        return -1
 
-	tn.close()
+    try:
+        reply = tn.read_all()
+    except Exception:
+        print('Telnet read from %s:%d failed: %s' % (HOST, PORT, format_exc()))
+        return -1
 
-	return reply
+    tn.close()
 
-if __name__ == '__main__' :
-	print(mirrors())
+    return reply
+
+
+if __name__ == '__main__':
+    print(mirrors())

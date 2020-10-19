@@ -143,3 +143,26 @@
 
 - sloan_log.py now looks for sos directory when BHM is lead.
 
+## [3.4.7] - 2020-10-18
+
+- Internally, most programs use sjd instead of mjd
+
+- sloan_log.py and log_support.py now only consider sp1 for hartmanns
+
+- A printing bug in sloan_log.py where the times would be cut off is fixed
+
+## [3.4.8] - 2020-10-18
+
+- Removed a .swp file that breaks the install
+
+## [3.4.9] - 2020-10-18
+
+- Added m4l->m4l.py
+
+- Added sdss-obstools to the outputs of sp_version.py
+
+- Fixed wave_mid.py and x_mid.py in the help tools
+
+- XMID and WAVEMID now support single-camera modes with tests
+
+- Added test for m4l.py
