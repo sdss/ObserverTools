@@ -167,7 +167,7 @@ class Logging:
         missing, faint = img.ap_test((900, 910), self.ap_master)
         # test = sub.Popen((Path(__file__).absolute().parent.parent
         #                   / 'old_bin/aptest').__str__() + ' {} {}'
-        #                  ''.format(self.args.mjd, img.exp_id), shell=True,
+        #                  ''.format(self.args.sjd, img.exp_id), shell=True,
         #                  stdout=sub.PIPE, stderr=sub.PIPE)
         # lines = test.stdout.read().decode('utf-8').splitlines()[3:]
         # err = test.stderr.read().decode('utf-8')
@@ -263,7 +263,7 @@ class Logging:
                         self.ap_data['cTime'].insert(i, img.isot)
                 detectors = []
                 red_dir = Path('/data/apogee/quickred/{}/'.format(
-                    self.args.mjd))
+                    self.args.sjd))
                 red_fil = red_dir / 'ap1D-a-{}.fits.fz'.format(img.exp_id)
                 if red_fil.exists():
                     detectors.append('a')
@@ -347,30 +347,30 @@ class Logging:
                 m_detectors = []
                 # img_mjd = int(Time(img.isot).mjd)
                 if ('BOSS' in img.lead) or ('BHM' in img.lead):
-                    red_dir = Path('/data/boss/sos/{}/'.format(self.args.mjd))
+                    red_dir = Path('/data/boss/sos/{}/'.format(self.args.sjd))
                     red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                         img.exp_id)
                 else:  # MaNGA
                     if img.flavor == 'Science':
                         red_dir = Path('/data/manga/dos/{}/'.format(
-                            self.args.mjd))
+                            self.args.sjd))
                         red_fil = red_dir / 'mgscisky-{}-r1-{:0>8}.fits'.format(
                             img.plate_id, img.exp_id)
                     elif img.flavor == 'Flat':
                         red_dir = Path('/data/manga/dos/{}/'.format(
-                            self.args.mjd))
+                            self.args.sjd))
                         red_fil = red_dir / 'mgtset-{}-{}-{:0>8}-r1.fits' \
-                                            ''.format(self.args.mjd,
+                                            ''.format(self.args.sjd,
                                                       img.plate_id, img.exp_id)
                     elif img.flavor == 'Arc':
                         red_dir = Path('/data/manga/dos/{}/'.format(
-                            self.args.mjd))
+                            self.args.sjd))
                         red_fil = red_dir / 'mgwset-{}-{}-{:0>8}-r1.fits' \
-                                            ''.format(self.args.mjd,
+                                            ''.format(self.args.sjd,
                                                       img.plate_id, img.exp_id)
                     else:  # Harts and Bias, no file written there
                         red_dir = Path('/data/manga/dos/{}/logs/'.format(
-                            self.args.mjd))
+                            self.args.sjd))
                         red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                             img.exp_id)
                 if red_fil.exists():
@@ -451,7 +451,7 @@ class Logging:
                                     prev_time))
                     else:
                         was_dark = False
-                upper = Time(self.args.mjd + 1, format='mjd')
+                upper = Time(self.args.sjd + 1, format='mjd')
                 if lower is None:
                     raise Exception('Morning cals not completed for this date')
                 self.morning_filter = ((lower <= self.ap_data['iTime'])
@@ -586,7 +586,7 @@ class Logging:
                 pass
         print()
         print('### Notes:\n')
-        dust_sum = get_dust.get_dust(self.args.mjd, self.args)
+        dust_sum = get_dust.get_dust(self.args.sjd, self.args)
         print('- Integrated Dust Counts: ~{:5.0f} dust-hrs'.format(
             dust_sum - dust_sum % 100))
         print('\n')
@@ -805,8 +805,8 @@ class Logging:
         print('\n')
 
     def log_support(self):
-        start = Time(self.args.mjd, format='mjd').isot
-        end = Time(self.args.mjd + 1, format='mjd').isot
+        start = Time(self.args.sjd, format='mjd')
+        end = Time(self.args.sjd + 1, format='mjd')
         tel = log_support.LogSupport(start, end, self.args)
         tel.set_callbacks()
         tel.get_offsets()
@@ -830,7 +830,8 @@ def parse_args():
                              " Note: must be run after 18:00Z to get the"
                              " correct sjd")
     parser.add_argument('-m', '--mjd', type=int,
-                        help='If not today (-t), the mjd to search')
+                        help='If not today (-t), the mjd to search (actually'
+                             ' sjd)')
     parser.add_argument('-s', '--summary', help='Print the data summary',
                         action='store_true')
     parser.add_argument('-d', '--data', action='store_true',
@@ -857,16 +858,16 @@ def parse_args():
 def main():
     args = parse_args()
     if args.mjd:
-        args.mjd = args.mjd
+        args.sjd = args.mjd
     elif args.today:
         now = Time.now() + 0.3
-        args.mjd = int(now.mjd)
+        args.sjd = int(now.mjd)
     else:
-        raise argparse.ArgumentError(args.mjd,
+        raise argparse.ArgumentError(args.sjd,
                                      'Must provide -t or -m in arguments')
 
-    ap_data_dir = ap_dir / '{}'.format(args.mjd)
-    b_data_dir = b_dir / '{}'.format(args.mjd)
+    ap_data_dir = ap_dir / '{}'.format(args.sjd)
+    b_data_dir = b_dir / '{}'.format(args.sjd)
     ap_images = Path(ap_data_dir).glob('apR-a*.apz')
     b_images = Path(b_data_dir).glob('sdR-r1*fit.gz')
 

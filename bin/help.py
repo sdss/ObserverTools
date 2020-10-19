@@ -11,8 +11,7 @@ This is a file to pull the help for all programs in bin. Each script must be
 """
 import subprocess as sub
 from pathlib import Path
-import sjd
-import sp_version
+from bin import sjd, sp_version
 
 __version__ = '3.0.1'
 
@@ -41,3 +40,4 @@ print(wavemid.split('"""')[1])
 xmid = open('x_mid.py', 'r').read()
 print('{:=^80}'.format('x_mid.py'))
 print(xmid.split('"""')[1])
+

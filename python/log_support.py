@@ -64,8 +64,8 @@ class LogSupport:
         self.call_times = self.call_times[callback_sorter]
 
         if self.args.verbose:
-            print('Callback start: {}'.format(self.tstart))
-            print('Callback end: {}'.format(self.tend))
+            print('Callback start: {}'.format(self.tstart.isot))
+            print('Callback end: {}'.format(self.tend.isot))
             print(self.call_times)
 
         filt = self.tstart - 0.3 < self.call_times
@@ -209,7 +209,6 @@ class LogSupport:
                                          weather_data[weather_keys[10]][i]))
 
     def get_hartmann(self):
-
         data = self.telemetry.get('25m:hartmann:sp1Residuals:deg',
                                   (self.tstart - 0.3).datetime,
                                   (self.tend - 0.3).datetime,
@@ -221,38 +220,40 @@ class LogSupport:
         hart_times = hart_times[hart_sorter]
         filt = self.tstart - 0.3 < hart_times
         hart_times = hart_times[filt]
+
+        if self.args.verbose:
+            print('hart_times: ', hart_times)
         hartmann_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
                          '25m:guider:cartridgeLoaded:plateID',
                          '25m:guider:survey:plateType',
                          '25m:hartmann:r1PistonMove', '25m:hartmann:b1RingMove',
                          '25m:hartmann:sp1AverageMove',
                          '25m:hartmann:sp1Residuals:deg',
-                         '25m:boss:sp1Temp:median',
-                         '25m:hartmann:r2PistonMove', '25m:hartmann:b2RingMove',
-                         '25m:hartmann:sp2AverageMove',
-                         '25m:hartmann:sp2Residuals:deg',
-                         '25m:boss:sp2Temp:median']
+                         '25m:boss:sp1Temp:median',]
+                         # '25m:hartmann:r2PistonMove', '25m:hartmann:b2RingMove
+                         # '25m:hartmann:sp2AverageMove',
+                         # '25m:hartmann:sp2Residuals:deg',
+                         # '25m:boss:sp2Temp:median']
         hart_data = {}
         for key in hartmann_keys:
             hart_data[key] = []
         for time in hart_times:
-            self.query(hartmann_keys, (time + 3 / 24 / 60).datetime,
-                       (time + 3 / 24 / 60).datetime,
+            self.query(hartmann_keys, time.datetime,
+                       time.datetime,
                        hart_data)
 
         self.hartmann += '=' * 80 + '\n'
         self.hartmann += '{:^80}\n'.format('Hartmann Log')
         self.hartmann += '=' * 80 + '\n\n'
-        self.hartmann += ('{:<5} {:<9} {:<5} {:<5} {:<5} {:<7} {:<4} {:<5}'
-                          ' {:<5} {:<5} {:<7} {:<4}'
+        self.hartmann += ('{:<5} {:<9} {:<5} {:<5} {:<5} {:<7} {:<4}'  # {:<5}'
+                          # ' {:<5} {:<5} {:<7} {:<4}'
                           '\n'.format('Time', 'Cart', 'R1', 'B1', 'Move1',
-                                      'B1Resid', 'TSP1', 'R2', 'B2', 'Move2',
-                                      'B2Resid', 'TSP2'))
+                                      'B1Resid', 'TSP1'))
         self.hartmann += '-' * 80 + '\n'
         for i, time in enumerate(hart_times):
             self.hartmann += ('{:>5} {:>2}-{:0>5}{:<1} {:>5.0f} {:>5.1f}'
-                              ' {:>5.0f} {:>7.1f} {:>4.1f} {:>5.0f}'
-                              ' {:>5.1f} {:>5.0f} {:>7.1f} {:>4.1f}'
+                              ' {:>5.0f} {:>7.1f} {:>4.1f}'  # {:>5.0f}'
+                              # ' {:>5.1f} {:>5.0f} {:>7.1f} {:>4.1f}'
                               '\n'.format(time.isot[11:16],
                                           hart_data[hartmann_keys[0]][i],
                                           hart_data[hartmann_keys[1]][i],
@@ -261,12 +262,12 @@ class LogSupport:
                                           hart_data[hartmann_keys[4]][i],
                                           hart_data[hartmann_keys[5]][i],
                                           hart_data[hartmann_keys[6]][i],
-                                          hart_data[hartmann_keys[7]][i],
-                                          hart_data[hartmann_keys[8]][i],
-                                          hart_data[hartmann_keys[9]][i],
-                                          hart_data[hartmann_keys[10]][i],
-                                          hart_data[hartmann_keys[11]][i],
-                                          hart_data[hartmann_keys[12]][i]))
+                                          hart_data[hartmann_keys[7]][i],))
+                                          # hart_data[hartmann_keys[8]][i],
+                                          # hart_data[hartmann_keys[9]][i],
+                                          # hart_data[hartmann_keys[10]][i],
+                                          # hart_data[hartmann_keys[11]][i],
+                                          # hart_data[hartmann_keys[12]][i]))
 
 
 def main():
@@ -295,14 +296,14 @@ def main():
     args = parser.parse_args()
 
     if args.today:
-        now = Time.now()
-        mjd = int(now.mjd)
-        start = Time(mjd, format='mjd')
+        now = Time.now() + 0.3
+        sjd = int(now.mjd)
+        start = Time(sjd, format='mjd')
         end = now
     elif args.mjd:
-        mjd = args.mjd
-        start = Time(mjd, format='mjd')
-        end = Time(int(mjd) + 1, format='mjd')
+        sjd = args.mjd
+        start = Time(sjd, format='mjd')
+        end = Time(int(sjd) + 1, format='mjd')
     else:
         raise argparse.ArgumentError(args.mjd,
                                      'Must provide -t or -m in arguments')

@@ -19,9 +19,9 @@ class BOSSRaw:
         self.fil = fil
         header = fitsio.read_header(fil)
 
-        # ler = self.image[layer_ind]
-        # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
         self.dither = header['MGDPOS']
+        if not self.dither:  # This key started working instead during SDSS-V
+            self.dither = header['POINTING'][0]
         self.exp_time = int(header['EXPTIME'])
         self.isot = Time(header['DATE-OBS'])  # UTC
         self.plate_id = header['PLATEID']

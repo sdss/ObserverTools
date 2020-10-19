@@ -24,7 +24,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 default_dir = Path('/data/apogee/utr_cdr/')
-boss_cams = ['r1', 'r2', 'b1', 'b2']
+boss_cams = ['r1', 'b1', 'r2', 'b2']
 file_sizes = {'APOGEE': 67115520, 'BOSS': 9e6, 'Guider': 4e5,
               'Engineering': 9e5}
 
@@ -235,7 +235,7 @@ class DS9Window:
             if 'BOSS' in self.name:
                 for i, cam in enumerate(boss_cams):
                     if self.verbose:
-                        print(fil, type(fil))
+                        print(i, fil.name.replace('r1', cam), type(fil))
                     self.display(fil.parent / fil.name.replace('r1', cam), i)
             else:
                 self.display(fil, 0)
