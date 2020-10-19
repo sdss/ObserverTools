@@ -25,7 +25,7 @@ def mirrors():
     # Read the data
 
     try:
-        tn.write('\n')
+        tn.write(b'\n')
     except Exception:
         raise Exception('Telnet write to {}:{} failed: {}'.format
                         (HOST, PORT, format_exc()))
@@ -38,7 +38,7 @@ def mirrors():
 
     tn.close()
 
-    return reply
+    return reply.decode('utf-8')
 
 
 if __name__ == '__main__':

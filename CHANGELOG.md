@@ -166,3 +166,8 @@
 - XMID and WAVEMID now support single-camera modes with tests
 
 - Added test for m4l.py
+
+## [3.4.10] - 2020-10-18
+
+- Fixed a bug in m4l.py where it expected byte types in Python 3
+
