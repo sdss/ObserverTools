@@ -7,7 +7,7 @@ class TestM4L(unittest.TestCase):
 
     def test_noargs(self):
         """Run m4l like normal"""
-        m4l.mirrors()
+        print(m4l.mirrors())
 
 
 if __name__ == '__main__':

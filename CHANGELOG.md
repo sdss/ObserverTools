@@ -175,3 +175,13 @@
 
 - Removed the xx-xx for SP2 in sloan_log.py if they're not found
 
+## [3.4.11] - 2020-10-22
+
+- Modified m4l to run from home via a localhost foreward
+
+- Fixed some sloan_log.py tests to include mirror numbers
+
+- Fixed sloan_log.py to include a section name for Mirro numbers
+
+- Gave m4l.py __version__
+

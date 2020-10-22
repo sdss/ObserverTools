@@ -79,7 +79,7 @@ warnings.filterwarnings('ignore', category=UserWarning, append=True)
 # For numpy boolean arrays
 warnings.filterwarnings('ignore', category=FutureWarning, append=True)
 
-__version__ = '3.7.0'
+__version__ = '3.7.1'
 
 ap_dir = Path('/data/apogee/archive/')
 b_dir = Path('/data/spectro/')
@@ -825,6 +825,9 @@ class Logging:
 
     @staticmethod
     def mirror_numbers():
+        print('=' * 80)
+        print('{:^80}'.format('Mirror Numbers'))
+        print('=' * 80 + '\n')
         try:
             mirror_nums = m4l.mirrors()
             print(mirror_nums)

@@ -8,6 +8,9 @@
 
 from telnetlib import Telnet
 from traceback import format_exc
+import socket
+
+__version__ = '3.1.1'
 
 
 def mirrors():
@@ -17,22 +20,28 @@ def mirrors():
 
     # Open the network connection
     try:
-        tn = Telnet(HOST, PORT)
-    except Exception:
-        raise Exception('Telnet connection to {}:{} failed: {}'.format(
-                HOST, PORT, format_exc()))
+        tn = Telnet(HOST, PORT, timeout=1)
+    except (ConnectionRefusedError, socket.timeout):
+        try:
+            tn = Telnet('localhost', PORT, timeout=2)
+        except (ConnectionRefusedError, socket.timeout) as e:
+            raise ConnectionRefusedError('Unable to connect to {0}, perhaps'
+                                         ' try\n ssh -L 2001:{0}:2001'
+                                         ' observer@sdss-gateway.apo.nmsu.edu\n'
+                                         '{1}'
+                                         ''.format(HOST, e))
 
     # Read the data
 
     try:
         tn.write(b'\n')
-    except Exception:
+    except (ConnectionRefusedError, socket.timeout):
         raise Exception('Telnet write to {}:{} failed: {}'.format
                         (HOST, PORT, format_exc()))
 
     try:
         reply = tn.read_all()
-    except Exception:
+    except (ConnectionRefusedError, socket.timeout):
         raise Exception('Telnet read from {}:{} failed: {}'.format(
             HOST, PORT, format_exc()))
 
