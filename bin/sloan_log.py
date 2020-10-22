@@ -41,9 +41,10 @@ import numpy as np
 try:
     import epics_fetch
     import get_dust
+    import m4l
 except ImportError as e:
     try:
-        from bin import epics_fetch, get_dust
+        from bin import epics_fetch, get_dust, m4l
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
                           '\n    {}'.format(e))
@@ -345,7 +346,7 @@ class Logging:
 
                     self.b_data['hHart'].append(hart)
                     self.b_data['hTime'].append(img.isot)
-                m_detectors = []
+                sos_files = []
                 # img_mjd = int(Time(img.isot).mjd)
                 if ('BOSS' in img.lead) or ('BHM' in img.lead):
                     red_dir = Path('/data/boss/sos/{}/'.format(self.args.sjd))
@@ -375,22 +376,22 @@ class Logging:
                         red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                             img.exp_id)
                 if red_fil.exists():
-                    m_detectors.append('r1')
+                    sos_files.append('r1')
                 else:
-                    m_detectors.append('xx')
+                    sos_files.append('xx')
                 if (red_fil.parent / red_fil.name.replace('r1', 'b1')).exists():
-                    m_detectors.append('b1')
+                    sos_files.append('b1')
                 else:
-                    m_detectors.append('xx')
+                    sos_files.append('xx')
                 if (red_fil.parent / red_fil.name.replace('r1', 'r2')).exists():
-                    m_detectors.append('r2')
-                else:
-                    m_detectors.append('xx')
+                    sos_files.append('r2')
+                # else:
+                #     m_detectors.append('xx')
                 if (red_fil.parent / red_fil.name.replace('r1', 'b2')).exists():
-                    m_detectors.append('b2')
-                else:
-                    m_detectors.append('xx')
-                self.b_data['iDetector'].append('-'.join(m_detectors))
+                    sos_files.append('b2')
+                # else:
+                #     m_detectors.append('xx')
+                self.b_data['iDetector'].append('-'.join(sos_files))
 
     def sort(self):
         """Sorts self.ap_data by cart time and by image time and converts to
@@ -621,8 +622,8 @@ class Logging:
         print('=' * 80 + '\n')
         for i, cart in enumerate(self.data['cCart']):
             print('### Cart {}, Plate {}, {}\n'.format(cart,
-                                                     self.data['cPlate'][i],
-                                                     self.data['cLead'][i]))
+                                                       self.data['cPlate'][i],
+                                                       self.data['cLead'][i]))
             if cart in self.ap_data['cCart']:
                 ap_cart = np.where(cart == self.ap_data['cCart'])[0][0]
 
@@ -663,7 +664,7 @@ class Logging:
                 print('# BOSS')
                 print('{:<5} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
                       ''.format('MJD', 'UTC', 'Exposure', 'Type',
-                                'Dith', 'Pipeline', 'ETime', 'Hart'))
+                                'Dith', 'SOS', 'ETime', 'Hart'))
                 print('-' * 80)
                 # i is an index for data, but it will disagree with b_data
                 # if there is an apogee-only cart
@@ -710,7 +711,7 @@ class Logging:
         print('=' * 80 + '\n')
         print('{:<5} {:<8} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
               ''.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type', 'Dith',
-                        'Pipeline', 'ETime', 'Hart'))
+                        'SOS', 'ETime', 'Hart'))
         print('-' * 80)
         for (mjd, iso, cart, plate, exp_id, exp_type, dith, detectors, etime,
              hart) in zip(self.b_data['iTime'].mjd + 0.3,
@@ -822,6 +823,14 @@ class Logging:
         print()
         print(tel.hartmann)
 
+    @staticmethod
+    def mirror_numbers():
+        try:
+            mirror_nums = m4l.mirrors()
+            print(mirror_nums)
+        except (ConnectionRefusedError, TimeoutError) as me:
+            print('Could not fetch mirror numbers:\n{}'.format(me))
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -833,6 +842,8 @@ def parse_args():
     parser.add_argument('-m', '--mjd', type=int,
                         help='If not today (-t), the mjd to search (actually'
                              ' sjd)')
+    parser.add_argument('--mirror', '--mirrors', action='store_true',
+                        help='Print mirror numbers using m4l.py')
     parser.add_argument('-s', '--summary', help='Print the data summary',
                         action='store_true')
     parser.add_argument('-d', '--data', action='store_true',
@@ -886,6 +897,7 @@ def main():
         p_boss = True
         p_apogee = True
         args.log_support = True
+        args.mirrors = True
 
     if args.summary:
         args.boss = True
@@ -918,6 +930,9 @@ def main():
 
     if args.log_support:
         log.log_support()
+
+    if args.mirrors:
+        log.mirror_numbers()
     return log
 
 
