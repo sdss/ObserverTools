@@ -171,3 +171,7 @@
 
 - Fixed a bug in m4l.py where it expected byte types in Python 3
 
+- Added mirror numbers to sloan_log.py
+
+- Removed the xx-xx for SP2 in sloan_log.py if they're not found
+
