@@ -193,3 +193,10 @@
 
 - Swapped '--mirrors' and '--mirror' in sloan_log's argparse section so that
  mirrors is the actual argument name
+
+ ## [3.4.13] - 2020-10-24
+
+ - Removed SP2 from sloan_log.py hartmann outputs
+
+ - Updated sloan_log.py summary to more accurately fit SDSS-V
+

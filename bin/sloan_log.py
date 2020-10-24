@@ -145,7 +145,7 @@ class Logging:
         # time, since some boss carts use shorter exposures. All these are
         # combined to fill Summary in self.count_dithers
         self.cart_data = {'cNAPA': [], 'cNAPB': [], 'cNBN': [], 'cNBS': [],
-                          'cNBE': [], 'cNBC': [], 'cBdt': [],
+                          'cNBE': [], 'cNBC': [], 'cBdt': [], 'cNB': [],
                           'cAPSummary': [],
                           'cBSummary': []}
         self.test_procs = []
@@ -329,16 +329,17 @@ class Logging:
                     tend = (Time(img.isot) + 5 / 24 / 60).datetime
                     hart = self.telemetry.get([
                         '25m:hartmann:r1PistonMove',
-                        '25m:hartmann:r2PistonMove',
+                        # '25m:hartmann:r2PistonMove',
                         '25m:hartmann:b1RingMove',
-                        '25m:hartmann:b2RingMove',
+                        # '25m:hartmann:b2RingMove',
                         '25m:hartmann:sp1AverageMove',
-                        '25m:hartmann:sp2AverageMove',
-                        '25m:hartmann:sp1Residuals:deg',
-                        '25m:hartmann:sp2Residuals:deg',
-                        '25m:boss:sp1Temp:median', '25m:boss:sp2Temp:median',
+                        # '25m:hartmann:sp2AverageMove',
                         '25m:hartmann:sp1Residuals:steps',
-                        '25m:hartmann:sp2Residuals:steps'
+                        '25m:hartmann:sp1Residuals:deg',
+                        # '25m:hartmann:sp2Residuals:deg',
+                        '25m:boss:sp1Temp:median',
+                        # '25m:boss:sp2Temp:median',
+                        # '25m:hartmann:sp2Residuals:steps'
                     ],
                         start=tstart,
                         end=tend,
@@ -489,84 +490,86 @@ class Logging:
                 (self.ap_data['iCart'] == cart)
                 & (self.ap_data['iDither'] == 'B')
                 & (self.ap_data['iEType'] == 'Object')))
-            self.cart_data['cNBN'].append(np.sum(
+            # self.cart_data['cNBN'].append(np.sum(
+                # (self.b_data['iCart'] == cart)
+                # & (self.b_data['iDither'] == 'N')
+                # & (self.b_data['iEType'] == 'Science')))
+            # self.cart_data['cNBS'].append(np.sum(
+                # (self.b_data['iCart'] == cart)
+                # & (self.b_data['iDither'] == 'S')
+                # & (self.b_data['iEType'] == 'Science')))
+            # self.cart_data['cNBE'].append(np.sum(
+                # (self.b_data['iCart'] == cart)
+                # & (self.b_data['iDither'] == 'E')
+                # & (self.b_data['iEType'] == 'Science')))
+            # self.cart_data['cNBC'].append(np.sum(
+                # (self.b_data['iCart'] == cart)
+                # & (self.b_data['iDither'] == 'C')
+                # & (self.b_data['iEType'] == 'Science')))
+            self.cart_data['cNB'].append(np.sum(
                 (self.b_data['iCart'] == cart)
-                & (self.b_data['iDither'] == 'N')
                 & (self.b_data['iEType'] == 'Science')))
-            self.cart_data['cNBS'].append(np.sum(
-                (self.b_data['iCart'] == cart)
-                & (self.b_data['iDither'] == 'S')
-                & (self.b_data['iEType'] == 'Science')))
-            self.cart_data['cNBE'].append(np.sum(
-                (self.b_data['iCart'] == cart)
-                & (self.b_data['iDither'] == 'E')
-                & (self.b_data['iEType'] == 'Science')))
-            self.cart_data['cNBC'].append(np.sum(
-                (self.b_data['iCart'] == cart)
-                & (self.b_data['iDither'] == 'C')
-                & (self.b_data['iEType'] == 'Science')))
-            if np.any((self.b_data['iCart'] == cart)
-                      & (self.b_data['iEType'] == 'Science')):
+            if self.cart_data['cNB'][-1] != 0:
                 self.cart_data['cBdt'].append(np.max(
-                    self.b_data['idt'][(self.b_data['iCart'] == cart)
-                                       & (self.b_data['iEType'] == 'Science')]
-                ))
+                    self.b_data['idt'][
+                        (self.b_data['iCart'] == cart)
+                        & (self.b_data['iEType'] == 'Science')]))
+            else:
+                self.cart_data['cBdt'].append(0)
 
         for i, cart in enumerate(self.data['cCart']):
             """To determine the number of apogee a dithers per cart (cNAPA),
             as well as b dithers (cNAPB), and the same for NSE dithers."""
             # APOGEE dithers
             if self.cart_data['cNAPA'][i] == self.cart_data['cNAPB'][i]:
-                self.cart_data['cAPSummary'].append(
-                    '{}xAB'.format(self.cart_data['cNAPA'][i]))
+                if self.cart_data['cNAPA'][i] != 0:
+                    self.cart_data['cAPSummary'].append(
+                        '{}xAB'.format(self.cart_data['cNAPA'][i]))
+                else:
+                    self.cart_data['cAPSummary'].append('No APOGEE')
             else:
                 self.cart_data['cAPSummary'].append(
                     '{}xA {}xB'.format(self.cart_data['cNAPA'][i],
                                        self.cart_data['cNAPB'][i]))
             # BOSS (MaNGA) dithers
-            if self.cart_data['cNBC'][i] == 0:
-                if (self.cart_data['cNBN'][i]
-                        == self.cart_data['cNBS'][i]
-                        == self.cart_data['cNBE'][i]):
-                    self.cart_data['cBSummary'].append(
-                        '{}xNSE'.format(self.cart_data['cNBN'][i]))
-                else:
-                    self.cart_data['cBSummary'].append(
-                        '{}xN {}xS {}xE'.format(self.cart_data['cNBN'][i],
-                                                self.cart_data['cNBS'][i],
-                                                self.cart_data['cNBE'][i]))
-            else:
+            # if self.cart_data['cNBC'][i] == 0:
+                # if (self.cart_data['cNBN'][i]
+                        # == self.cart_data['cNBS'][i]
+                        # == self.cart_data['cNBE'][i]):
+                    # self.cart_data['cBSummary'].append(
+                        # '{}xNSE'.format(self.cart_data['cNBN'][i]))
+                # else:
+                    # self.cart_data['cBSummary'].append(
+                        # '{}xN {}xS {}xE'.format(self.cart_data['cNBN'][i],
+                                                # self.cart_data['cNBS'][i],
+                                                # self.cart_data['cNBE'][i]))
+            #else:
+            if self.cart_data['cNB'][i] != 0:
                 self.cart_data['cBSummary'].append(
-                    '{}xC'.format(self.cart_data['cNBC'][i]))
-            if len(self.cart_data['cBdt']):
-                try:
-                    if self.cart_data['cBdt'][i] != 900:
-                        self.cart_data['cBSummary'][-1] += '@{}s'.format(
-                            self.cart_data['cBdt'][i])
-                except IndexError:
-                    # Happens if there is no science frame yet with an exposure
-                    # time.
-                    pass
+                        '{}x{}s'.format(self.cart_data['cNB'][i],
+                                     self.cart_data['cBdt'][i]))
+            else:
+                self.cart_data['cBSummary'].append('No BOSS')
 
     @staticmethod
     def hartmann_parse(hart):
-        output = ''  # .format((Time(hart[0].times[-1])).isot)
+        output = '{}\n'.format(str(hart[0].times[-1])[:19])
         output += 'r1: {:>6.0f}, b1: {:>6.1f}\n'.format(
-            hart[0].values[-1], hart[2].values[-1])
-        output += 'r2: {:>6.0f}, b2: {:>6.1f}\n'.format(
-            hart[1].values[-1], hart[3].values[-1])
-        output += 'Average Moves:\n'
-        output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
-            hart[4].values[-1], hart[5].values[-1])
-        output += 'Red Residuals:\n'
-        output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
-            hart[10].values[-1], hart[11].values[-1])
-        output += 'Blue Residuals:\n'
-        output += 'SP1: {:>6.1f}, SP2: {:>6.1f}\n'.format(
-            hart[6].values[-1], hart[7].values[-1])
-        output += 'Spectrograph Temperatures:\n'
-        output += 'SP1: {:>6.1f}, SP2: {:>6.1f}'.format(
-            hart[8].values[-1], hart[9].values[-1])
+            hart[0].values[-1], hart[1].values[-1])
+        # output += 'r2: {:>6.0f}, b2: {:>6.1f}\n'.format(
+        #  hart[1].values[-1], hart[3].values[-1])
+        output += 'Average Move: {:>6.0f}\n'.format(hart[2].values[-1])
+        # output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
+            # hart[4].values[-1], hart[5].values[-1])
+        output += 'R Residuals: {:>6.0f}\n'.format(hart[3].values[-1])
+        # output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
+            # hart[10].values[-1], hart[11].values[-1])
+        output += 'B Residuals: {:>6.1f}\n'.format(hart[4].values[-1])
+        # output += 'SP1: {:>6.1f}, SP2: {:>6.1f}\n'.format(
+            # hart[6].values[-1], hart[7].values[-1])
+        output += 'SP1 Temperature: {:>6.1f}\n'.format(hart[5].values[-1])
+        # output += 'SP1: {:>6.1f}, SP2: {:>6.1f}'.format(
+            # hart[8].values[-1], hart[9].values[-1])
         return output
 
     def p_summary(self):
@@ -698,12 +701,13 @@ class Logging:
                     window = ((self.b_data['hTime']
                                >= self.data['cTime'][i])
                               & (self.b_data['hTime'] < Time.now()))
+                if self.b_data['hTime'][window]:
+                    print()
+                    print('Hartmanns')
                 for t, hart in zip(self.b_data['hTime'][window],
                                    self.b_data['hHart'][window]):
-                    print()
-                    print(t.iso)
                     print(self.hartmann_parse(hart))
-                print('\n')
+                print()
 
     def p_boss(self):
         print('=' * 80)
