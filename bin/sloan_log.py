@@ -845,7 +845,7 @@ def parse_args():
     parser.add_argument('-m', '--mjd', type=int,
                         help='If not today (-t), the mjd to search (actually'
                              ' sjd)')
-    parser.add_argument('--mirror', '--mirrors', action='store_true',
+    parser.add_argument('--mirrors', '--mirror', action='store_true',
                         help='Print mirror numbers using m4l.py')
     parser.add_argument('-s', '--summary', help='Print the data summary',
                         action='store_true')

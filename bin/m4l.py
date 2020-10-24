@@ -10,7 +10,7 @@ from telnetlib import Telnet
 from traceback import format_exc
 import socket
 
-__version__ = '3.1.1'
+__version__ = '3.1.2'
 
 
 def mirrors():
@@ -20,7 +20,7 @@ def mirrors():
 
     # Open the network connection
     try:
-        tn = Telnet(HOST, PORT, timeout=1)
+        tn = Telnet(HOST, PORT, timeout=2)
     except (ConnectionRefusedError, socket.timeout):
         try:
             tn = Telnet('localhost', PORT, timeout=2)

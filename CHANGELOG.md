@@ -185,3 +185,11 @@
 
 - Gave m4l.py __version__
 
+## [3.4.12] - 2020-10-24
+
+- Increased the mirror number timeout to 2s
+
+- Removed ./sdss-obstools because it was meant for modules which we will not use
+
+- Swapped '--mirrors' and '--mirror' in sloan_log's argparse section so that
+ mirrors is the actual argument name
