@@ -43,7 +43,8 @@ class DS9Window:
     verbose: A debugging tool
     """
 
-    def __init__(self, name, fits_dir, regex, scale, zoom, verbose, info):
+    def __init__(self, name, fits_dir, regex, scale, zoom, verbose, info,
+                 vertical):
 
         # Constants and variables
 
@@ -57,6 +58,7 @@ class DS9Window:
         self.zoom = zoom
         self.verbose = verbose
         self.info = info
+        self.vertical = vertical
 
         hsh = hashlib.sha1(''.join(self.name + str(self.fits_dir) + self.regex
                                    + self.scale).encode())
@@ -98,6 +100,10 @@ class DS9Window:
             self.ds9.set('view info no')
             self.ds9.set('view panner no')
             self.ds9.set('view magnifier no')
+            self.ds9.set('view buttons no')
+
+        if self.vertical:
+            self.ds9.set('view layout vertical')
             self.ds9.set('view buttons no')
 
     @staticmethod  # This means it doesn't take self as an argument
@@ -275,7 +281,7 @@ def parseargs():
     parser.add_argument('-g', '--guider', action='store_true',
                         help='If included, will display guider images.'
                              ' Overrides most arguments.')
-    parser.add_argument('--info', dest='info', action='store_true',
+    parser.add_argument('-j', '--info', dest='info', action='store_true',
                         help='If included, it will show the info panel like a' 
                              ' normal DS9 window. Without info, it will be more' 
                              ' compact and may easily fit on the monitor')
@@ -293,7 +299,10 @@ def parseargs():
                         type=str, help='Set scaling. Default is "histequ"')
 
     parser.add_argument('--version', action='store_true', help='Version info')
-
+    parser.add_argument('-u', '--vertical', dest='vertical',
+                        action='store_true', help='Whether or not to have an '
+                                                  'information screen on the '
+                                                  'side')
     parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
                         default=False,
                         help='Be verbose. Default is to be quiet.')
@@ -351,7 +360,7 @@ def main():
     args = parseargs()
     # Start the display
     window = DS9Window(args.name, args.fits_dir, args.regex, args.scale,
-                       args.zoom, args.verbose, args.info)
+                       args.zoom, args.verbose, args.info, args.vertical)
     while True:
         window.update()
         # This loop is for tracing memory allocation to track memory leaks, none

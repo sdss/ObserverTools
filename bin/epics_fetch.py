@@ -42,10 +42,19 @@ def get_data(channel, start_time, end_time):
 
     telemetry.scan_archives()
     data = telemetry.get(channel, start_time, end_time, interpolation='raw')
-    try:
-        data.times = Time(data.times)
-    except ValueError:
-        data.times = Time(data.times, format='iso')
+    if isinstance(data, list):
+        for i, dat in enumerate(data):
+            try:
+                data[i].times = Time(dat.times)
+            except ValueError:
+                data[i].times = Time(dat.times, format='iso')
+
+    else:
+        try:
+            data.times = Time(data.times)
+        except ValueError:
+            data.times = Time(data.times, format='iso')
+
     return data
 
 

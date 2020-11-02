@@ -177,11 +177,11 @@
 
 ## [3.4.11] - 2020-10-22
 
-- Modified m4l to run from home via a localhost foreward
+- Modified m4l to run from home via a localhost forward
 
 - Fixed some sloan_log.py tests to include mirror numbers
 
-- Fixed sloan_log.py to include a section name for Mirro numbers
+- Fixed sloan_log.py to include a section name for Mirror numbers
 
 - Gave m4l.py __version__
 
@@ -194,9 +194,26 @@
 - Swapped '--mirrors' and '--mirror' in sloan_log's argparse section so that
  mirrors is the actual argument name
 
- ## [3.4.13] - 2020-10-24
+## [3.4.13] - 2020-10-24
 
- - Removed SP2 from sloan_log.py hartmann outputs
+- Removed SP2 from sloan_log.py hartmann outputs
 
- - Updated sloan_log.py summary to more accurately fit SDSS-V
+- Updated sloan_log.py summary to more accurately fit SDSS-V
 
+## [3.5.0] - 2020-11-1
+
+- ds9_live.py now has a vertical layout option
+
+- New file: tpm_fetch.py, that plots a tpm variable or prints it
+
+- Tests for tpm_fetch.py
+
+- New file: telescope_status.py, with symlink telStatus
+
+- telescope_status.py tests
+
+- epics_fetch.py now handles list inputs directly
+
+- Added vertical layout option to ds9_live tests  
+
+- Integrated telescope_status into sloan_log

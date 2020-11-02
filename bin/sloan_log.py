@@ -34,6 +34,8 @@ import argparse
 import sys
 import warnings
 import textwrap
+import struct
+import socket
 
 import numpy as np
 
@@ -42,13 +44,13 @@ try:
     import epics_fetch
     import get_dust
     import m4l
+    import telescope_status
 except ImportError as e:
     try:
-        from bin import epics_fetch, get_dust, m4l
+        from bin import epics_fetch, get_dust, m4l, telescope_status
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
                           '\n    {}'.format(e))
-
 
 try:
     import fitsio
@@ -70,6 +72,12 @@ except ImportError as e:
     except ImportError as e:
         raise ImportError('Please add ObserverTools/python to your PYTHONPATH:'
                           '\n    {}'.format(e))
+try:
+    import tpmdgram
+except ImportError:
+    has_tpm = False
+    tpmdgram = None
+    print('TPM python modules not installed')
 
 if sys.version_info.major < 3:
     raise Exception('Interpretter must be python 3 or newer')
@@ -491,21 +499,21 @@ class Logging:
                 & (self.ap_data['iDither'] == 'B')
                 & (self.ap_data['iEType'] == 'Object')))
             # self.cart_data['cNBN'].append(np.sum(
-                # (self.b_data['iCart'] == cart)
-                # & (self.b_data['iDither'] == 'N')
-                # & (self.b_data['iEType'] == 'Science')))
+            # (self.b_data['iCart'] == cart)
+            # & (self.b_data['iDither'] == 'N')
+            # & (self.b_data['iEType'] == 'Science')))
             # self.cart_data['cNBS'].append(np.sum(
-                # (self.b_data['iCart'] == cart)
-                # & (self.b_data['iDither'] == 'S')
-                # & (self.b_data['iEType'] == 'Science')))
+            # (self.b_data['iCart'] == cart)
+            # & (self.b_data['iDither'] == 'S')
+            # & (self.b_data['iEType'] == 'Science')))
             # self.cart_data['cNBE'].append(np.sum(
-                # (self.b_data['iCart'] == cart)
-                # & (self.b_data['iDither'] == 'E')
-                # & (self.b_data['iEType'] == 'Science')))
+            # (self.b_data['iCart'] == cart)
+            # & (self.b_data['iDither'] == 'E')
+            # & (self.b_data['iEType'] == 'Science')))
             # self.cart_data['cNBC'].append(np.sum(
-                # (self.b_data['iCart'] == cart)
-                # & (self.b_data['iDither'] == 'C')
-                # & (self.b_data['iEType'] == 'Science')))
+            # (self.b_data['iCart'] == cart)
+            # & (self.b_data['iDither'] == 'C')
+            # & (self.b_data['iEType'] == 'Science')))
             self.cart_data['cNB'].append(np.sum(
                 (self.b_data['iCart'] == cart)
                 & (self.b_data['iEType'] == 'Science')))
@@ -533,21 +541,21 @@ class Logging:
                                        self.cart_data['cNAPB'][i]))
             # BOSS (MaNGA) dithers
             # if self.cart_data['cNBC'][i] == 0:
-                # if (self.cart_data['cNBN'][i]
-                        # == self.cart_data['cNBS'][i]
-                        # == self.cart_data['cNBE'][i]):
-                    # self.cart_data['cBSummary'].append(
-                        # '{}xNSE'.format(self.cart_data['cNBN'][i]))
-                # else:
-                    # self.cart_data['cBSummary'].append(
-                        # '{}xN {}xS {}xE'.format(self.cart_data['cNBN'][i],
-                                                # self.cart_data['cNBS'][i],
-                                                # self.cart_data['cNBE'][i]))
-            #else:
+            # if (self.cart_data['cNBN'][i]
+            # == self.cart_data['cNBS'][i]
+            # == self.cart_data['cNBE'][i]):
+            # self.cart_data['cBSummary'].append(
+            # '{}xNSE'.format(self.cart_data['cNBN'][i]))
+            # else:
+            # self.cart_data['cBSummary'].append(
+            # '{}xN {}xS {}xE'.format(self.cart_data['cNBN'][i],
+            # self.cart_data['cNBS'][i],
+            # self.cart_data['cNBE'][i]))
+            # else:
             if self.cart_data['cNB'][i] != 0:
                 self.cart_data['cBSummary'].append(
-                        '{}x{}s'.format(self.cart_data['cNB'][i],
-                                     self.cart_data['cBdt'][i]))
+                    '{}x{}s'.format(self.cart_data['cNB'][i],
+                                    self.cart_data['cBdt'][i]))
             else:
                 self.cart_data['cBSummary'].append('No BOSS')
 
@@ -560,16 +568,16 @@ class Logging:
         #  hart[1].values[-1], hart[3].values[-1])
         output += 'Average Move: {:>6.0f}\n'.format(hart[2].values[-1])
         # output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
-            # hart[4].values[-1], hart[5].values[-1])
+        # hart[4].values[-1], hart[5].values[-1])
         output += 'R Residuals: {:>6.0f}\n'.format(hart[3].values[-1])
         # output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
-            # hart[10].values[-1], hart[11].values[-1])
+        # hart[10].values[-1], hart[11].values[-1])
         output += 'B Residuals: {:>6.1f}\n'.format(hart[4].values[-1])
         # output += 'SP1: {:>6.1f}, SP2: {:>6.1f}\n'.format(
-            # hart[6].values[-1], hart[7].values[-1])
+        # hart[6].values[-1], hart[7].values[-1])
         output += 'SP1 Temperature: {:>6.1f}\n'.format(hart[5].values[-1])
         # output += 'SP1: {:>6.1f}, SP2: {:>6.1f}'.format(
-            # hart[8].values[-1], hart[9].values[-1])
+        # hart[8].values[-1], hart[9].values[-1])
         return output
 
     def p_summary(self):
@@ -838,6 +846,35 @@ class Logging:
         except (ConnectionRefusedError, TimeoutError) as me:
             print('Could not fetch mirror numbers:\n{}'.format(me))
 
+    @staticmethod
+    def tel_status():
+        print('=' * 80)
+        print('{:^80}'.format('Telescope Status'))
+        print('=' * 80 + '\n')
+        if not has_tpm:
+            return
+        try:
+            sz = tpmdgram.tinit()
+
+            multicast_group = '224.1.1.1'
+            server_address = ('', 2007)
+
+            # Init socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+            # Bind to the server address
+            sock.bind(server_address)
+
+            # Tell the OS to add the socket to the multicast group on all
+            # interfaces
+            group = socket.inet_aton(multicast_group)
+            mreq = struct.pack('4sL', group, socket.INADDR_ANY)
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+            status = telescope_status.query(sock, sz)
+            print(status)
+        except OSError as oe:
+            print(f"Couldn't get telescope status:\n{oe}")
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -866,6 +903,8 @@ def parse_args():
     parser.add_argument('-n', '--noprogress', action='store_true',
                         help='Show no progress in processing images. WARNING:'
                              ' Might be slower, but it could go either way.')
+    parser.add_argument('--telstatus', action='store_true',
+                        help='Print telescope status')
     parser.add_argument('--morning', action='store_true',
                         help='Only output apogee morning cals')
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -905,6 +944,7 @@ def main():
         p_apogee = True
         args.log_support = True
         args.mirrors = True
+        args.telstatus = True
 
     if args.summary:
         args.boss = True
@@ -940,6 +980,9 @@ def main():
 
     if args.mirrors:
         log.mirror_numbers()
+
+    if args.telstatus:
+        log.tel_status()
     return log
 
 

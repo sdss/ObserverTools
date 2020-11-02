@@ -38,7 +38,8 @@ def getPlateInfo(plateID):
                 print(exposure.exposure_no, exposure.sjd(),
                       exposure.flavor.label,
                       exposure.survey.label)
-                if exposure.sjd() > mjd: mjd = exposure.sjd()
+                if exposure.sjd() > mjd:
+                    mjd = exposure.sjd()
             if "Complete" == plate.calculatedCompletionStatus():
                 print("Complete on ", mjd)
         else:

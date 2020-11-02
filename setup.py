@@ -23,6 +23,7 @@ setup(
     description='A library of tools for SDSS telescope operations.',
     long_description=(here / 'README.md').open('r', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
+
     url='https://wiki.sdss.org/display/APO/Observing+Scripts',
     author='Dylan Gatlin, Dmitry Bizyaev',
     author_email='dgatlin@apo.nmsu.edu',

@@ -34,6 +34,7 @@ class TestSloanLog(unittest.TestCase):
         args.verbose = True
         args.noprogress = False
         args.mirrors = True
+        args.telstatus = True
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -70,6 +71,7 @@ class TestSloanLog(unittest.TestCase):
         args.morning = False
         args.verbose = True
         args.mirrors = False
+        args.telstatus = False
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -102,6 +104,7 @@ class TestSloanLog(unittest.TestCase):
         args.morning = False
         args.verbose = True
         args.morrors = False
+        args.telstatus = False
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -132,6 +135,7 @@ class TestSloanLog(unittest.TestCase):
         args.morning = False
         args.verbose = True
         args.mirrors = False
+        args.telstatus = False
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -162,6 +166,7 @@ class TestSloanLog(unittest.TestCase):
         args.morning = False
         args.verbose = True
         args.mirrors = False
+        args.telstatus = False
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -192,6 +197,7 @@ class TestSloanLog(unittest.TestCase):
         args.morning = False
         args.verbose = True
         args.mirrors = True
+        args.telstatus = False
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -203,6 +209,39 @@ class TestSloanLog(unittest.TestCase):
         log.count_dithers()
         log.log_support()
         log.mirror_numbers()
+
+
+def test_tel_status(self):
+    """Test telstatus integration"""
+
+    class Dummy(object):
+        pass
+
+    args = Dummy()
+    args.sjd = sjd.sjd()
+    args.print = False
+    args.summary = False
+    args.data = False
+    args.boss = False
+    args.apogee = False
+    args.p_boss = False
+    args.p_apogee = False
+    args.log_support = False
+    args.morning = False
+    args.verbose = True
+    args.mirrors = False
+    args.telstatus = True
+
+    ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
+    b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
+    ap_images = list(Path(ap_data_dir).glob('apR-a*.apz'))
+    b_images = list(Path(b_data_dir).glob('sdR-r1*fit.gz'))
+    log = sloan_log.Logging(ap_images, b_images, args)
+    log.parse_images()
+    log.sort()
+    log.count_dithers()
+    log.log_support()
+    log.mirror_numbers()
 
 
 if __name__ == '__main__':

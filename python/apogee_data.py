@@ -121,9 +121,9 @@ class APOGEERaw:
         diff = w_model[0] - w0
         if np.abs(diff) > 10:
             print('A large dither was reported for exposure {}: {:.3f}'
-                          '\n  This may mean the zero point needs to be'
-                          ' adjusted, currently it is {}'
-                          ''.format(self.exp_id, diff, w0))
+                  '\n  This may mean the zero point needs to be'
+                  ' adjusted, currently it is {}'
+                  ''.format(self.exp_id, diff, w0))
         return diff
 
     def ap_test(self, ws=(900, 910), master_col=None, plot=False):

@@ -45,17 +45,17 @@ class LogSupport:
 
     def set_callbacks(self):
         data = self.telemetry.get([  # '25m:sop:doApogeeBossScience_nDither'
-                                   # ':nDitherDone',
-                                   '25m:sop:doBossScience_nExp'
-                                   ':nExpDone',
-                                   '25m:sop:doMangaSequence_ditherSeq:index',
-                                   '25m:sop:doApogeeMangaSequence_ditherSeq:'
-                                   'index',
-                                   '25m:sop:doApogeeScience_index:index'],
-                                  (self.tstart - 0.3).datetime,
-                                  (self.tend - 0.3).datetime,
-                                  interpolation='raw',
-                                  scan_archives=False)
+            # ':nDitherDone',
+            '25m:sop:doBossScience_nExp'
+            ':nExpDone',
+            '25m:sop:doMangaSequence_ditherSeq:index',
+            '25m:sop:doApogeeMangaSequence_ditherSeq:'
+            'index',
+            '25m:sop:doApogeeScience_index:index'],
+            (self.tstart - 0.3).datetime,
+            (self.tend - 0.3).datetime,
+            interpolation='raw',
+            scan_archives=False)
         self.call_times = []
         for dat in data:
             self.call_times += dat.times
@@ -112,9 +112,9 @@ class LogSupport:
                                          off_data[offsets_keys[8]][i][0] * 3600,
                                          off_data[offsets_keys[9]][i][0] * 3600,
                                          off_data[offsets_keys[10]][
-                                               i][0] * 3600,
+                                             i][0] * 3600,
                                          off_data[offsets_keys[11]][
-                                               i][0] * 3600,
+                                             i][0] * 3600,
                                          off_data[offsets_keys[12]][i])
                              )
 
@@ -229,11 +229,11 @@ class LogSupport:
                          '25m:hartmann:r1PistonMove', '25m:hartmann:b1RingMove',
                          '25m:hartmann:sp1AverageMove',
                          '25m:hartmann:sp1Residuals:deg',
-                         '25m:boss:sp1Temp:median',]
-                         # '25m:hartmann:r2PistonMove', '25m:hartmann:b2RingMove
-                         # '25m:hartmann:sp2AverageMove',
-                         # '25m:hartmann:sp2Residuals:deg',
-                         # '25m:boss:sp2Temp:median']
+                         '25m:boss:sp1Temp:median']
+        # '25m:hartmann:r2PistonMove', '25m:hartmann:b2RingMove
+        # '25m:hartmann:sp2AverageMove',
+        # '25m:hartmann:sp2Residuals:deg',
+        # '25m:boss:sp2Temp:median']
         hart_data = {}
         for key in hartmann_keys:
             hart_data[key] = []
@@ -245,15 +245,13 @@ class LogSupport:
         self.hartmann += '=' * 80 + '\n'
         self.hartmann += '{:^80}\n'.format('Hartmann Log')
         self.hartmann += '=' * 80 + '\n\n'
-        self.hartmann += ('{:<5} {:<9} {:<5} {:<5} {:<5} {:<7} {:<4}'  # {:<5}'
-                          # ' {:<5} {:<5} {:<7} {:<4}'
+        self.hartmann += ('{:<5} {:<9} {:<5} {:<5} {:<5} {:<7} {:<4}'
                           '\n'.format('Time', 'Cart', 'R1', 'B1', 'Move1',
                                       'B1Resid', 'TSP1'))
         self.hartmann += '-' * 80 + '\n'
         for i, time in enumerate(hart_times):
             self.hartmann += ('{:>5} {:>2}-{:0>5}{:<1} {:>5.0f} {:>5.1f}'
-                              ' {:>5.0f} {:>7.1f} {:>4.1f}'  # {:>5.0f}'
-                              # ' {:>5.1f} {:>5.0f} {:>7.1f} {:>4.1f}'
+                              ' {:>5.0f} {:>7.1f} {:>4.1f}'
                               '\n'.format(time.isot[11:16],
                                           hart_data[hartmann_keys[0]][i],
                                           hart_data[hartmann_keys[1]][i],
@@ -262,12 +260,12 @@ class LogSupport:
                                           hart_data[hartmann_keys[4]][i],
                                           hart_data[hartmann_keys[5]][i],
                                           hart_data[hartmann_keys[6]][i],
-                                          hart_data[hartmann_keys[7]][i],))
-                                          # hart_data[hartmann_keys[8]][i],
-                                          # hart_data[hartmann_keys[9]][i],
-                                          # hart_data[hartmann_keys[10]][i],
-                                          # hart_data[hartmann_keys[11]][i],
-                                          # hart_data[hartmann_keys[12]][i]))
+                                          hart_data[hartmann_keys[7]][i], ))
+            # hart_data[hartmann_keys[8]][i],
+            # hart_data[hartmann_keys[9]][i],
+            # hart_data[hartmann_keys[10]][i],
+            # hart_data[hartmann_keys[11]][i],
+            # hart_data[hartmann_keys[12]][i]))
 
 
 def main():
@@ -353,4 +351,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

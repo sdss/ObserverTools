@@ -3,6 +3,7 @@ import unittest
 from bin import sjd
 from astropy.time import Time
 
+
 class TestSJD(unittest.TestCase):
 
     def test_astropy(self):

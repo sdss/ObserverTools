@@ -2,7 +2,6 @@
 import unittest
 from pathlib import Path
 from bin import ds9_live
-import pyds9
 
 
 class TestDS9(unittest.TestCase):
@@ -16,17 +15,18 @@ class TestDS9(unittest.TestCase):
     def test_no_args(self):
         args = ds9_live.parseargs()
         window = ds9_live.DS9Window(args.name, args.fits_dir, args.regex,
-                                    args.scale, args.zoom, args.verbose, False)
+                                    args.scale, args.zoom, args.verbose, False,
+                                    True)
         window.close()
 
     def test_boss(self):
         window = ds9_live.DS9Window('BOSS', '/data/spectro/', 'sdR-r1*',
-                                    'histequ', '1.0', False, False)
+                                    'histequ', '1.0', False, False, True)
         window.close()
 
     def test_guider(self):
         window = ds9_live.DS9Window('Guider', '/data/gcam/', 'gimg-*',
-                                    'histequ', '1.0', False, False)
+                                    'histequ', '1.0', False, False, True)
         window.close()
 
     def test_apogee_summary_dir(self):

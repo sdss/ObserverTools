@@ -16,9 +16,7 @@ from pathlib import Path
 import numpy as np
 import sys
 
-
 __version__ = '3.0.0'
-
 
 if not sys.argv[1:2]:
     print("    Usage:  WAVEMID  2036.0 2045.0 2043.0 2044.0  [ct]")
@@ -95,7 +93,8 @@ else:
 # print "tblCart=", tblCart[tblInd]
 
 # select line for requested cart and calulate the difference 
-tblWmidC = tblWmid[tblInd, 0:len(sosWmid)]  # requested cart parameters from table
+tblWmidC = tblWmid[tblInd, 0:len(sosWmid)]  # requested cart parameters from
+# table
 difWmid = sosWmid - tblWmidC  # difference between sos and table for requested
 # cart
 
@@ -162,11 +161,11 @@ plt.grid(True)
 plt.xlabel('b1 - b1(ct=0), pix')
 plt.ylabel('r1 - r1(ct=0), pix')
 plt.title('sp1 wavemid', size=15)
-tolerance = plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
-                     [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
-tolerance1 = plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
-                      [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
-                      linewidth=0.6)
+plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
+         [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
+plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
+         [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
+         linewidth=0.6)
 curCart = plt.plot(sosWmidN[0], sosWmidN[1], 'rs')
 plt.annotate("current", [sosWmidN[0] + 0.5, sosWmidN[1] - 0.1], color="r",
              size=13)
@@ -185,17 +184,17 @@ plt.grid(True)
 plt.xlabel('b2 - b2(ct=0), pix')
 plt.ylabel('r2 - r2(ct=0), pix')
 plt.title('sp2 wavemid', size=15)
-tolerance = plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
-                     [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
-tolerance1 = plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
-                      [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
-                      linewidth=0.6)
-curCart = plt.plot(sosWmidN[2], sosWmidN[3], 'rs')
+plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
+         [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
+plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
+         [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
+         linewidth=0.6)
+plt.plot(sosWmidN[2], sosWmidN[3], 'rs')
 plt.annotate("current", [sosWmidN[2] + 0.5, sosWmidN[3] - 0.1], color="r",
              size=13)
 # line3 = plt.plot([xmin,xmax],[ymin,ymax],color='black', linewidth=0.6)
-line3 = plt.plot([xmin, xmax], [xmin * 1.36, xmax * 1.36], color='black',
-                 linewidth=0.4)
+plt.plot([xmin, xmax], [xmin * 1.36, xmax * 1.36], color='black',
+         linewidth=0.4)
 # for i in range(1,n):
 #     plt.annotate("%2i"% (tblCart[i]), [tblWmidN[i,2]+0.4,tblWmidN[i,3]-0.1],
 #     color="b", size=12)

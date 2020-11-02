@@ -97,7 +97,8 @@ else:
 # print "tblCart=", tblCart[tblInd]
 
 # select line for rewuested cart and calulate the difference 
-tblXmidC = tblXmid[tblInd, 0:len(sosXmid)]  # requested cart parameters from table
+tblXmidC = tblXmid[tblInd, 0:len(sosXmid)]  # requested cart parameters from
+# table
 difXmidC = sosXmid - tblXmidC  # difference between sos and table for requested
 # cart
 
@@ -156,15 +157,15 @@ plt.grid(True)
 plt.xlabel('b1 - b1(nominal), pix')
 plt.ylabel('r1 - r1(nominal), pix')
 plt.title('sp1 xmid', size=15)
-tolerance = plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
+plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
                      [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
-tolerance1 = plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
+plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
                       [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
                       linewidth=0.6)
-curCart = plt.plot(sosXmidN[0], sosXmidN[1], 'rs')
+plt.plot(sosXmidN[0], sosXmidN[1], 'rs')
 plt.annotate("current", [sosXmidN[0] + 0.5, sosXmidN[1] - 0.1], color="r",
              size=13)
-line3 = plt.plot([xmin, xmax], [ymin, ymax], color='black', linewidth=0.6)
+plt.plot([xmin, xmax], [ymin, ymax], color='black', linewidth=0.6)
 # plt.setp(line3, color='black', linewidth=1.0)
 # for i in range(1,n):
 #     plt.annotate("%2i"% (tblCart[i]), [tblXmidN[i,0]+0.4,tblXmidN[i,1]-0.1],
@@ -177,15 +178,15 @@ plt.grid(True)
 plt.xlabel('b2 - b2(nominal), pix')
 plt.ylabel('r2 - r2(nominal), pix')
 plt.title('sp2 xmid', size=15)
-tolerance = plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
+plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
                      [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
-tolerance1 = plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
+plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
                       [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
                       linewidth=0.6)
-curCart = plt.plot(sosXmidN[2], sosXmidN[3], 'rs')
+plt.plot(sosXmidN[2], sosXmidN[3], 'rs')
 plt.annotate("current", [sosXmidN[2] + 0.5, sosXmidN[3] - 0.1], color="r",
              size=13)
-line3 = plt.plot([xmin, xmax], [ymin, ymax], color='black', linewidth=0.6)
+plt.plot([xmin, xmax], [ymin, ymax], color='black', linewidth=0.6)
 # for i in range(1,n):
 #     plt.annotate("%2i"% (tblCart[i]), [tblXmidN[i,2]+0.4,tblXmidN[i,3]-0.1],
 #     color="b", size=12)
