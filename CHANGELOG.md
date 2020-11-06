@@ -223,3 +223,28 @@
 
 - Removed pyfits from requirements.txt. The newest verion of pyfits breaks on
  the Macs
+ 
+## [3.5.2] - 2020-11-5
+
+- Removed fitsio version from requirements.txt The newest version of fitsio
+ breaks on the Macs
+ 
+## [3.5.3] - 2020-11-5
+
+- With more Mac issues, I removed any fits package requirements and numpy's
+ version
+ 
+## [3.5.4] - 2020-11-5
+
+- Screw it, removed all versions from requirements.txt because of this new pip
+ change
+ 
+## [3.5.5] - 2020-11-5
+
+- By installing packages one by one, it looks like pytest-astropy uses psutil
+ which is not python-3-only pip ready. Removing from requirements.txt
+ 
+ ## [3.5.5] - 2020-11-5
+
+- In sloan_log.py, it would break without tpmdgram via telescope_status.py,
+ fixed 

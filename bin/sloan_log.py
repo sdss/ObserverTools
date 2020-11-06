@@ -44,10 +44,9 @@ try:
     import epics_fetch
     import get_dust
     import m4l
-    import telescope_status
 except ImportError as e:
     try:
-        from bin import epics_fetch, get_dust, m4l, telescope_status
+        from bin import epics_fetch, get_dust, m4l
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
                           '\n    {}'.format(e))
@@ -74,6 +73,7 @@ except ImportError as e:
                           '\n    {}'.format(e))
 try:
     import tpmdgram
+    import telescope_status
 except ImportError:
     has_tpm = False
     tpmdgram = None
