@@ -7,7 +7,7 @@ tqdm~=4.50.0
 channelarchiver~=1.0.0
 seaborn~=0.11.0
 scipy~=1.5.2
-pyfits~=3.5
+# pyfits~=3.5
 setuptools~=47.1.1
 pytest-astropy
 datetime~=4.3

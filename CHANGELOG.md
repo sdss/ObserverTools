@@ -217,3 +217,9 @@
 - Added vertical layout option to ds9_live tests  
 
 - Integrated telescope_status into sloan_log
+
+
+## [3.5.1] - 2020-11-5
+
+- Removed pyfits from requirements.txt. The newest verion of pyfits breaks on
+ the Macs
