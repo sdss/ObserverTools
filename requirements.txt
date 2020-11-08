@@ -1,14 +1,15 @@
-pathlib  # ~=1.0.1
-matplotlib  # ~=3.3.2
-numpy  # ~=1.18.5
-astropy  # ~=4.1
-# pyds9  # ~=1.8.1
-tqdm  # ~=4.50.0
-channelarchiver  # ~=1.0.0
+pathlib~=1.0.1
+matplotlib~=3.3.2
+numpy~=1.18.5
+astropy~=4.1
+pyds9  # ~=1.8.1
+tqdm~=4.50.2
+channelarchiver~=1.0.0
 seaborn  # ~=0.11.0
-scipy  # ~=1.5.2
-# pyfits~=3.5
-setuptools  # ~=47.1.1
-# pytest-astropy
-datetime  # ~=4.3
-# fitsio  # ~=1.1.3
+scipy~=1.5.3
+pyfits~=3.5
+setuptools~=47.1.1
+pytest-astropy
+datetime~=4.3
+fitsio~=1.1.3
+beautifulsoup4~=4.9.3

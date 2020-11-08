@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import tpmdgram
 import socket
 import struct
@@ -88,7 +88,7 @@ def parseargs():
                         help='Channel(s) to plot')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('--version', action='store_true')
-    parser.add_argument('--dt', nargs=1,
+    parser.add_argument('--dt', nargs=1, dtype=float,
                         help='Time interval between prints (used with'
                              ' --channels)')
 
@@ -111,7 +111,7 @@ def main():
             ax = fig.add_subplot(1, 1, 1)
             chart = StripChart(channel, fig, ax)
             anis.append(animation.FuncAnimation(fig, chart.update,
-                                                interval=1000))
+                                                interval=args.dt * 1000))
             charts.append(chart)
         plt.show()
 
@@ -130,7 +130,7 @@ def main():
                 data = tpmdgram.data2dict(data)
                 new_t = Time(data['ctime'], format='unix')
                 # print((new_t - old_t).to(u.s))
-                loop_cond = (new_t - old_t) < (5 * u.s)
+                loop_cond = (new_t - old_t) < (args.dt * u.s)
             print(f'{new_t.isot[11:19]:<10}' + ''.join([' {:12}'.format(
                 data[channel]) for channel in args.channels]))
 

@@ -244,7 +244,26 @@
 - By installing packages one by one, it looks like pytest-astropy uses psutil
  which is not python-3-only pip ready. Removing from requirements.txt
  
- ## [3.5.5] - 2020-11-5
+## [3.5.5] - 2020-11-5
 
 - In sloan_log.py, it would break without tpmdgram via telescope_status.py,
  fixed 
+ 
+## [3.5.6] - 2020-11-5
+
+- Minor fix pushes
+
+## [3.5.7] - 2020-11-5
+
+- Fixed a case where has_tpm might not exist
+
+## [3.5.8] - 2020-11-6
+
+- Implemented the dt argument in tpm_fetch
+
+- Undid all those software version changes I made because the bug was actually
+ in the sdss-obs2 PYTHONPATH
+
+- Started sossy.py, a tool to find SOS total signal to noise
+
+- m4l.py can now save nominals with the write argument

@@ -4,13 +4,18 @@
  using Python 3 with no arguments:
 
  m4l.py
+
+ If you want to save the migs, run it with write like
+
+ m4l.py write
  """
 
 from telnetlib import Telnet
 from traceback import format_exc
 import socket
+import sys
 
-__version__ = '3.1.2'
+__version__ = '3.2.0'
 
 
 def mirrors():
@@ -34,7 +39,10 @@ def mirrors():
     # Read the data
 
     try:
-        tn.write(b'\n')
+        if sys.argv[1] == 'write':
+            tn.write(b'write\n')
+        else:
+            tn.write(b'\n')
     except (ConnectionRefusedError, socket.timeout):
         raise Exception('Telnet write to {}:{} failed: {}'.format
                         (HOST, PORT, format_exc()))

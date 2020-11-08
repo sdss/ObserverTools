@@ -74,6 +74,7 @@ except ImportError as e:
 try:
     import tpmdgram
     import telescope_status
+    has_tpm = True
 except ImportError:
     has_tpm = False
     tpmdgram = None
@@ -275,6 +276,7 @@ class Logging:
                 red_dir = Path('/data/apogee/quickred/{}/'.format(
                     self.args.sjd))
                 red_fil = red_dir / 'ap1D-a-{}.fits.fz'.format(img.exp_id)
+                # TODO Have this include tiers depending on 1D or 2D quickred
                 if red_fil.exists():
                     detectors.append('a')
                 else:
