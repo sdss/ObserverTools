@@ -267,3 +267,5 @@
 - Started sossy.py, a tool to find SOS total signal to noise
 
 - m4l.py can now save nominals with the write argument
+
+- soss.py can handle plates with no signal

@@ -35,7 +35,7 @@ class Plate:
 
     def parse_sjd(self, mjd):
         if self.args.verbose:
-            print(mjd)
+            print('Searching {}'.format(mjd))
         log_html = Path('/data/boss/sos/{}/logfile-{}.html'.format(mjd, mjd))
         if not log_html.exists():
             return
@@ -66,22 +66,25 @@ class Plate:
         # print(self.useful_sjds)
         self.useful_sjds = np.array(self.useful_sjds).astype(int)
         self.all_exp_ids = self.all_exp_ids
-        # print(self.all_snrs)
-        self.all_snrs = np.array(self.all_snrs[0]).astype(float)
+        self.all_snrs = np.array(self.all_snrs).astype(float)
         self.snr_totals = np.array(self.snr_totals).astype(float)
 
     def print_summary(self):
 
         for i, mjd in enumerate(self.useful_sjds):
-            print('SJD: {}'.format(mjd))
-            print('    {:^8} {:^5} {:^5}'.format('ExpID', 'R1', 'B1'))
-            for expid, snr in zip(self.all_exp_ids[i], self.all_snrs):
-                print('    {:0>8.0f} {:5.1f} {:5.1f}'.format(
+            print('    SJD: {}'.format(mjd))
+            print('        {:^8} {:^4} {:^4}'.format('ExpID', 'R1', 'B1'))
+            for expid, snr in zip(self.all_exp_ids[i], self.all_snrs[i]):
+                print('        {:0>8.0f} {:4.1f} {:4.1f}'.format(
                     expid, snr[0], snr[1]))
-            print('Night total: {:5.1f} {:5.1f}'.format(
+            print('    Night total: {:4.1f} {:4.1f}'.format(
                 *self.snr_totals[i]))
-        print('\nTotal S/N^2: {:5.1f} {:5.1f}'.format(
-                *self.snr_totals.sum(axis=0)))
+        if bool(self.snr_totals.sum()):
+            print('\nTotal S/N^2: {:4.1f} {:4.1f}\n'.format(
+                    *self.snr_totals.sum(axis=0)))
+
+        else:
+            print("This plate hasn't been observed\n")
 
 
 def parse_args():
@@ -116,6 +119,7 @@ def main():
     args = parse_args()
 
     for plate in args.plates:
+        print('Plate: {}'.format(plate))
         pl = Plate(plate, args.sjds, args)
         pl.parse_plate()
         pl.print_summary()
