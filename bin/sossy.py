@@ -48,17 +48,31 @@ class Plate:
                     if '>(S/N)^2' in line:
                         sci_images = line.split('<td align="RIGHT">')
                         exp_ids.append(sci_images[0].split('SCIENCE-')[-1][:-1])
-                        exp_snrs.append(sci_images[2:4])
+                        if 'bold' not in sci_images[2]:
+                            exp_snrs.append(sci_images[2:4])
+                        else:
+                            exp_snrs.append([sci_images[2].split()[-1],
+                                             sci_images[3].split()[-1]])
                 last_line = plate.find_all('tr')[-1].decode().split(
                     '<td align="RIGHT">')
                 if 'TOTAL (S/N)^2' in last_line[1]:
                     self.useful_sjds.append(mjd)
                     self.all_exp_ids.append(np.array(exp_ids).astype(int))
-                    self.all_snrs.append(exp_snrs)
+                    self.all_snrs.append(np.array(exp_snrs).astype(float))
                     # Sometimes there's a bold secion in the S/N values, this
                     # loop ignores any of those values on the left
-                    self.snr_totals.append([item[-5:]
-                                            for item in last_line[2:4]])
+                    # The if is in case there is no reported S/N^2 (I think tha
+                    # means the exposures were bad or no science exposures were
+                    # taken.
+                    if (('bold' not in last_line[2])
+                       and ('bold' not in last_line[3])):
+                        self.snr_totals.append(last_line[2:4])
+                    else:
+                        if 'bold' not in last_line[2].split()[-1]:
+                            self.snr_totals.append([last_line[2].split()[-1],
+                                                    last_line[3].split()[-1]])
+                        else:
+                            self.snr_totals.append([0., 0.])
 
     def parse_plate(self):
         for mjd in self.sjds:
@@ -66,7 +80,7 @@ class Plate:
         # print(self.useful_sjds)
         self.useful_sjds = np.array(self.useful_sjds).astype(int)
         self.all_exp_ids = self.all_exp_ids
-        self.all_snrs = np.array(self.all_snrs).astype(float)
+        self.all_snrs = np.array(self.all_snrs)
         self.snr_totals = np.array(self.snr_totals).astype(float)
 
     def print_summary(self):
