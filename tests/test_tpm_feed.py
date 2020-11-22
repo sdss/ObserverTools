@@ -4,9 +4,9 @@ import subprocess as sub
 from pathlib import Path
 
 
-class TestTPMFetch(unittest.TestCase):
+class TestTPMFeed(unittest.TestCase):
     def setUp(self):
-        self.file = Path(__file__).absolute().parent.parent / 'bin/tpm_fetch.py'
+        self.file = Path(__file__).absolute().parent.parent / 'bin/tpm_feed.py'
 
     def test_print(self):
         try:
