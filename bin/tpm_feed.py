@@ -88,7 +88,7 @@ def parseargs():
                         help='Channel(s) to plot')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('--version', action='store_true')
-    parser.add_argument('--dt', nargs=1, type=float,
+    parser.add_argument('--dt', nargs=1, type=float, default=5,
                         help='Time interval between prints (used with'
                              ' --channels)')
     parser.add_argument('--list-channels', dest='list_channels',
@@ -97,14 +97,16 @@ def parseargs():
 
     args = parser.parse_args()
 
-    if args.version:
-        print(__version__)
-
     return args
 
 
-def main():
-    args = parseargs()
+def main(args=parseargs()):
+
+    if args.list_channels:
+        args.channels = []
+
+    if args.version:
+        print(__version__)
 
     if args.list_channels:
         data, addr = sock.recvfrom(sz)
@@ -121,6 +123,7 @@ def main():
             anis.append(animation.FuncAnimation(fig, chart.update,
                                                 interval=args.dt * 1000))
             charts.append(chart)
+        print('Close the plots to get a table feed')
         plt.show()
 
     if args.channels:
@@ -141,6 +144,9 @@ def main():
                 loop_cond = (new_t - old_t) < (args.dt * u.s)
             print(f'{new_t.isot[11:19]:<10}' + ''.join([' {:12}'.format(
                 data[channel]) for channel in args.channels]))
+
+    sock.detach()
+    sock.close()
 
 
 if __name__ == '__main__':

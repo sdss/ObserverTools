@@ -39,8 +39,11 @@ def mirrors():
     # Read the data
 
     try:
-        if sys.argv[1] == 'write':
-            tn.write(b'write\n')
+        if len(sys.argv) > 1:
+            if sys.argv[1] == 'write':
+                tn.write(b'write\n')
+            else:
+                print('Only `write` accepted as argument')
         else:
             tn.write(b'\n')
     except (ConnectionRefusedError, socket.timeout):
@@ -52,7 +55,7 @@ def mirrors():
     except (ConnectionRefusedError, socket.timeout):
         raise Exception('Telnet read from {}:{} failed: {}'.format(
             HOST, PORT, format_exc()))
-
+    tn.sock.close()
     tn.close()
 
     return reply.decode('utf-8')

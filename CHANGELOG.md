@@ -269,3 +269,20 @@
 - m4l.py can now save nominals with the write argument
 
 - soss.py can handle plates with no signal
+
+## [3.5.9] - 2020-11-25
+
+- Changed tpm_fetch to tpm_feed, added tpm_fetch, that queries past data
+
+- Changed main for tpm_fetch and tpm_feed so that main can be run in tests
+
+- Added a master flat, taken from the previous nights of data since the MTP
+ cleaning, only including upgraded carts
+
+- Added tests for tpm_fetch.py
+
+- telescope_status.py now more closely matches other tpmdgram-based scripts
+
+- Added new scripts to help.py
+
+- sloan_log.py now reports average fiber throughput percentage.

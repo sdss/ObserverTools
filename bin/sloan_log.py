@@ -34,8 +34,6 @@ import argparse
 import sys
 import warnings
 import textwrap
-import struct
-import socket
 
 import numpy as np
 
@@ -44,9 +42,10 @@ try:
     import epics_fetch
     import get_dust
     import m4l
+    import telescope_status
 except ImportError as e:
     try:
-        from bin import epics_fetch, get_dust, m4l
+        from bin import epics_fetch, get_dust, m4l, telescope_status
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
                           '\n    {}'.format(e))
@@ -71,14 +70,6 @@ except ImportError as e:
     except ImportError as e:
         raise ImportError('Please add ObserverTools/python to your PYTHONPATH:'
                           '\n    {}'.format(e))
-try:
-    import tpmdgram
-    import telescope_status
-    has_tpm = True
-except ImportError:
-    has_tpm = False
-    tpmdgram = None
-    print('TPM python modules not installed')
 
 if sys.version_info.major < 3:
     raise Exception('Interpretter must be python 3 or newer')
@@ -140,7 +131,7 @@ class Logging:
                         'iSeeing': [], 'iDetector': [], 'iDither': [],
                         'iNRead': [], 'iEType': [], 'iCart': [], 'iPlate': [],
                         'dCart': [], 'dTime': [], 'dMissing': [], 'dFaint': [],
-                        'dNMissing': [], 'dNFaint': [], 'aTime': [],
+                        'dNMissing': [], 'dNFaint': [], 'dAvg': [], 'aTime': [],
                         'aOffset': [], 'aID': [], 'aLamp': [], 'oTime': [],
                         'oOffset': [], 'oDither': []}
         self.b_data = {'cCart': [], 'cTime': [],
@@ -163,8 +154,10 @@ class Logging:
         # self.ap_tester = ap_test.ApogeeFlat(
         #     Path(__file__).absolute().parent.parent
         #     / 'dat/ap_master_flat_col_array.dat', self.args)
-        master_data = fitsio.read('/data/apogee/quickred/59011/ap1D-a-34490027'
-                                  '.fits.fz')
+        master_path = (Path(__file__).absolute().parent.parent
+                       / 'dat/master_dome_flat_1.npy')
+        master_data = np.load(master_path)
+
         self.ap_master = np.average(master_data[:, 900:910], axis=1)
 
         self.morning_filter = None
@@ -175,7 +168,7 @@ class Logging:
         """
         # This is from ap_test
         self.args.plot = False
-        missing, faint = img.ap_test((900, 910), self.ap_master)
+        missing, faint, avg = img.ap_test((900, 910), self.ap_master)
         # test = sub.Popen((Path(__file__).absolute().parent.parent
         #                   / 'old_bin/aptest').__str__() + ' {} {}'
         #                  ''.format(self.args.sjd, img.exp_id), shell=True,
@@ -213,6 +206,7 @@ class Logging:
         self.ap_data['dNFaint'].append(n_faint)
         self.ap_data['dMissing'].append(missing)
         self.ap_data['dFaint'].append(faint)
+        self.ap_data['dAvg'].append(avg)
         self.ap_data['dCart'].append(img.cart_id)
         self.ap_data['dTime'].append(img.isot)
 
@@ -594,9 +588,11 @@ class Logging:
                                  self.cart_data['cBSummary'][i]))
             try:
                 j = np.where(self.ap_data['dCart'] == cart)[0][0]
-                print('Missing Fibers: {}, Faint fibers: {}'.format(
+                print('Missing Fibers: {:2}, Faint fibers: {:2},'
+                      ' Average Throughput: {:.1f}%'.format(
                     self.ap_data['dNMissing'][j],
-                    self.ap_data['dNFaint'][j]))
+                    self.ap_data['dNFaint'][j],
+                    self.ap_data['dAvg'][j]*100))
             except IndexError:
                 pass
         print()
@@ -853,26 +849,8 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('Telescope Status'))
         print('=' * 80 + '\n')
-        if not has_tpm:
-            return
         try:
-            sz = tpmdgram.tinit()
-
-            multicast_group = '224.1.1.1'
-            server_address = ('', 2007)
-
-            # Init socket
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-            # Bind to the server address
-            sock.bind(server_address)
-
-            # Tell the OS to add the socket to the multicast group on all
-            # interfaces
-            group = socket.inet_aton(multicast_group)
-            mreq = struct.pack('4sL', group, socket.INADDR_ANY)
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-            status = telescope_status.query(sock, sz)
+            status = telescope_status.query()
             print(status)
         except OSError as oe:
             print(f"Couldn't get telescope status:\n{oe}")

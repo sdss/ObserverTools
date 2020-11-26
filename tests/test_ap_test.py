@@ -2,6 +2,7 @@
 import unittest
 from pathlib import Path
 from bin import ap_test
+import numpy as np
 
 
 class TestAPTest(unittest.TestCase):
@@ -16,10 +17,12 @@ class TestAPTest(unittest.TestCase):
         self.args.exps = [[34490027, 34490042, 34490051, 34490056, 34490069]]
         self.args.plot = False
         self.args.verbose = True
+        master_path = self.project / 'dat/master_dome_flat_1.npy'
+        self.master_data = np.load(master_path)
 
     def test_known_date(self):
-        self.atest = ap_test.ApogeeFlat(
-            '/data/apogee/quickred/58021/ap1D-a-24590019.fits.fz', self.args)
+
+        self.atest = ap_test.ApogeeFlat(self.master_data, self.args)
         self.atest.run_inputs()
 
     def test_directory(self):
@@ -30,8 +33,7 @@ class TestAPTest(unittest.TestCase):
     def test_plotting(self):
         """Tests the plotting routine"""
         self.args.plot = True
-        self.atest = ap_test.ApogeeFlat(
-            '/data/apogee/quickred/58021/ap1D-a-24590019.fits.fz', self.args)
+        self.atest = ap_test.ApogeeFlat(self.master_data, self.args)
         self.atest.run_inputs()
 
 

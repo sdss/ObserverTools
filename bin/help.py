@@ -17,7 +17,7 @@ from bin import sjd, sp_version, m4l
 __version__ = '3.1.0'
 
 argparsed = ['ap_test.py', 'boss_sha1sum.py', 'ds9_live.py', 'epics_fetch.py',
-             'get_dust.py', 'sloan_log.py']
+             'get_dust.py', 'sloan_log.py', 'tpm_fetch.py', 'tpm_feed.py']
 non_argparsed = ['sjd.py', 'sp_version.py', 'wave_mid.py', 'x_mid']
 bin_dir = Path(__file__).parent
 

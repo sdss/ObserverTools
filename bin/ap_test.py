@@ -12,7 +12,7 @@ DG: A rewrite of Elena's aptest script.
 import numpy as np
 import fitsio
 from argparse import ArgumentParser
-# from pathlib import Path
+from pathlib import Path
 from python import apogee_data
 
 __version__ = '3.2.0'
@@ -20,7 +20,10 @@ __version__ = '3.2.0'
 
 class ApogeeFlat:
     def __init__(self, master_flat, args):
-        master_data = fitsio.read(master_flat)
+        if isinstance(master_flat, str) or isinstance(master_flat, Path):
+            master_data = fitsio.read(master_flat)
+        elif isinstance(master_flat, np.ndarray):
+            master_data = master_flat
         self.ap_master = np.average(master_data[:, 900:910], axis=1)
         self.args = args
         self.args.verbose = True
@@ -72,8 +75,11 @@ def parse_args():
 
 def main():
     args = parse_args()
-    master_path = '/data/apogee/quickred/59011/ap1D-a-34490027.fits.fz'
-    apogee = ApogeeFlat(master_path, args)
+    master_path = (Path(__file__).absolute().parent.parent
+                   / 'dat/master_dome_flat_1.npy')
+    master_data = np.load(master_path)
+
+    apogee = ApogeeFlat(master_data, args)
     apogee.run_inputs()
 
 

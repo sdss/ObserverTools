@@ -144,6 +144,7 @@ class APOGEERaw:
                 return ''
         slc = np.average(self.quickred_data[:, ws[0]:ws[1]], axis=1)
         flux_ratio = slc / master_col
+        avg = np.mean(flux_ratio)
         missing = flux_ratio < 0.2
         faint = (flux_ratio < 0.7) & (0.2 <= flux_ratio)
         bright = ~missing & ~faint
@@ -176,7 +177,7 @@ class APOGEERaw:
                 self.exp_id), size=15)
             fig.show()
 
-        return missing_bundles, faint_bundles
+        return missing_bundles, faint_bundles, avg
 
     @staticmethod
     def create_bundles(subset):

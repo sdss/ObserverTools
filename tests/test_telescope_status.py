@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
-import subprocess as sub
 from pathlib import Path
+from bin import telescope_status
 
 
 class TestTelStatus(unittest.TestCase):
@@ -10,11 +10,7 @@ class TestTelStatus(unittest.TestCase):
                      / 'bin/telescope_status.py')
 
     def test_print(self):
-        out = sub.check_output([self.file], shell=True)
-        for line in out.decode('utf-8').splitlines():
-            print(line)
-            self.assertNotIn('Error', line)
-            self.assertNotIn('Exception', line)
+        telescope_status.main()
 
 
 if __name__ == '__main__':
