@@ -15,7 +15,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from python import apogee_data
 
-__version__ = '3.2.0'
+__version__ = '3.2.1'
 
 
 class ApogeeFlat:
@@ -75,7 +75,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    master_path = (Path(__file__).absolute().parent.parent
+    master_path = (Path(apogee_data.__file__).absolute().parent.parent
                    / 'dat/master_dome_flat_1.npy')
     master_data = np.load(master_path)
 

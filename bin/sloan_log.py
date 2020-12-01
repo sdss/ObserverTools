@@ -79,7 +79,7 @@ warnings.filterwarnings('ignore', category=UserWarning, append=True)
 # For numpy boolean arrays
 warnings.filterwarnings('ignore', category=FutureWarning, append=True)
 
-__version__ = '3.7.1'
+__version__ = '3.7.2'
 
 ap_dir = Path('/data/apogee/archive/')
 b_dir = Path('/data/spectro/')
@@ -113,7 +113,7 @@ class Logging:
 
     def __init__(self, ap_images, m_images, args):
         self.ap_images = ap_images
-        self.m_images = m_images
+        self.b_images = m_images
         self.args = args
         # Dictionary keys that begin with c are of len(carts_in_a_night),
         # keys that begin with i are of len(images_in_a_night), keys that begin
@@ -154,9 +154,9 @@ class Logging:
         # self.ap_tester = ap_test.ApogeeFlat(
         #     Path(__file__).absolute().parent.parent
         #     / 'dat/ap_master_flat_col_array.dat', self.args)
-        master_path = (Path(__file__).absolute().parent.parent
+        master_path = (Path(apogee_data.__file__).absolute().parent.parent
                        / 'dat/master_dome_flat_1.npy')
-        master_data = np.load(master_path)
+        master_data = np.load(master_path.as_posix())
 
         self.ap_master = np.average(master_data[:, 900:910], axis=1)
 
@@ -214,7 +214,7 @@ class Logging:
         """Goes through every image in ap_images and m_images to put them in
         dictionaries."""
         if self.args.apogee:
-            print('Reading APOGEE Data')
+            print('Reading APOGEE Data ({})'.format(len(self.ap_images)))
             for image in tqdm(self.ap_images):
                 # print(image)
                 img = apogee_data.APOGEERaw(image, self.args, 1)
@@ -296,7 +296,7 @@ class Logging:
                 self.ap_data['iPlate'].append(img.plate_id)
         if self.args.boss:
             print('Reading BOSS Data')
-            for image in tqdm(self.m_images):
+            for image in tqdm(self.b_images):
                 img = boss_data.BOSSRaw(image)
                 if img.cart_id not in self.data['cCart']:
                     self.data['cCart'].append(img.cart_id)

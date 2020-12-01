@@ -39,11 +39,14 @@ def mirrors():
     # Read the data
 
     try:
-        if len(sys.argv) > 1:
-            if sys.argv[1] == 'write':
-                tn.write(b'write\n')
+        if __name__ == '__main__':
+            if len(sys.argv) > 1:
+                if sys.argv[1] == 'write':
+                    tn.write(b'write\n')
+                else:
+                    print('Only `write` accepted as argument')
             else:
-                print('Only `write` accepted as argument')
+                tn.write(b'\n')
         else:
             tn.write(b'\n')
     except (ConnectionRefusedError, socket.timeout):

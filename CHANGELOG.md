@@ -286,3 +286,20 @@
 - Added new scripts to help.py
 
 - sloan_log.py now reports average fiber throughput percentage.
+
+## [3.5.10] - 2020-11-30
+
+- Added dat and tests to packages in an attempt to get them included in the dist
+ which is more important now that we have a new master flat.
+ 
+- Converted pathlib.Path to str in sloan_log.py
+
+- Added dat folder contents to setup.py as package_data, works on my machine,
+ ready for testing at hub
+ 
+## [3.5.11] - 2020-11-30
+
+- hub installs a script differently than I do locally, so the previous method
+ didn't work. pkg_resources also didn't work, so I settled on using a path
+ relative to apogee_data, which installs in a location more similar to the
+ master flat than scripts like sloan_log.py
