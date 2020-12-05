@@ -303,3 +303,10 @@
  didn't work. pkg_resources also didn't work, so I settled on using a path
  relative to apogee_data, which installs in a location more similar to the
  master flat than scripts like sloan_log.py
+ 
+## [3.5.12] - 2020-12-05
+
+- Made some changes to tpm_fetch.py to have some features Dan0 included in a
+ similar script.
+ 
+- Added an mjd window test for test_tpm_fetch.py

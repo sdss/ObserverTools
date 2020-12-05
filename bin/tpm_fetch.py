@@ -54,6 +54,8 @@ class TPMSJD:
                                       names=('Time', 'Key', 'Value'))
             else:
                 print('No data found for {}'.format(sjd))
+                self.data = None
+                return
         self.data['Time'] = Time(self.data['Time'], format='unix')
 
 
@@ -63,6 +65,9 @@ def parse_args():
                         help='The start time of the query')
     parser.add_argument('--t2', nargs=1,
                         help='The start time of the query')
+    parser.add_argument('-m', '--mjd', type=int,
+                        help='The mjd to search, can be used as an alternative'
+                             ' to --t1 and --t2')
     parser.add_argument('-c', '--channels', nargs='+',
                         help='Channel names to query. For an exhaustive list,'
                              ' run `tpm_feed.py --list-channels`')
@@ -73,6 +78,11 @@ def parse_args():
 
 
 def main(args=parse_args()):
+    print(args.mjd)
+    if args.mjd:
+        args.t1 = '{}'.format(Time(args.mjd, format='mjd').isot)
+        args.t2 = '{}'.format(Time(args.mjd + 1, format='mjd').isot)
+    print(args.t1)
     if args.channels:
         for channel in args.channels:
             if args.verbose:
@@ -85,8 +95,10 @@ def main(args=parse_args()):
             for sjd in range(int(arg_times.mjd[0] + 0.3),
                              int(arg_times.mjd[1] + 0.3) + 1):
                 tpm = TPMSJD(sjd, args.channels, verbose=args.verbose)
-                window = ((tpm.data['Time'] >= arg_times[0])
-                          & (tpm.data['Time'] <= arg_times[1]))
+                if tpm.data is None:
+                    continue
+                window = ((tpm.data['Time'] >= (arg_times[0] - 0.3))
+                          & (tpm.data['Time'] <= (arg_times[1] - 0.3)))
                 if args.verbose:
                     print('    {} times for day {} are within the window, out'
                           ' of {} times.'.format(np.sum(window), sjd,
@@ -109,9 +121,11 @@ def main(args=parse_args()):
             ax = fig.gca()
             ax.plot_date(times.plot_date, values, '-', drawstyle='steps-post')
             ax.set_title(channel)
-            ax.set_xlabel('{} to {}'.format(*times.iso))
-            ax.set_xlim(*arg_times.plot_date)
-            ax.xaxis.set_major_formatter(DateFormatter('%R'))
+            ax.set_xlabel('{} to {}'.format(times[0].iso[:16],
+                                            times[-1].iso[:16]))
+            ax.set_xlim(*(arg_times - 0.3).plot_date)
+            ax.set_xticklabels(ax.get_xticks(), rotation=35)
+            ax.xaxis.set_major_formatter(DateFormatter('%RZ'))
             plt.show()
     else:
         print('No channel specified, nothing to do')
