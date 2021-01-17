@@ -72,7 +72,7 @@ def parse_args():
     parser.add_argument('-f', '--force', action='store_true',
                         help='Forces analysis to conitinue even if a file is'
                              ' missing from /data or ~/data')
-                                              
+
     args = parser.parse_args()
     return args
 
@@ -131,14 +131,13 @@ def main(args=parse_args()):
                         continue
         sos_soup = BeautifulSoup(sos_path.open('r').read(), 'html.parser')
         for plate in sos_soup.find_all('caption'):
-            plateid = int(plate.find('b').decode().split()[2])
+            plate_id = int(plate.find('b').decode().split()[2])
             try:
                 for line in plate.find('tr').decode().split('<tr>'):
                     if '>(S/N)^2' in line:
-                        plates[plateid].b_count += 1
+                        plates[plate_id].b_count += 1
             except AttributeError:
-                print(f'Failed to parse SOS on {mjd} with plate {plateid}')
-                print(line)
+                print(f'Failed to parse SOS on {mjd} with plate {plate_id}')
                 continue
     if args.verbose:
         print('Plates Data')
@@ -148,16 +147,15 @@ def main(args=parse_args()):
     b_big_total = 0
     a_big_total = 0
 
-
     if args.manga:
-        print('='* 80)
+        print('=' * 80)
         print(f'{"MaNGA":^80}')
-        print('='* 80)
+        print('=' * 80)
         b_tot = 0
         a_tot = 0
         p_count = 0
-        for plateid in sorted(plates.keys()):
-            plate = plates[plateid]
+        for plate_id in sorted(plates.keys()):
+            plate = plates[plate_id]
             if 'MaNGA dither' == plate:
                 if args.verbose:
                     print(plate)
@@ -165,21 +163,19 @@ def main(args=parse_args()):
                 b_tot += plate.b_count
                 a_tot += plate.a_count
         print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
-                f' {a_tot}\nPlates Visited: {p_count}')
+              f' {a_tot}\nPlates Visited: {p_count}')
         b_big_total += b_tot
         a_big_total += a_tot
 
-
-
     if args.apogee:
-        print('='* 80)
+        print('=' * 80)
         print(f'{"APOGEE-2":^80}')
-        print('='* 80)
+        print('=' * 80)
         b_tot = 0
         a_tot = 0
         p_count = 0
-        for plateid in sorted(plates.keys()):
-            plate = plates[plateid]
+        for plate_id in sorted(plates.keys()):
+            plate = plates[plate_id]
             if ('APOGEE-2' == plate) or ('APOGEE lead' == plate):
                 if args.verbose:
                     print(plate)
@@ -187,19 +183,19 @@ def main(args=parse_args()):
                 b_tot += plate.b_count
                 a_tot += plate.a_count
         print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
-                f' {a_tot}\nPlates Visited: {p_count}')
+              f' {a_tot}\nPlates Visited: {p_count}')
         b_big_total += b_tot
         a_big_total += a_tot
 
     if args.mwm:
-        print('='* 80)
+        print('=' * 80)
         print(f'{"Milky Way Mapper":^80}')
-        print('='* 80)
+        print('=' * 80)
         b_tot = 0
         a_tot = 0
         p_count = 0
-        for plateid in sorted(plates.keys()):
-            plate = plates[plateid]
+        for plate_id in sorted(plates.keys()):
+            plate = plates[plate_id]
             if 'MWM lead' == plate:
                 if args.verbose:
                     print(plate)
@@ -212,14 +208,14 @@ def main(args=parse_args()):
         a_big_total += a_tot
 
     if args.bhm:
-        print('='* 80)
+        print('=' * 80)
         print(f'{"Black Hole Mapper":^80}')
-        print('='* 80)
+        print('=' * 80)
         p_count = 0
         b_tot = 0
         a_tot = 0
-        for plateid in sorted(plates.keys()):
-            plate = plates[plateid]
+        for plate_id in sorted(plates.keys()):
+            plate = plates[plate_id]
             if 'BHM lead' == plate:
                 if args.verbose:
                     print(plate)
@@ -230,16 +226,15 @@ def main(args=parse_args()):
               f' {a_tot}\nPlates Visited: {p_count}')
         b_big_total += b_tot
         a_big_total += a_tot
-    print('='*80)
+    print('=' * 80)
     print(f'{"Overall":^80}')
-    print('='*80)
+    print('=' * 80)
 
     print(f'Total BOSS exposures: {b_big_total}\nTotal APOGEE Exposures:'
-            f' {a_big_total}\nTotal Plates Visited: {len(plates)}')
+          f' {a_big_total}\nTotal Plates Visited: {len(plates)}')
 
     return 0
 
 
 if __name__ == "__main__":
     main()
-
