@@ -316,3 +316,6 @@
 - Replaced tpmdgram with tpmdata, runs while tpm is open!
 
 - Working on changes in time tracking to work in SDSS-V
+
+- Working draft of time_track.py added to bin
+
