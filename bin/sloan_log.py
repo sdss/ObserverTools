@@ -930,7 +930,7 @@ def main():
         args.apogee = True
         p_boss = True
         p_apogee = True
-        # args.log_support = True
+        # args.log_support = True  # Because this usually produces wrong results
         args.mirrors = True
         args.telstatus = True
 
