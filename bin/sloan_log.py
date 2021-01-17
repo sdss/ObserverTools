@@ -295,7 +295,7 @@ class Logging:
                 self.ap_data['iCart'].append(img.cart_id)
                 self.ap_data['iPlate'].append(img.plate_id)
         if self.args.boss:
-            print('Reading BOSS Data')
+            print('Reading BOSS Data ({})'.format(len(self.b_images)))
             for image in tqdm(self.b_images):
                 img = boss_data.BOSSRaw(image)
                 if img.cart_id not in self.data['cCart']:
@@ -922,7 +922,7 @@ def main():
         args.apogee = True
         p_boss = True
         p_apogee = True
-        args.log_support = True
+        # args.log_support = True
         args.mirrors = True
         args.telstatus = True
 

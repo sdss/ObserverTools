@@ -11,7 +11,7 @@ from astropy.time import Time
 import argparse
 
 try:
-    import epics_fetch
+    from bin import epics_fetch
 except ImportError as e:
     raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
                       '    {}'.format(e))
@@ -44,14 +44,16 @@ class LogSupport:
         return data
 
     def set_callbacks(self):
-        data = self.telemetry.get([  # '25m:sop:doApogeeBossScience_nDither'
+        data = self.telemetry.get([
+            # '25m:sop:doApogeeBossScience_nDither'
             # ':nDitherDone',
-            '25m:sop:doBossScience_nExp'
-            ':nExpDone',
-            '25m:sop:doMangaSequence_ditherSeq:index',
-            '25m:sop:doApogeeMangaSequence_ditherSeq:'
-            'index',
-            '25m:sop:doApogeeScience_index:index'],
+            # '25m:sop:doBossScience_nExp'
+            # ':nExpDone',
+            # '25m:sop:doMangaSequence_ditherSeq:index',
+            # '25m:sop:doApogeeMangaSequence_ditherSeq:'
+            # 'index',
+            # '25m:sop:doApogeeScience_index:index'],
+            '25m:apogee:exposureWroteSummary'],
             (self.tstart - 0.3).datetime,
             (self.tend - 0.3).datetime,
             interpolation='raw',
@@ -97,7 +99,9 @@ class LogSupport:
                                            'calibOff', 'guideRMS'))
         self.offsets += '-' * 80 + '\n'
         for i, time in enumerate(self.call_times):
-            self.offsets += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>4.1f}'
+            if off_data[offsets_keys[2]][i] == '':
+                continue
+            self.offsets += ('{:>5} {:>2}-{:0>5} {:>1} {:>6.1f} {:>4.1f}'
                              ' {:>6.1f} ({:>5.1f},{:>5.1f}) {:>8.1f}'
                              ' ({:2.0f},{:2.0f},{:2.0f}) {:>8.3f}'
                              '\n'.format(time.isot[11:16],
@@ -144,6 +148,8 @@ class LogSupport:
                                          'Wind', 'Dir', 'FWHM'))
         self.focus += '-' * 80 + '\n'
         for i, time in enumerate(self.call_times):
+            if foc_data[focus_keys[2]][i] == '':
+                continue
             self.focus += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>5.0f}'
                            ' {:>5.0f}'
                            ' {:>5.0f} {:>6.1f} {:>5.1f} {:>5.1f} {:>4.0f}'
@@ -189,6 +195,8 @@ class LogSupport:
                                      'IRSC\u03C3', 'IRSC\u03BC'))
         self.weather += '-' * 80 + '\n'
         for i, time in enumerate(self.call_times):
+            if weather_data[weather_keys[2]][i] == '':
+                continue
             self.weather += ('{:>5} {:>2}-{:0>5}{:>1} {:>5.1f} {:>5.1f}'
                              ' {:>4.1f} {:>5}'
                              ' {:>4.0f} {:>3.0f} {:>6.0f} {:>7.1f} {:>5.1f}'
@@ -250,6 +258,8 @@ class LogSupport:
                                       'B1Resid', 'TSP1'))
         self.hartmann += '-' * 80 + '\n'
         for i, time in enumerate(hart_times):
+            if hart_data[hartmann_keys[2]][i] == '':
+                continue
             self.hartmann += ('{:>5} {:>2}-{:0>5}{:<1} {:>5.0f} {:>5.1f}'
                               ' {:>5.0f} {:>7.1f} {:>4.1f}'
                               '\n'.format(time.isot[11:16],
@@ -351,3 +361,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
