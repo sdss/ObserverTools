@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-import socket
-import struct
+#!/usr/bin/env python3
+
 from astropy.time import Time
 import sys
 
@@ -12,35 +11,20 @@ except ImportError as e:
     except ImportError:
         raise ImportError(f'epics_fetch.py not in PYTHONPATH:\n {sys.path}')
 try:
-    import tpmdgram
+    import tpmdata
+    tpmdata.tinit()
 except ImportError:
-    print('tpmdgram unavailable')
-    tpmdgram = None
-
+    print('tpmdata unavailable')
+    tpmdata = None
 
 __version__ = '3.0.0'
 
 
 def query():
-    if tpmdgram is None:
-        return
-    sz = tpmdgram.tinit()
+    if tpmdata is None:
+        raise ConnectionError('Cannot query the tpm without tpmdata installed')
 
-    multicast_group = '224.1.1.1'
-    server_address = ('', 2007)
-
-    # Init socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    # Bind to the server address
-    sock.bind(server_address)
-
-    # Tell the OS to add the socket to the multicast group on all interfaces
-    group = socket.inet_aton(multicast_group)
-    mreq = struct.pack('4sL', group, socket.INADDR_ANY)
-    sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-    data, addr = sock.recvfrom(sz)
-    data = tpmdgram.data2dict(data)
+    data = tpmdata.packet(1, 1)
 
     t = Time(data['ctime'], format='unix')
     output = f'Status at:  {t.isot[12:19]}Z\n'
@@ -60,8 +44,6 @@ def query():
     output += f"LN2 autofill systems:  Connected and turned on\n"
     output += (f"180L LN2 dewar scale:  SP1 {data['dewar_sp1_lb']:6.1f} lbs,"
                f" {data['dewar_sp1_psi']:6.1f} psi")
-    sock.detach()
-    sock.close()
 
     return output
 

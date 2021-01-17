@@ -19,41 +19,77 @@ timetrack.py -b -a -m  -m1 58271 -m2 58271
 """
 
 import argparse
-import eboss
-import manga
-import apogee
+# import eboss
+# import manga
+# import apogee
 from bin import sjd
 import warnings
+import numpy as np
+from pathlib import Path
+import fitsio
 
 warnings.filterwarnings('ignore')
 
-if __name__ == "__main__":
-    print("Current mjd=", sjd.sjd())
-    desc = 'list of files for time tracking report '
+
+def parse_args():
+    desc = 'Creates a report of all observed plates for time tracking'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-m1', '--mjd1', help='start mjd, default current mjd',
                         default=sjd.sjd(), type=int)
     parser.add_argument('-m2', '--mjd2', help='end mjd, default current mjd',
                         default=sjd.sjd(), type=int)
-    parser.add_argument('-a', '--apogee', help='get apogee report',
+    parser.add_argument('-a', '--apogee', help='get APOGEE-2 report',
                         action="store_true")
-    parser.add_argument('-b', '--boss', help='get boss report',
+    parser.add_argument('-b', '--bhm', help='get BHM report',
                         action="store_true")
-    parser.add_argument('-m', '--manga', help='get manga report',
+    parser.add_argument('-e', '--eboss', help='get eBOSS report',
+                        action="store_true")
+    parser.add_argument('-m', '--mwm', help='get MWM report',
+                        action="store_true")
+    parser.add_argument('--manga', help='get MaNGA report',
                         action="store_true")
     parser.add_argument('-v', '--verbose', help='verbose data',
                         action="store_true")
     args = parser.parse_args()
-    # if args.mjd2 == None: args.mjd2=args.mjd1+1
+    return args
 
-    if args.boss:
-        eboss.eboss(args.mjd1, args.mjd2, args.verbose)
 
-    if args.apogee:
-        apogee.apogee(args.mjd1, args.mjd2, args.verbose)
+def main(args=parse_args()):
+    if np.any((args.apogee, args.bhm, args.mwm, args.eboss, args.manga)):
+        plate_dates = {}
+        for mjd in range(args.mjd1, args.mjd2 + 1):
+            qr_path = Path(f'/data/apogee/quickred/{mjd}/')
+            if not qr_path.exists():
+                qr_path = Path(f'~/data/apogee/quickred/{mjd}/')
+                if not qr_path.exists():
+                    raise FileNotFoundError('No path to apogee quickred'
+                                            ' files found, cannot build'
+                                            ' plate list\n'
+                                            f'{qr_path.as_posix()}')
+            for fits in qr_path.glob('ap1D-a-*.fits.fz'):
+                header = fitsio.read_header(fits.as_posix())
+                if plate_dates[header['PLATEID']]:
+                    if mjd not in plate_dates[header['PLATEID']]:
+                        plate_dates[header['PLATEID']].append(mjd)
+                else:
+                    plate_dates[header['PLATEID']] = [mjd]
 
-    if args.manga:
-        manga.manga(args.mjd1, args.mjd2, args.verbose)
+    else:
+        raise argparse.ArgumentTypeError('No mission arguments given,'
+                                         ' nothing to do')
+    # if args.boss:
+    #     eboss.eboss(args.mjd1, args.mjd2, args.verbose)
+    # if args.apogee:
+    #     apogee.apogee(args.mjd1, args.mjd2, args.verbose)
+    # if args.manga:
+    #     manga.manga(args.mjd1, args.mjd2, args.verbose)
+    # if args.mwm:
+    #     pass
+    # if args.bhm:
+    #     pass
 
-    print("-------------------------------------------------------------")
-    print("")
+    return 0
+
+
+if __name__ == "__main__":
+    main()

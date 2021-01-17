@@ -21,10 +21,20 @@ completeness of apogee plates using authoschedule. Consuted with John Donnor.
 import glob
 import re
 import grepfitsLib
-import configparser
+import psycopg2
+import os
+try:
+    import configparser
+except ImportError:  # A Python 3 compatability test
+    import ConfigParser as configparser
+from pathlib import Path
 
-from sdss.internal.database.connections.APODatabaseAdminLocalConnection import \
-    db
+if os.getenv('HOSTNAME') == 'sdss4-hub':
+    from sdss.internal.database.connections.APODatabaseAdminLocalConnection \
+        import db
+else:
+    from sdss.internal.database.connections.APODatabaseUserTunnelConnection \
+        import db
 import sdss.internal.database.apo.platedb.ModelClasses as platedb
 
 config = configparser.RawConfigParser()
@@ -38,7 +48,10 @@ def getFiles(mask):
 
 
 def getApogee(mjd1, mjd2, verbose):
-    path_red = '/data/apogee/quickred/'
+    path_red = Path('/data/apogee/quickred/')
+    if not path_red.exists():
+        path_red = Path('~').absolute() / path_red
+    print(path_red)
     red = 'ap2D-a-*.fits.fz'
     regex = "\d{8}"
     plates = {}
@@ -178,12 +191,15 @@ def ap_str(plates, mjd1, mjd2):
 
     bold = '\033[01m'
     reset = '\033[0m'
+    # bold = ''
+    # reset = ''
     print("")
     print(bold, "**** Apogee summary ****", reset)
     print("")
 
     red = '\033[31m'
     black = '\033[30m'
+    # red = ''
     print(red, "APOGEE-2: completed %s plates among %s observed." % (
         len(apDone), len(apPlates)))
     print("  - %3d apogee-led exposures  (%d x'A', %d x'B')" % (apExp, ad, bd))
@@ -192,7 +208,7 @@ def ap_str(plates, mjd1, mjd2):
     print("         including %s x double DAB-exposure pairs and %s unpaired" %
           (dblPairs, dblOrp))
     print("  - %3s short SAB-exposures  pairs obtained on MaNGA-led co-obs"
-          " plates" % (mExp / 2), black)
+          " plates" % (mExp / 2), reset)
 
     print("")
     print("Observed APOGEE-lead plates: %s " % (len(apPlates)))

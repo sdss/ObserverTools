@@ -310,3 +310,9 @@
  similar script.
  
 - Added an mjd window test for test_tpm_fetch.py
+
+## [3.5.13] - 2021-01-16
+
+- Replaced tpmdgram with tpmdata, runs while tpm is open!
+
+- Working on changes in time tracking to work in SDSS-V

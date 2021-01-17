@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import tpmdgram
+import tpmdata
 import socket
 import struct
 import numpy as np
@@ -14,21 +14,7 @@ import astropy.units as u
 __version__ = '3.0.1'
 
 
-sz = tpmdgram.tinit()
-
-multicast_group = '224.1.1.1'
-server_address = ('', 2007)
-
-# Init socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-# Bind to the server address
-sock.bind(server_address)
-
-# Tell the OS to add the socket to the multicast group on all interfaces
-group = socket.inet_aton(multicast_group)
-mreq = struct.pack('4sL', group, socket.INADDR_ANY)
-sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+tpmdata.tinit()
 
 
 class StripChart:
@@ -39,9 +25,7 @@ class StripChart:
         self.fig = fig
         self.ax = ax
         self.formatter = dates.DateFormatter('%H:%M')
-
-        data, addr = sock.recvfrom(sz)
-        data = tpmdgram.data2dict(data)
+        data = tpmdata.packet(1, 1)
 
         self.t0 = Time.now()
         self.times = Time([data['ctime']], format='unix')
@@ -54,8 +38,7 @@ class StripChart:
 
     def update(self, i):
 
-        data, addr, = sock.recvfrom(sz)
-        data = tpmdgram.data2dict(data)
+        data = tpmdata.packet(1, 1)
         self.times = Time(np.append(self.times, Time(data['ctime'],
                                                      format='unix')))
 
@@ -109,8 +92,7 @@ def main(args=parseargs()):
         print(__version__)
 
     if args.list_channels:
-        data, addr = sock.recvfrom(sz)
-        data = tpmdgram.data2dict(data)
+        data = tpmdata.packet(1, 1)
         print(data.keys())
 
     if args.plot:
@@ -131,22 +113,17 @@ def main(args=parseargs()):
         print(f"{'Time':10}" + ''.join([' {:<12}'.format(channel)
                                         for channel in args.channels]))
         while True:
-            data, addr, = sock.recvfrom(sz)
-            data = tpmdgram.data2dict(data)
+            data = tpmdata.packet(1, 1)
             old_t = Time(data['ctime'], format='unix')
             new_t = old_t
             loop_cond = True
             while loop_cond:
-                data, addr, = sock.recvfrom(sz)
-                data = tpmdgram.data2dict(data)
+                data = tpmdata.packet(1, 1)
                 new_t = Time(data['ctime'], format='unix')
                 # print((new_t - old_t).to(u.s))
                 loop_cond = (new_t - old_t) < (args.dt * u.s)
             print(f'{new_t.isot[11:19]:<10}' + ''.join([' {:12}'.format(
                 data[channel]) for channel in args.channels]))
-
-    sock.detach()
-    sock.close()
 
 
 if __name__ == '__main__':
