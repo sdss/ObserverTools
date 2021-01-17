@@ -102,20 +102,20 @@ class LogSupport:
                              ' ({:2.0f},{:2.0f},{:2.0f}) {:>8.3f}'
                              '\n'.format(time.isot[11:16],
                                          off_data[offsets_keys[0]][i],
-                                         off_data[offsets_keys[1]][i],
-                                         off_data[offsets_keys[2]][i][0],
-                                         off_data[offsets_keys[3]][i],
-                                         off_data[offsets_keys[4]][i],
-                                         off_data[offsets_keys[5]][i],
-                                         off_data[offsets_keys[6]][i][0] * 3600,
-                                         off_data[offsets_keys[7]][i][0] * 3600,
-                                         off_data[offsets_keys[8]][i][0] * 3600,
-                                         off_data[offsets_keys[9]][i][0] * 3600,
-                                         off_data[offsets_keys[10]][
-                                             i][0] * 3600,
-                                         off_data[offsets_keys[11]][
-                                             i][0] * 3600,
-                                         off_data[offsets_keys[12]][i])
+                                         off_data[offsets_keys[1]][i],)
+                                         # off_data[offsets_keys[2]][i][0],
+                                         # off_data[offsets_keys[3]][i],
+                                         # off_data[offsets_keys[4]][i],
+                                         # off_data[offsets_keys[5]][i],
+                                         # off_data[offsets_keys[6]][i][0] * 3600,
+                                         # off_data[offsets_keys[7]][i][0] * 3600,
+                                         # off_data[offsets_keys[8]][i][0] * 3600,
+                                         # off_data[offsets_keys[9]][i][0] * 3600,
+                                         # off_data[offsets_keys[10]][
+                                         #     i][0] * 3600,
+                                         # off_data[offsets_keys[11]][
+                                         #     i][0] * 3600,
+                                         # off_data[offsets_keys[12]][i])
                              )
 
     def get_focus(self):

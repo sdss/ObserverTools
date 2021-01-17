@@ -242,7 +242,7 @@ class Logging:
                               " type {}".format(img.file, img.exp_type))
                 elif ('Object' in img.exp_type) and ('-a-' in img.file.name):
                     # TODO check an object image for a good FWHM (last
-                    #  input)
+                    # input)
                     self.ap_data['oTime'].append(img.isot)
                     self.ap_data['oOffset'].append(
                         img.compute_offset((30, 35), 1090, 40, 2))
@@ -269,20 +269,25 @@ class Logging:
                 detectors = []
                 red_dir = Path('/data/apogee/quickred/{}/'.format(
                     self.args.sjd))
-                red_fil = red_dir / 'ap1D-a-{}.fits.fz'.format(img.exp_id)
-                # TODO Have this include tiers depending on 1D or 2D quickred
-                if red_fil.exists():
-                    detectors.append('a')
+                red_name = 'ap1D-a-{}.fits.fz'.format(img.exp_id)
+                if (red_dir / red_name).exists():
+                    detectors.append('1')
+                elif (red_dir / red_name.replace('1D', '2D')).exists():
+                    detectors.append('2')
                 else:
                     detectors.append('x')
-                if (red_fil.parent / red_fil.name.replace(
-                        '-a-', '-b-')).exists():
-                    detectors.append('b')
+                if (red_dir / red_name.replace('-a-', '-b-')).exists():
+                    detectors.append('1')
+                elif (red_dir / red_name.replace('-a-', '-b-').replace(
+                        '1D', '2D')).exists():
+                    detectors.append('2')
                 else:
                     detectors.append('x')
-                if (red_fil.parent / red_fil.name.replace(
-                        '-a-', '-c-')).exists():
-                    detectors.append('c')
+                if (red_dir / red_name.replace('-a-', '-c-')).exists():
+                    detectors.append('1')
+                elif (red_dir / red_name.replace('-a-', '-c-').replace(
+                        '1D', '2D')).exists():
+                    detectors.append('2')
                 else:
                     detectors.append('x')
                 self.ap_data['iTime'].append(img.isot)
@@ -295,7 +300,7 @@ class Logging:
                 self.ap_data['iCart'].append(img.cart_id)
                 self.ap_data['iPlate'].append(img.plate_id)
         if self.args.boss:
-            print('Reading BOSS Data')
+            print('Reading BOSS Data ({})'.format(len(self.b_images)))
             for image in tqdm(self.b_images):
                 img = boss_data.BOSSRaw(image)
                 if img.cart_id not in self.data['cCart']:
@@ -804,16 +809,19 @@ class Logging:
             ['{:.3f}'.format(f) for f in np.diff(
                 self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])])
         print('\n'.join(wrapper.wrap(une_str)))
-        obj_offsets = []
-        prev_dither = None
-        prev_f = 0.
-        for d, f in zip(self.ap_data['oDither'], self.ap_data['oOffset']):
-            if d != prev_dither:
-                obj_offsets.append('{:.3f}'.format(f - prev_f))
-            prev_dither = d
-            prev_f = f
-        obj_str = 'Object Offsets: {}'.format(obj_offsets)
+        obj_str = 'Object Offsets: {}'.format(
+            ['{:.3f}'.format(f) for f in np.diff(
+                self.ap_data['oOffset'])])
         print('\n'.join(wrapper.wrap(obj_str)))
+        # obj_offsets = []
+        # prev_dither = None
+        # prev_f = 0.
+        # for d, f in zip(self.ap_data['oDither'], self.ap_data['oOffset']):
+        #     if d != prev_dither:
+        #         obj_offsets.append('{:.3f}'.format(f - prev_f))
+        #     prev_dither = d
+        #     prev_f = f
+        # obj_str = 'Object Offsets: {}'.format(obj_offsets)
         print('\n')
 
     def log_support(self):
