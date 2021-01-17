@@ -810,7 +810,7 @@ class Logging:
                 self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])])
         print('\n'.join(wrapper.wrap(une_str)))
         obj_str = 'Object Offsets: {}'.format(
-            ['{:.3f}'.format(f) for f in np.diff(
+            ['{:>6.3f}'.format(f) for f in np.diff(
                 self.ap_data['oOffset'])])
         print('\n'.join(wrapper.wrap(obj_str)))
         # obj_offsets = []
