@@ -68,7 +68,7 @@ def main(args=parse_args()):
                                             f'{qr_path.as_posix()}')
             for fits in qr_path.glob('ap1D-a-*.fits.fz'):
                 header = fitsio.read_header(fits.as_posix())
-                if plate_dates[header['PLATEID']]:
+                if header['PLATEID'] in plate_dates.keys():
                     if mjd not in plate_dates[header['PLATEID']]:
                         plate_dates[header['PLATEID']].append(mjd)
                 else:
