@@ -43,11 +43,31 @@ class Plate:
         self.a_count = 0
 
     def __str__(self):
-        return(f'{self.plate_id:5}, {self.cart:2}, {self.lead_survey:11},'
+        return(f'{self.plate_id:5}, {self.lead_survey:11},'
                f' {self.b_count:3} BOSS, {self.a_count:3} APOGEE')
 
     def __eq__(self, other: str):
         return other == self.lead_survey
+
+
+def summarize(mission_name, mission_key, plates, verbose=False):
+    print('=' * 80)
+    print(f'{mission_name:^80}')
+    print('=' * 80)
+    b_tot = 0
+    a_tot = 0
+    plate_ids = []
+    for plate_id in sorted(plates.keys()):
+        plate = plates[plate_id]
+        if mission_key == plate:
+            if verbose:
+                print(plate)
+            plate_ids.append(plate_id)
+            b_tot += plate.b_count
+            a_tot += plate.a_count
+    print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
+          f' {a_tot}\nPlates Visited: {len(plate_ids)}')
+    return b_tot, a_tot
 
 
 def parse_args():
@@ -173,17 +193,18 @@ def main(args=parse_args()):
         print('=' * 80)
         b_tot = 0
         a_tot = 0
-        p_count = 0
+        plate_ids = []
         for plate_id in sorted(plates.keys()):
             plate = plates[plate_id]
             if ('APOGEE-2' == plate) or ('APOGEE lead' == plate):
                 if args.verbose:
                     print(plate)
-                p_count += 1
+                plate_ids.append(plate_id)
                 b_tot += plate.b_count
                 a_tot += plate.a_count
+        print(', '.join(plate_ids))
         print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
-              f' {a_tot}\nPlates Visited: {p_count}')
+              f' {a_tot}\nPlates Visited: {len(plate_ids)}')
         b_big_total += b_tot
         a_big_total += a_tot
 
@@ -193,39 +214,42 @@ def main(args=parse_args()):
         print('=' * 80)
         b_tot = 0
         a_tot = 0
-        p_count = 0
+        plate_ids = []
         for plate_id in sorted(plates.keys()):
             plate = plates[plate_id]
             if 'MWM lead' == plate:
                 if args.verbose:
                     print(plate)
-                p_count += 1
+                plate_ids.append(plate_id)
                 b_tot += plate.b_count
                 a_tot += plate.a_count
         print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
-              f' {a_tot}\nPlates Visited: {p_count}')
+              f' {a_tot}\nPlates Visited: {len(plate_ids)}')
         b_big_total += b_tot
         a_big_total += a_tot
 
     if args.bhm:
-        print('=' * 80)
-        print(f'{"Black Hole Mapper":^80}')
-        print('=' * 80)
-        p_count = 0
-        b_tot = 0
-        a_tot = 0
-        for plate_id in sorted(plates.keys()):
-            plate = plates[plate_id]
-            if 'BHM lead' == plate:
-                if args.verbose:
-                    print(plate)
-                p_count += 1
-                b_tot += plate.b_count
-                a_tot += plate.a_count
-        print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
-              f' {a_tot}\nPlates Visited: {p_count}')
-        b_big_total += b_tot
-        a_big_total += a_tot
+        b, a = summarize('Black Hole Mapper', 'BHM lead', plates, args.verbose)
+        b_big_total += b
+        a_big_total += a
+        # print('=' * 80)
+        # print(f'{"Black Hole Mapper":^80}')
+        # print('=' * 80)
+        # p_count = 0
+        # b_tot = 0
+        # a_tot = 0
+        # for plate_id in sorted(plates.keys()):
+        #     plate = plates[plate_id]
+        #     if 'BHM lead' == plate:
+        #         if args.verbose:
+        #             print(plate)
+        #         p_count += 1
+        #         b_tot += plate.b_count
+        #         a_tot += plate.a_count
+        # print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
+        #       f' {a_tot}\nPlates Visited: {p_count}')
+        # b_big_total += b_tot
+        # a_big_total += a_tot
     print('=' * 80)
     print(f'{"Overall":^80}')
     print('=' * 80)

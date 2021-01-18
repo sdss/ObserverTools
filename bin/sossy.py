@@ -55,6 +55,10 @@ class Plate:
                                              sci_images[3].split()[-1]])
                 last_line = plate.find_all('tr')[-1].decode().split(
                     '<td align="RIGHT">')
+                try:
+                    last_line[1]
+                except IndexError:
+                    continue
                 if 'TOTAL (S/N)^2' in last_line[1]:
                     self.useful_sjds.append(mjd)
                     self.all_exp_ids.append(np.array(exp_ids).astype(int))

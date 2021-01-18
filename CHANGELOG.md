@@ -319,3 +319,13 @@
 
 - Working draft of time_track.py added to bin
 
+- sloan_log.py shows 1 or 2 or x for APOGEE quickred
+
+- sloan_log.py shows the dithers for all APOGEE images even if no dither occured
+
+- log_support uses apogee:exposureWroteSummary for callbacks
+
+- log_support checks to see if the mission is defined in each callback 
+  (not during cals)
+
+- Fixed a bug with sossy on plates with only 1 table row
