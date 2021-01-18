@@ -26,6 +26,8 @@ import fitsio
 import tqdm
 from bs4 import BeautifulSoup
 import sys
+import textwrap
+from typing import Union, Tuple
 
 # warnings.filterwarnings('ignore')
 sys.setrecursionlimit(10000)  # This is a very dangerous operation that
@@ -50,7 +52,7 @@ class Plate:
         return other == self.lead_survey
 
 
-def summarize(mission_name, mission_key, plates, verbose=False):
+def summarize(mission_name: str, mission_key: Union[str, Tuple[str, str]], plates: dict, verbose:bool=False):
     print('=' * 80)
     print(f'{mission_name:^80}')
     print('=' * 80)
@@ -59,14 +61,17 @@ def summarize(mission_name, mission_key, plates, verbose=False):
     plate_ids = []
     for plate_id in sorted(plates.keys()):
         plate = plates[plate_id]
-        if mission_key == plate:
+        condition = (mission_key == plate if isinstance(mission_key, str)
+                else any([key == plate for key in mission_key]))
+        if condition:
             if verbose:
                 print(plate)
-            plate_ids.append(plate_id)
+            plate_ids.append(f'{plate_id:.0f}')
             b_tot += plate.b_count
             a_tot += plate.a_count
+    print(textwrap.fill(', '.join(plate_ids), width=80))
     print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
-          f' {a_tot}\nPlates Visited: {len(plate_ids)}')
+          f' {a_tot}\nPlates Visited: {len(plate_ids)}\n')
     return b_tot, a_tot
 
 
@@ -116,6 +121,8 @@ def main(args=parse_args()):
                                             ' found, cannot build plate list\n'
                                             f'{qr_path.as_posix()}')
                 else:
+                    print(f'Failed to parse APOGEE quickred on {mjd} with'
+                          f' plate {plate_id}')
                     continue
         # Checks each 1D-a- image for plate info, and add it to the count if
         # it's a science image
@@ -168,88 +175,26 @@ def main(args=parse_args()):
     a_big_total = 0
 
     if args.manga:
-        print('=' * 80)
-        print(f'{"MaNGA":^80}')
-        print('=' * 80)
-        b_tot = 0
-        a_tot = 0
-        p_count = 0
-        for plate_id in sorted(plates.keys()):
-            plate = plates[plate_id]
-            if 'MaNGA dither' == plate:
-                if args.verbose:
-                    print(plate)
-                p_count += 1
-                b_tot += plate.b_count
-                a_tot += plate.a_count
-        print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
-              f' {a_tot}\nPlates Visited: {p_count}')
-        b_big_total += b_tot
-        a_big_total += a_tot
+        b, a = summarize('MaNGA', 'MaNGA dither', plates, args.verbose)
+        b_big_total += b
+        a_big_total += a
 
     if args.apogee:
-        print('=' * 80)
-        print(f'{"APOGEE-2":^80}')
-        print('=' * 80)
-        b_tot = 0
-        a_tot = 0
-        plate_ids = []
-        for plate_id in sorted(plates.keys()):
-            plate = plates[plate_id]
-            if ('APOGEE-2' == plate) or ('APOGEE lead' == plate):
-                if args.verbose:
-                    print(plate)
-                plate_ids.append(plate_id)
-                b_tot += plate.b_count
-                a_tot += plate.a_count
-        print(', '.join(plate_ids))
-        print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
-              f' {a_tot}\nPlates Visited: {len(plate_ids)}')
-        b_big_total += b_tot
-        a_big_total += a_tot
+        b, a = summarize('APOGEE-2', ('APOGEE lead', 'APOGEE-2'), plates,
+                         args.verbose)
+        b_big_total += b
+        a_big_total += a
 
     if args.mwm:
-        print('=' * 80)
-        print(f'{"Milky Way Mapper":^80}')
-        print('=' * 80)
-        b_tot = 0
-        a_tot = 0
-        plate_ids = []
-        for plate_id in sorted(plates.keys()):
-            plate = plates[plate_id]
-            if 'MWM lead' == plate:
-                if args.verbose:
-                    print(plate)
-                plate_ids.append(plate_id)
-                b_tot += plate.b_count
-                a_tot += plate.a_count
-        print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
-              f' {a_tot}\nPlates Visited: {len(plate_ids)}')
-        b_big_total += b_tot
-        a_big_total += a_tot
+        b, a = summarize('Milky Way Mapper', 'MWM lead', plates, args.verbose)
+        b_big_total += b
+        a_big_total += a
 
     if args.bhm:
         b, a = summarize('Black Hole Mapper', 'BHM lead', plates, args.verbose)
         b_big_total += b
         a_big_total += a
-        # print('=' * 80)
-        # print(f'{"Black Hole Mapper":^80}')
-        # print('=' * 80)
-        # p_count = 0
-        # b_tot = 0
-        # a_tot = 0
-        # for plate_id in sorted(plates.keys()):
-        #     plate = plates[plate_id]
-        #     if 'BHM lead' == plate:
-        #         if args.verbose:
-        #             print(plate)
-        #         p_count += 1
-        #         b_tot += plate.b_count
-        #         a_tot += plate.a_count
-        # print(f'Total BOSS exposures: {b_tot}\nTotal APOGEE Exposures:'
-        #       f' {a_tot}\nPlates Visited: {p_count}')
-        # b_big_total += b_tot
-        # a_big_total += a_tot
+
     print('=' * 80)
     print(f'{"Overall":^80}')
     print('=' * 80)
@@ -262,3 +207,4 @@ def main(args=parse_args()):
 
 if __name__ == "__main__":
     main()
+
