@@ -267,27 +267,29 @@ class Logging:
                         self.ap_data['cTime'].pop(i)
                         self.ap_data['cTime'].insert(i, img.isot)
                 detectors = []
+                arch_dir = Path('/data/apogee/archive/{}/'.format(
+                    self.args.sjd))
                 red_dir = Path('/data/apogee/quickred/{}/'.format(
                     self.args.sjd))
-                red_name = 'ap1D-a-{}.fits.fz'.format(img.exp_id)
-                if (red_dir / red_name).exists():
-                    detectors.append('1')
-                elif (red_dir / red_name.replace('1D', '2D')).exists():
-                    detectors.append('2')
+                red_name = 'apR-a-{}.apz'.format(img.exp_id)
+                if (arch_dir / red_name).exists():
+                    detectors.append('a')
+                # elif (red_dir / red_name.replace('1D', '2D')).exists():
+                    # detectors.append('2')
                 else:
                     detectors.append('x')
-                if (red_dir / red_name.replace('-a-', '-b-')).exists():
-                    detectors.append('1')
-                elif (red_dir / red_name.replace('-a-', '-b-').replace(
-                        '1D', '2D')).exists():
-                    detectors.append('2')
+                if (arch_dir / red_name.replace('-a-', '-b-')).exists():
+                    detectors.append('b')
+                # elif (red_dir / red_name.replace('-a-', '-b-').replace(
+                        # '1D', '2D')).exists():
+                    # detectors.append('2')
                 else:
                     detectors.append('x')
-                if (red_dir / red_name.replace('-a-', '-c-')).exists():
-                    detectors.append('1')
-                elif (red_dir / red_name.replace('-a-', '-c-').replace(
-                        '1D', '2D')).exists():
-                    detectors.append('2')
+                if (arch_dir / red_name.replace('-a-', '-c-')).exists():
+                    detectors.append('c')
+                # elif (red_dir / red_name.replace('-a-', '-c-').replace(
+                        # '1D', '2D')).exists():
+                    # detectors.append('2')
                 else:
                     detectors.append('x')
                 self.ap_data['iTime'].append(img.isot)
@@ -642,9 +644,9 @@ class Logging:
                 ap_cart = np.where(cart == self.ap_data['cCart'])[0][0]
 
                 print('# APOGEE')
-                print('{:<5} {:<8} {:<8} {:<12} {:<4} {:<6} {:<9}'
+                print('{:<5} {:<8} {:<8} {:<12} {:<4} {:<6} {:<5}'
                       ' {:<4}'.format('MJD', 'UTC', 'Exposure', 'Type',
-                                      'Dith', 'nReads', 'Pipeline',
+                                      'Dith', 'Reads', 'Arch',
                                       'Seeing'))
                 print('-' * 80)
                 window = self.get_window(self.ap_data, ap_cart)
@@ -659,7 +661,7 @@ class Logging:
                     self.ap_data['iDetector'][window],
                     self.ap_data['iSeeing'][window]
                 ):
-                    print('{:<5.0f} {:0>8} {:<8.0f} {:<12} {:<4} {:>6} {:<9}'
+                    print('{:<5.0f} {:0>8} {:<8.0f} {:<12} {:<4} {:>5} {:<5}'
                           ' {:>4.1f}'.format(int(mjd), iso[11:19], exp_id,
                                              exp_type,
                                              dith, nread, detectors, see))
@@ -751,9 +753,9 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('APOGEE Data Summary'))
         print('=' * 80 + '\n')
-        print('{:<5} {:<8} {:<8} {:<8} {:<12} {:<4} {:<6} {:<8}'
+        print('{:<5} {:<8} {:<8} {:<8} {:<12} {:<4} {:<5} {:<5}'
               ' {:<6}'.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type',
-                              'Dith', 'nReads', 'Pipeline',
+                              'Dith', 'Reads', 'Arch',
                               'Seeing'))
         print('-' * 80)
         if self.args.morning:
@@ -771,8 +773,8 @@ class Logging:
                 self.ap_data['iSeeing'][self.morning_filter]
             ):
                 print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
-                      ' {:>6}'
-                      ' {:<8}'
+                      ' {:>5}'
+                      ' {:<5}'
                       ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
                                          exp_id, exp_type,
                                          dith, nread, detectors, see))
