@@ -329,3 +329,5 @@
   (not during cals)
 
 - Fixed a bug with sossy on plates with only 1 table row
+
+- Some changes to ds9_live.py to handle name conflicts
