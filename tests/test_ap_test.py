@@ -28,7 +28,8 @@ class TestAPTest(unittest.TestCase):
     def test_directory(self):
         """Checks to see if the directory for new data is available to this
         computer"""
-        self.assertTrue(Path('/data/apogee/utr_cdr/').exists())
+        self.assertTrue(Path('/data/apogee/utr_cdr/').exists()
+                        or (Path.home() / 'data/apogee/utr_cdr').exists())
 
     def test_plotting(self):
         """Tests the plotting routine"""

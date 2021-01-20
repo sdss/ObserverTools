@@ -82,7 +82,11 @@ warnings.filterwarnings('ignore', category=FutureWarning, append=True)
 __version__ = '3.7.2'
 
 ap_dir = Path('/data/apogee/archive/')
+if not ap_dir.exists():
+    ap_dir = Path.home() / 'data/apogee/archive'
 b_dir = Path('/data/spectro/')
+if not b_dir.exists():
+    b_dir = Path.home() / 'data/spectro'
 
 
 class Logging:

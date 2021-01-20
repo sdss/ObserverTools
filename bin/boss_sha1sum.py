@@ -30,9 +30,10 @@ def create_hash_line(file):
 
 def write_hashes(path, output_file):
     path = Path(path)
-    out = output_file.open('w')
-    for fits in path.glob('*.fit.gz'):
-        out.write(create_hash_line(fits))
+
+    with output_file.open('w') as out:
+        for fits in path.glob('*.fit.gz'):
+            out.write(create_hash_line(fits))
 
 
 def parseargs():
@@ -57,6 +58,8 @@ def main():
     args = parseargs()
     for mj in args.mjds:
         data_dir = Path('/data/spectro/{}'.format(mj))
+        if not data_dir.exists():
+            data_dir = Path.home() / 'data/spectro/{}'.format(mj)
         if args.file:
             output_file = Path(args.file)
         else:

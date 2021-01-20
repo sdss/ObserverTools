@@ -11,6 +11,7 @@ class TestSloanLog(unittest.TestCase):
         computer"""
         ap_data_dir = sloan_log.ap_dir
         b_data_dir = sloan_log.b_dir
+        print(ap_data_dir, b_data_dir)
         self.assertTrue(Path(ap_data_dir).exists())
         self.assertTrue(Path(b_data_dir).exists())
 

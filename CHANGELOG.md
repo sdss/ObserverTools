@@ -311,7 +311,7 @@
  
 - Added an mjd window test for test_tpm_fetch.py
 
-## [3.5.13] - 2021-01-16
+## [3.6.0] - 2021-01-20
 
 - Replaced tpmdgram with tpmdata, runs while tpm is open!
 
@@ -329,3 +329,9 @@
   (not during cals)
 
 - Fixed a bug with sossy on plates with only 1 table row
+
+- Some changes to ds9_live.py to handle name conflicts
+
+- Changed a variety of tests to support Macs that can't make /data and must
+  instead use ~/data
+  

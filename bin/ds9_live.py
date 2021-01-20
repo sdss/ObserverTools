@@ -24,6 +24,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 default_dir = Path('/data/apogee/utr_cdr/')
+if not default_dir.exists():
+    default_dir = Path.home() / 'data/apogee/utr_cdr/'
 boss_cams = ['r1', 'b1', 'r2', 'b2']
 file_sizes = {'APOGEE': 67115520, 'BOSS': 9e6, 'Guider': 4e5,
               'Engineering': 9e5}
@@ -79,7 +81,7 @@ class DS9Window:
                 print('A similar instance of ds9 is already running as {},'
                       ' would you like to connect to it, close it, or create'
                       ' another window with a new name?'.format(ds9))
-                action = input('[connect]/close/change: ')
+                action = input('[change]/close/connect: ')
                 if ((action.lower() == 'connect')
                         or (action.lower() == '')):
                     self.name = ds9
@@ -88,12 +90,12 @@ class DS9Window:
                     d.set('exit')
                 else:
                     print('Please provide a new name. This can also be done'
-                          'via the -n argument:')
+                          ' via the -n argument:')
                     self.name = input('>')
         if self.verbose:
             print(self.name)
         self.ds9 = pyds9.DS9(self.name)
-        if 'BOSS' in self.name:
+        if '/data/spectro' in self.fits_dir.as_posix():
             self.ds9.set('tile yes')
 
         if not self.info:
@@ -327,13 +329,15 @@ def parseargs():
             args.fits_dir = Path('/summary-ics')
         else:
             args.fits_dir = Path('/data/apogee/utr_cdr/')
-        args.name = 'APOGEE'
+        if args.name == 'Scanner':
+            args.name = 'APOGEE'
         args.scale = args.scale
         args.zoom = args.zoom
 
     elif args.boss:
         args.fits_dir = Path('/data/spectro/')
-        args.name = 'BOSS'
+        if args.name == 'Scanner':
+            args.name = 'BOSS'
         args.scale = args.scale
         args.zoom = 0.5
         args.regex = 'sdR-r1*'
