@@ -24,6 +24,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 default_dir = Path('/data/apogee/utr_cdr/')
+if not default_dir.exists():
+    default_dir = Path.home() / 'data/apogee/utr_cdr/'
 boss_cams = ['r1', 'b1', 'r2', 'b2']
 file_sizes = {'APOGEE': 67115520, 'BOSS': 9e6, 'Guider': 4e5,
               'Engineering': 9e5}

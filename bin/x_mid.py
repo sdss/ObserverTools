@@ -52,10 +52,10 @@ if nPar >= 7:
 fPath = Path('.')
 # fName="bin/xmid.dat"
 # fullName=fPath+"/"+fName
-fullName = Path(__file__).parent.parent / "dat/xmid.dat"
-# print "fullName=", fullName
+fullName = Path(__file__).absolute().parent.parent / 'dat/xmid.dat'
 if not fullName.exists():
-    sys.exit(fullName + " was not found, exit")
+    sys.exit("{} was not found, exit".format(fullName.absolute()))
+
 
 # read Kaike's table file  to string array
 file = fullName.open('r')
@@ -129,7 +129,7 @@ print("The tolerance is +/- 8 pixels (yellow), +/- 12 pixel (red)")
 
 # check if to plot
 if not plotQ:
-    sys.exit(" ")
+    sys.exit()
 
 print("Plotting, close window with plot to exit")
 

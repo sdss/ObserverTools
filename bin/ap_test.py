@@ -31,9 +31,15 @@ class ApogeeFlat:
     def run_inputs(self):
         for i, sjd in enumerate(self.args.sjds):
             for exp in self.args.exps[i]:
-                ap_img = apogee_data.APOGEERaw('/data/apogee/archive/{}/apR-a'
-                                               '-{}.apz'.format(
-                                                   sjd, exp), self.args)
+                try:
+                    ap_img = apogee_data.APOGEERaw('/data/apogee/archive/{}/'
+                                                   'apR-a-{}.apz'.format(
+                        sjd, exp), self.args)
+                except OSError:
+                    ap_img = apogee_data.APOGEERaw(
+                        (Path.home() / ('data/apogee/archive/{}/apR-a-{}.apz'
+                                        ''.format(sjd, exp))).as_posix(),
+                        self.args)
                 ap_img.ap_test((900, 910), master_col=self.ap_master,
                                plot=self.args.plot)
 

@@ -49,9 +49,9 @@ if nPar >= 7:
 fPath = Path('.')
 # fName="bin/wavemid.dat"
 # fullName=fPath+"/"+fName
-fullName = Path(__file__).parent.parent / 'dat/wavemid.dat'
+fullName = Path(__file__).absolute().parent.parent / 'dat/wavemid.dat'
 if not fullName.exists():
-    sys.exit(fullName + " was not found, exit")
+    sys.exit("{} was not found, exit".format(fullName.absolute()))
 
 # read Kaike's table file  to string array
 file = fullName.open('r')
@@ -132,7 +132,7 @@ print("Tolerance: b,r +/-10(yellow);  b +/-15(red);  r +/-20(red)")
 
 # check if to plot
 if not plotQ:
-    sys.exit(" ")
+    sys.exit()
 
 print("Plotting, close window with plot to exit")
 
