@@ -17,11 +17,11 @@ __version__ = '3.1.0'
 
 
 class TPMSJD:
-    def __init__(self, sjd, channels, verbose=False):
+    def __init__(self, sjd:int, channels:iter, verbose=False):
         self.sjd = sjd
         self.channels = channels
         self.verbose = verbose
-        print('    Searching through {}'.format(sjd))
+        print('Searching through {}'.format(sjd))
         uncompressed = Path('/data/logs/mcp/tpm-archive-{}.dat'
                             ''.format(sjd))
         if uncompressed.exists():
@@ -34,7 +34,8 @@ class TPMSJD:
                         if channel in line:
                             useful_lines.append(line.split())
             useful_lines = np.array(useful_lines)
-            self.data = Table(useful_lines, names=('Time', 'Key', 'Value'))
+            self.data = Table(useful_lines, names=('Time', 'Key', 'Value'),
+                    dtype=(float, str, float))
             # self.data = ascii.read(uncompressed,
             #                        names=('Time', 'Key', 'Value'))
         else:
@@ -53,7 +54,7 @@ class TPMSJD:
                     self.data = Table(useful_lines,
                                       names=('Time', 'Key', 'Value'))
             else:
-                print('No data found for {}'.format(sjd))
+                print('    No data found for {}'.format(sjd))
                 self.data = None
                 return
         self.data['Time'] = Time(self.data['Time'], format='unix')
@@ -78,11 +79,9 @@ def parse_args():
 
 
 def main(args=parse_args()):
-    print(args.mjd)
     if args.mjd:
         args.t1 = '{}'.format(Time(args.mjd, format='mjd').isot)
         args.t2 = '{}'.format(Time(args.mjd + 1, format='mjd').isot)
-    print(args.t1)
     if args.channels:
         for channel in args.channels:
             if args.verbose:
@@ -92,13 +91,13 @@ def main(args=parse_args()):
                 return
             arg_times = Time([args.t1, args.t2])
             tpmsets = []
-            for sjd in range(int(arg_times.mjd[0] + 0.3),
-                             int(arg_times.mjd[1] + 0.3) + 1):
+            for sjd in range(int(arg_times.mjd[0]),
+                             int(arg_times.mjd[1]) + 1):
                 tpm = TPMSJD(sjd, args.channels, verbose=args.verbose)
                 if tpm.data is None:
                     continue
-                window = ((tpm.data['Time'] >= (arg_times[0] - 0.3))
-                          & (tpm.data['Time'] <= (arg_times[1] - 0.3)))
+                window = ((tpm.data['Time'] >= (arg_times[0]))
+                          & (tpm.data['Time'] <= (arg_times[1])))
                 if args.verbose:
                     print('    {} times for day {} are within the window, out'
                           ' of {} times.'.format(np.sum(window), sjd,
@@ -123,7 +122,7 @@ def main(args=parse_args()):
             ax.set_title(channel)
             ax.set_xlabel('{} to {}'.format(times[0].iso[:16],
                                             times[-1].iso[:16]))
-            ax.set_xlim(*(arg_times - 0.3).plot_date)
+            ax.set_xlim(*(arg_times).plot_date)
             ax.set_xticklabels(ax.get_xticks(), rotation=35)
             ax.xaxis.set_major_formatter(DateFormatter('%RZ'))
             plt.show()
