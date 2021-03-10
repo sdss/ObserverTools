@@ -16,23 +16,18 @@ from pathlib import Path
 import numpy as np
 import sys
 
-
 __version__ = '3.0.0'
 
-
-if not sys.argv[1:4]:
-    print("    Usage:  WAVEMID  2036.0 2045.0 2043.0 2044.0  [ct] [plot] ")
+if not sys.argv[1:2]:
+    print("    Usage:  WAVEMID  2036.0 2045.0 2043.0 2044.0  [ct]")
     print("    ct - optional cart number, 0 - sos nominal")
     print("    plot - to plot ")
     sys.exit("Error: program requires at least 4 arguments, exit")
 nPar = len(sys.argv)
 # print " "
 
-# read sos xmids arguments  
-# for i in range(1,len(sys.argv)):
-sosWmid = np.zeros(4, dtype=float)
-for i in range(4):
-    sosWmid[i] = float(sys.argv[i + 1])
+# read sosWmids arguments
+sosWmid = np.array(sys.argv[1:]).astype(float)
 
 # read sosCart & plot options
 sosCart = 0
@@ -54,9 +49,9 @@ if nPar >= 7:
 fPath = Path('.')
 # fName="bin/wavemid.dat"
 # fullName=fPath+"/"+fName
-fullName = Path(__file__).parent.parent / 'dat/wavemid.dat'
+fullName = Path(__file__).absolute().parent.parent / 'dat/wavemid.dat'
 if not fullName.exists():
-    sys.exit(fullName + " was not found, exit")
+    sys.exit("{} was not found, exit".format(fullName.absolute()))
 
 # read Kaike's table file  to string array
 file = fullName.open('r')
@@ -98,14 +93,14 @@ else:
 # print "tblCart=", tblCart[tblInd]
 
 # select line for requested cart and calulate the difference 
-tblWmidC = tblWmid[tblInd, 0:4]  # requested cart parameters from table
+tblWmidC = tblWmid[tblInd, 0:len(sosWmid)]  # requested cart parameters from
+# table
 difWmid = sosWmid - tblWmidC  # difference between sos and table for requested
 # cart
 
 # print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
 print(" " * 13, "  b1     r1     b2     r2")
-print("current     : {:6.1f} {:6.1f} {:6.1f} {:6.1f}".format(
-      sosWmid[0], sosWmid[1], sosWmid[2], sosWmid[3]))
+print("current     :" + (" {:6.1f}" * len(sosWmid)).format(*sosWmid))
 
 # print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
 # print "tblCart=", tblCart[tblInd]
@@ -113,12 +108,11 @@ print("current     : {:6.1f} {:6.1f} {:6.1f} {:6.1f}".format(
 # print "nominal  : %6.1f %6.1f %6.1f %6.1f" % (tblWmidC[0],tblWmidC[1],
 # tblWmidC[2],tblWmidC[3])
 
-print("nominal[%2i] : %6.1f %6.1f %6.1f %6.1f" % (
-    tblCart[tblInd], tblWmidC[0], tblWmidC[1], tblWmidC[2], tblWmidC[3]))
+print("nominal  {:2.0f} :".format(tblCart[tblInd])
+      + (" {:6.1f}" * len(sosWmid)).format(*tblWmidC))
 # print "difference : %6.1f %6.1f %6.1f %6.1f" % (difWmid[0], difWmid[1],
 # difWmid[2],difWmid[3])
-print("WAVEMID spec: %6.1f %6.1f %6.1f %6.1f" % (
-    difWmid[0], difWmid[1], difWmid[2], difWmid[3]))
+print("WAVEMID spec:" + ("{:6.1f}" * len(difWmid)).format(*difWmid))
 print("-------------- ")
 
 # a=-b; c=0
@@ -126,16 +120,19 @@ print("-------------- ")
 # WAVEMID by 1.36 A.
 step = 31.0
 sp1 = round((difWmid[0] + difWmid[1] / 1.36) / 2.0 * step)
-sp2 = round((difWmid[2] + difWmid[3] / 1.36) / 2.0 * step)
 print("boss moveColl spec=sp1 a=%i b=%i c=0" % (-sp1, sp1))
-print("boss moveColl spec=sp2 a=%i b=%i c=0" % (-sp2, sp2))
+try:
+    sp2 = round((difWmid[2] + difWmid[3] / 1.36) / 2.0 * step)
+    print("boss moveColl spec=sp2 a=%i b=%i c=0" % (-sp2, sp2))
+except IndexError:
+    pass
 print("-------------")
 print("Tolerance: b,r +/-10(yellow);  b +/-15(red);  r +/-20(red)")
 # print " "
 
 # check if to plot
 if not plotQ:
-    sys.exit(" ")
+    sys.exit()
 
 print("Plotting, close window with plot to exit")
 
@@ -164,11 +161,11 @@ plt.grid(True)
 plt.xlabel('b1 - b1(ct=0), pix')
 plt.ylabel('r1 - r1(ct=0), pix')
 plt.title('sp1 wavemid', size=15)
-tolerance = plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
-                     [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
-tolerance1 = plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
-                      [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
-                      linewidth=0.6)
+plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
+         [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
+plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
+         [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
+         linewidth=0.6)
 curCart = plt.plot(sosWmidN[0], sosWmidN[1], 'rs')
 plt.annotate("current", [sosWmidN[0] + 0.5, sosWmidN[1] - 0.1], color="r",
              size=13)
@@ -187,17 +184,17 @@ plt.grid(True)
 plt.xlabel('b2 - b2(ct=0), pix')
 plt.ylabel('r2 - r2(ct=0), pix')
 plt.title('sp2 wavemid', size=15)
-tolerance = plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
-                     [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
-tolerance1 = plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
-                      [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
-                      linewidth=0.6)
-curCart = plt.plot(sosWmidN[2], sosWmidN[3], 'rs')
+plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
+         [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
+plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
+         [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
+         linewidth=0.6)
+plt.plot(sosWmidN[2], sosWmidN[3], 'rs')
 plt.annotate("current", [sosWmidN[2] + 0.5, sosWmidN[3] - 0.1], color="r",
              size=13)
 # line3 = plt.plot([xmin,xmax],[ymin,ymax],color='black', linewidth=0.6)
-line3 = plt.plot([xmin, xmax], [xmin * 1.36, xmax * 1.36], color='black',
-                 linewidth=0.4)
+plt.plot([xmin, xmax], [xmin * 1.36, xmax * 1.36], color='black',
+         linewidth=0.4)
 # for i in range(1,n):
 #     plt.annotate("%2i"% (tblCart[i]), [tblWmidN[i,2]+0.4,tblWmidN[i,3]-0.1],
 #     color="b", size=12)

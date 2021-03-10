@@ -162,7 +162,6 @@ def main():
     for fil in glob.glob(save_dir + '/*'):
         os.chmod(fil, 0o777)
 
-        
 
 if __name__ == '__main__':
     main()

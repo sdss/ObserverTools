@@ -5,6 +5,7 @@ from astropy.time import Time
 from scipy.optimize import leastsq
 import fitsio
 import numpy as np
+import textwrap
 
 try:
     from bin import epics_fetch
@@ -70,6 +71,8 @@ class APOGEERaw:
 
         self.quickred_data = np.array([[]])
         self.quickred_file = ''
+        self.utr_file = ''
+        self.utr_data = np.array([[]])
 
     # noinspection PyTupleAssignmentBalance,PyTypeChecker
     def compute_offset(self, fibers=(30, 35), w0=939, dw=40, sigma=1.2745):
@@ -120,35 +123,66 @@ class APOGEERaw:
 
         diff = w_model[0] - w0
         if np.abs(diff) > 10:
-            raise Warning('A large dither was reported for exposure {}: {:.3f}'
-                          '\n  This may mean the zero point needs to be'
-                          ' adjusted, currently it is {}'
-                          ''.format(self.exp_id, diff, w0))
+            print('A large dither was reported for exposure {}: {:.3f}'
+                  '\n  This may mean the zero point needs to be'
+                  ' adjusted, currently it is {}'
+                  ''.format(self.exp_id, diff, w0))
         return diff
 
-    def ap_test(self, ws=(900, 910), master_col=None, plot=False):
+    def ap_test(self, ws=(900, 910), master_col=None, plot=False, legacy=False,
+                dome_flat_shape=None, n_fibers=300):
         if master_col is None:
             raise ValueError("APTest didn't receive a valid master_col: {}"
                              "".format(master_col))
-        if self.quickred_data.size == 0:
+        if legacy:
             mjd = self.file.absolute().parent.name
-            self.quickred_file = (self.file.absolute().parent.parent.parent
-                                  / 'quickred/{}/ap1D-a-{}.fits.fz'
-                                    ''.format(mjd, self.exp_id))
+            self.utr_file = Path('/data/apogee/utr_cdr/{}/apRaw-{}.fits'.format(
+                mjd, self.exp_id))
+            if not self.utr_file.exists():
+                self.utr_file = (Path.home() / 'data/apogee/utr_cdr/'
+                                               '{}/apRaw-{}.fits'.format(
+                    mjd, self.exp_id))
+                if not self.utr_file.exists():
+                    raise FileNotFoundError("Couldn't fine the file: {}".format(
+                        self.utr_file.as_posix()
+                    ))
             try:
-                self.quickred_data = fitsio.read(self.quickred_file, 1)
+                self.utr_data = fitsio.read(self.utr_file, 0)
             except OSError as e:
                 if self.args.verbose:
                     print('APTest for {} produced this error\n{}'.format(
                         self.file, e))
-                return ''
-        slc = np.average(self.quickred_data[:, ws[0]:ws[1]], axis=1)
+            slc0 = np.average(self.utr_data[::-1, ws[0]:ws[1]], axis=1)
+            slc = np.zeros(n_fibers)
+            for j in range(n_fibers):
+                for k in range(10):
+                    if dome_flat_shape[j, k] != 0:
+                        slc[j] += slc0[dome_flat_shape[j, k]]
+
+        else:
+            if self.quickred_data.size == 0:
+                mjd = self.file.absolute().parent.name
+                self.quickred_file = (self.file.absolute().parent.parent.parent
+                                      / 'quickred/{}/ap1D-a-{}.fits.fz'
+                                        ''.format(mjd, self.exp_id))
+                try:
+                    self.quickred_data = fitsio.read(self.quickred_file, 1)
+                except OSError as e:
+                    if self.args.verbose:
+                        print('APTest for {} produced this error\n{}'.format(
+                            self.file, e))
+            slc = np.average(self.quickred_data[:, ws[0]:ws[1]], axis=1)
         flux_ratio = slc / master_col
+        bad_data = ((flux_ratio == np.inf)
+                    | (flux_ratio == -np.inf)
+                    | np.isnan(flux_ratio))
+        flux_ratio[bad_data] = np.nan
+        avg = np.nanmean(flux_ratio)
         missing = flux_ratio < 0.2
         faint = (flux_ratio < 0.7) & (0.2 <= flux_ratio)
         bright = ~missing & ~faint
-        i_missing = np.where(missing)[0].astype(int)
-        i_faint = np.where(faint)[0].astype(int)
+        i_missing = np.where(missing)[0].astype(int) + 1
+        i_faint = np.where(faint)[0].astype(int) + 1
         i_bright = np.where(bright)[0]
         missing_bundles = self.create_bundles(i_missing)
         faint_bundles = self.create_bundles(i_faint)
@@ -176,7 +210,7 @@ class APOGEERaw:
                 self.exp_id), size=15)
             fig.show()
 
-        return missing_bundles, faint_bundles
+        return missing_bundles, faint_bundles, avg
 
     @staticmethod
     def create_bundles(subset):

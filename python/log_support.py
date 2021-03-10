@@ -11,12 +11,12 @@ from astropy.time import Time
 import argparse
 
 try:
-    import epics_fetch
+    from bin import epics_fetch
 except ImportError as e:
     raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
                       '    {}'.format(e))
 
-__version__ = '3.1.1'
+__version__ = '3.2.0'
 
 
 class LogSupport:
@@ -44,13 +44,20 @@ class LogSupport:
         return data
 
     def set_callbacks(self):
-        data = self.telemetry.get(['25m:sop:doMangaSequence_ditherSeq:index',
-                                   '25m:sop:doApogeeMangaSequence_ditherSeq'
-                                   ':index',
-                                   '25m:sop:doApogeeScience_index:index'],
-                                  (self.tstart - 0.25).datetime,
-                                  (self.tend - 0.25).datetime, interpolation='raw',
-                                  scan_archives=False)
+        data = self.telemetry.get([
+            # '25m:sop:doApogeeBossScience_nDither'
+            # ':nDitherDone',
+            # '25m:sop:doBossScience_nExp'
+            # ':nExpDone',
+            # '25m:sop:doMangaSequence_ditherSeq:index',
+            # '25m:sop:doApogeeMangaSequence_ditherSeq:'
+            # 'index',
+            # '25m:sop:doApogeeScience_index:index'],
+            '25m:apogee:exposureWroteSummary'],
+            (self.tstart - 0.3).datetime,
+            (self.tend - 0.3).datetime,
+            interpolation='raw',
+            scan_archives=False)
         self.call_times = []
         for dat in data:
             self.call_times += dat.times
@@ -59,11 +66,11 @@ class LogSupport:
         self.call_times = self.call_times[callback_sorter]
 
         if self.args.verbose:
-            print('Callback start: {}'.format(self.tstart))
-            print('Callback end: {}'.format(self.tend))
+            print('Callback start: {}'.format(self.tstart.isot))
+            print('Callback end: {}'.format(self.tend.isot))
             print(self.call_times)
 
-        filt = self.tstart - 0.25 < self.call_times
+        filt = self.tstart - 0.3 < self.call_times
         self.call_times = self.call_times[filt]
 
     def get_offsets(self):
@@ -92,7 +99,9 @@ class LogSupport:
                                            'calibOff', 'guideRMS'))
         self.offsets += '-' * 80 + '\n'
         for i, time in enumerate(self.call_times):
-            self.offsets += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>4.1f}'
+            if off_data[offsets_keys[2]][i] == '':
+                continue
+            self.offsets += ('{:>5} {:>2}-{:0>5} {:>1} {:>6.1f} {:>4.1f}'
                              ' {:>6.1f} ({:>5.1f},{:>5.1f}) {:>8.1f}'
                              ' ({:2.0f},{:2.0f},{:2.0f}) {:>8.3f}'
                              '\n'.format(time.isot[11:16],
@@ -107,9 +116,9 @@ class LogSupport:
                                          off_data[offsets_keys[8]][i][0] * 3600,
                                          off_data[offsets_keys[9]][i][0] * 3600,
                                          off_data[offsets_keys[10]][
-                                               i][0] * 3600,
+                                             i][0] * 3600,
                                          off_data[offsets_keys[11]][
-                                               i][0] * 3600,
+                                             i][0] * 3600,
                                          off_data[offsets_keys[12]][i])
                              )
 
@@ -139,6 +148,8 @@ class LogSupport:
                                          'Wind', 'Dir', 'FWHM'))
         self.focus += '-' * 80 + '\n'
         for i, time in enumerate(self.call_times):
+            if foc_data[focus_keys[2]][i] == '':
+                continue
             self.focus += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>5.0f}'
                            ' {:>5.0f}'
                            ' {:>5.0f} {:>6.1f} {:>5.1f} {:>5.1f} {:>4.0f}'
@@ -184,6 +195,8 @@ class LogSupport:
                                      'IRSC\u03C3', 'IRSC\u03BC'))
         self.weather += '-' * 80 + '\n'
         for i, time in enumerate(self.call_times):
+            if weather_data[weather_keys[2]][i] == '':
+                continue
             self.weather += ('{:>5} {:>2}-{:0>5}{:>1} {:>5.1f} {:>5.1f}'
                              ' {:>4.1f} {:>5}'
                              ' {:>4.0f} {:>3.0f} {:>6.0f} {:>7.1f} {:>5.1f}'
@@ -204,49 +217,51 @@ class LogSupport:
                                          weather_data[weather_keys[10]][i]))
 
     def get_hartmann(self):
-
         data = self.telemetry.get('25m:hartmann:sp1Residuals:deg',
-                                  (self.tstart - 0.25).datetime,
-                                  (self.tend - 0.25).datetime, interpolation='raw',
+                                  (self.tstart - 0.3).datetime,
+                                  (self.tend - 0.3).datetime,
+                                  interpolation='raw',
                                   scan_archives=False)
         hart_times = data.times
         hart_times = Time(hart_times)
         hart_sorter = hart_times.argsort()
         hart_times = hart_times[hart_sorter]
-        filt = self.tstart - 0.25 < hart_times
+        filt = self.tstart - 0.3 < hart_times
         hart_times = hart_times[filt]
+
+        if self.args.verbose:
+            print('hart_times: ', hart_times)
         hartmann_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
                          '25m:guider:cartridgeLoaded:plateID',
                          '25m:guider:survey:plateType',
                          '25m:hartmann:r1PistonMove', '25m:hartmann:b1RingMove',
                          '25m:hartmann:sp1AverageMove',
                          '25m:hartmann:sp1Residuals:deg',
-                         '25m:boss:sp1Temp:median',
-                         '25m:hartmann:r2PistonMove', '25m:hartmann:b2RingMove',
-                         '25m:hartmann:sp2AverageMove',
-                         '25m:hartmann:sp2Residuals:deg',
-                         '25m:boss:sp2Temp:median']
+                         '25m:boss:sp1Temp:median']
+        # '25m:hartmann:r2PistonMove', '25m:hartmann:b2RingMove
+        # '25m:hartmann:sp2AverageMove',
+        # '25m:hartmann:sp2Residuals:deg',
+        # '25m:boss:sp2Temp:median']
         hart_data = {}
         for key in hartmann_keys:
             hart_data[key] = []
         for time in hart_times:
-            self.query(hartmann_keys, (time + 3 / 24 / 60).datetime,
-                       (time + 3 / 24 / 60).datetime,
+            self.query(hartmann_keys, time.datetime,
+                       time.datetime,
                        hart_data)
 
         self.hartmann += '=' * 80 + '\n'
         self.hartmann += '{:^80}\n'.format('Hartmann Log')
         self.hartmann += '=' * 80 + '\n\n'
-        self.hartmann += ('{:<5} {:<9} {:<5} {:<5} {:<5} {:<7} {:<4} {:<5}'
-                          ' {:<5} {:<5} {:<7} {:<4}'
+        self.hartmann += ('{:<5} {:<9} {:<5} {:<5} {:<5} {:<7} {:<4}'
                           '\n'.format('Time', 'Cart', 'R1', 'B1', 'Move1',
-                                      'B1Resid', 'TSP1', 'R2', 'B2', 'Move2',
-                                      'B2Resid', 'TSP2'))
+                                      'B1Resid', 'TSP1'))
         self.hartmann += '-' * 80 + '\n'
         for i, time in enumerate(hart_times):
+            if hart_data[hartmann_keys[2]][i] == '':
+                continue
             self.hartmann += ('{:>5} {:>2}-{:0>5}{:<1} {:>5.0f} {:>5.1f}'
-                              ' {:>5.0f} {:>7.1f} {:>4.1f} {:>5.0f}'
-                              ' {:>5.1f} {:>5.0f} {:>7.1f} {:>4.1f}'
+                              ' {:>5.0f} {:>7.1f} {:>4.1f}'
                               '\n'.format(time.isot[11:16],
                                           hart_data[hartmann_keys[0]][i],
                                           hart_data[hartmann_keys[1]][i],
@@ -255,12 +270,12 @@ class LogSupport:
                                           hart_data[hartmann_keys[4]][i],
                                           hart_data[hartmann_keys[5]][i],
                                           hart_data[hartmann_keys[6]][i],
-                                          hart_data[hartmann_keys[7]][i],
-                                          hart_data[hartmann_keys[8]][i],
-                                          hart_data[hartmann_keys[9]][i],
-                                          hart_data[hartmann_keys[10]][i],
-                                          hart_data[hartmann_keys[11]][i],
-                                          hart_data[hartmann_keys[12]][i]))
+                                          hart_data[hartmann_keys[7]][i], ))
+            # hart_data[hartmann_keys[8]][i],
+            # hart_data[hartmann_keys[9]][i],
+            # hart_data[hartmann_keys[10]][i],
+            # hart_data[hartmann_keys[11]][i],
+            # hart_data[hartmann_keys[12]][i]))
 
 
 def main():
@@ -289,14 +304,14 @@ def main():
     args = parser.parse_args()
 
     if args.today:
-        now = Time.now()
-        mjd = int(now.mjd)
-        start = Time(mjd, format='mjd')
+        now = Time.now() + 0.3
+        sjd = int(now.mjd)
+        start = Time(sjd, format='mjd')
         end = now
     elif args.mjd:
-        mjd = args.mjd
-        start = Time(mjd, format='mjd')
-        end = Time(int(mjd) + 1, format='mjd')
+        sjd = args.mjd
+        start = Time(sjd, format='mjd')
+        end = Time(int(sjd) + 1, format='mjd')
     else:
         raise argparse.ArgumentError(args.mjd,
                                      'Must provide -t or -m in arguments')

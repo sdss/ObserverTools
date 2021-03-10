@@ -17,11 +17,17 @@ setup(
     scripts=[str(p) for p in (here / 'bin').glob('*')],
     package_data={
         '': ['*.dat', '*.fits', '*.npy', '*.txt'],
+        'dat': ['*.npy', '*.dat'],
     },
-    packages=['python', 'bin'],
+    packages=['python', 'bin', 'dat', 'tests'],
     install_requires=requirements,
     description='A library of tools for SDSS telescope operations.',
+    long_description=(here / 'README.md').open('r', encoding='utf-8').read(),
+    long_description_content_type='text/markdown',
+
     url='https://wiki.sdss.org/display/APO/Observing+Scripts',
-    test_suite='nose.collector',
-    tests_require=['nose']
+    author='Dylan Gatlin, Dmitry Bizyaev',
+    author_email='dgatlin@apo.nmsu.edu',
+    license='BSD 3-clause',
+    license_file='LICENSE.md',
 )

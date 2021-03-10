@@ -3,7 +3,7 @@
 sjd.py
 Written by Elena Malanushenko, moved to ObserverTools by Dylan Gatlin
 
-If run as a script, it prints the Sloan Julian Date, which is mjd + 0.25.
+If run as a script, it prints the Sloan Julian Date, which is mjd + 0.3.
  This tool is often imported in other
  Python functions. This is probably the most used script in this library, so
  stability is critical.

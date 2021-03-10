@@ -22,7 +22,12 @@
 #
 # ask dmbiz
 
-import posix, time, sys, string, os
+import os
+import posix
+import string
+import sys
+import time
+
 import pyfits
 
 f_tmp = 'search_log.txt'

@@ -20,18 +20,17 @@ import sys
 __version__ = '3.0.0'
 
 
-if not sys.argv[1:4]:
+if not sys.argv[1:2]:
     print("    Usage:  XMID  2036.0 2045.0 2043.0 2044.0  [ct]")
     print("    ct - optional cart number, 0 - sos nominal")
+    print("    plot - to plot ")
     sys.exit("Error: program requires at least 4 arguments, exit")
+
 nPar = len(sys.argv)
 # print " "
 
 # read sosXmids arguments  
-# for i in range(1,len(sys.argv)):
-sosXmid = np.zeros(4, dtype=float)
-for i in range(4):
-    sosXmid[i] = float(sys.argv[i + 1])
+sosXmid = np.array(sys.argv[1:]).astype(float)
 
 # read sosCart & plot options
 sosCart = 0
@@ -46,15 +45,17 @@ if nPar >= 7:
         plotQ = True
     else:
         sosCart = int(sys.argv[6])
+# print "sosCart=", sosCart
+# print "plotQ=",plotQ
 
 # check if Kaike's table exist on disk
 fPath = Path('.')
 # fName="bin/xmid.dat"
 # fullName=fPath+"/"+fName
-fullName = Path(__file__).parent.parent / "dat/xmid.dat"
-# print "fullName=", fullName
+fullName = Path(__file__).absolute().parent.parent / 'dat/xmid.dat'
 if not fullName.exists():
-    sys.exit(fullName + " was not found, exit")
+    sys.exit("{} was not found, exit".format(fullName.absolute()))
+
 
 # read Kaike's table file  to string array
 file = fullName.open('r')
@@ -96,29 +97,30 @@ else:
 # print "tblCart=", tblCart[tblInd]
 
 # select line for rewuested cart and calulate the difference 
-tblXmidC = tblXmid[tblInd, 0:4]  # requested cart parameters from table
+tblXmidC = tblXmid[tblInd, 0:len(sosXmid)]  # requested cart parameters from
+# table
 difXmidC = sosXmid - tblXmidC  # difference between sos and table for requested
 # cart
 
 # print "   Requested nominal set for cart=%2i" % (tblCart[tblInd])
 print(" " * 13, "  b1     r1     b2     r2")
-print("current     : {:6.1f} {:6.1f} {:6.1f} {:6.1f}".format(
-      sosXmid[0], sosXmid[1], sosXmid[2], sosXmid[3]))
-print("nominal [{:2.0f}]: {:6.1f} {:6.1f} {:6.1f} {:6.1f}".format(
-      tblCart[tblInd], tblXmidC[0], tblXmidC[1], tblXmidC[2], tblXmidC[3]))
-print("XMID spec   : {:6.1f} {:6.1f} {:6.1f} {:6.1f}".format(
-    difXmidC[0], difXmidC[1], difXmidC[2], difXmidC[3]))
-# print "difference: %6.1f %6.1f %6.1f %6.1f" % (difXmidC[0], difXmidC[1],
-# difXmidC[2],difXmidC[3])
+print("current     :" + (" {:6.1f}" * len(sosXmid)).format(*sosXmid))
+print("nominal {:2.0f}  :".format(tblCart[tblInd])
+      + (" {:6.1f}" * len(tblXmidC)).format(*tblXmidC))
+print("XMID spec   :" + (" {:6.1f}" * len(difXmidC)).format(*difXmidC))
 print("-" * 40)
 
 # -a=-b=c
 # boss moveColl spec=sp1 a=-63 b=-63 c=63  # +1
 step = 63.0
 sp1 = round((difXmidC[0] + difXmidC[1]) / 2.0 * step)
-sp2 = round((difXmidC[2] + difXmidC[3]) / 2.0 * step)
 print("boss moveColl spec=sp1 a=%i b=%i c=%i" % (sp1, sp1, -sp1))
-print("boss moveColl spec=sp2 a=%i b=%i c=%i" % (sp2, sp2, -sp2))
+try:
+    sp2 = round((difXmidC[2] + difXmidC[3]) / 2.0 * step)
+    print("boss moveColl spec=sp2 a=%i b=%i c=%i" % (sp2, sp2, -sp2))
+except IndexError:
+    pass
+
 print("-" * 40)
 print("The tolerance is +/- 8 pixels (yellow), +/- 12 pixel (red)")
 # print ""
@@ -127,13 +129,12 @@ print("The tolerance is +/- 8 pixels (yellow), +/- 12 pixel (red)")
 
 # check if to plot
 if not plotQ:
-    sys.exit(" ")
+    sys.exit()
 
 print("Plotting, close window with plot to exit")
 
 tblXmidN = np.zeros([n, 4])
-tblXmidN[:, 0:4] = tblXmid[:, 0:4] - tblXmid[0,
-                                     0:4]  # tbl minus tbl sos nominal
+tblXmidN[:, 0:4] = tblXmid[:, 0:] - tblXmid[0, 0:]  # tbl minus tbl sos nominal
 
 sosXmidN = np.zeros([4])
 sosXmidN[:] = sosXmid[:] - tblXmid[0, :]  # sos minus tbl sos nominal
@@ -156,15 +157,15 @@ plt.grid(True)
 plt.xlabel('b1 - b1(nominal), pix')
 plt.ylabel('r1 - r1(nominal), pix')
 plt.title('sp1 xmid', size=15)
-tolerance = plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
+plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
                      [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
-tolerance1 = plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
+plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
                       [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
                       linewidth=0.6)
-curCart = plt.plot(sosXmidN[0], sosXmidN[1], 'rs')
+plt.plot(sosXmidN[0], sosXmidN[1], 'rs')
 plt.annotate("current", [sosXmidN[0] + 0.5, sosXmidN[1] - 0.1], color="r",
              size=13)
-line3 = plt.plot([xmin, xmax], [ymin, ymax], color='black', linewidth=0.6)
+plt.plot([xmin, xmax], [ymin, ymax], color='black', linewidth=0.6)
 # plt.setp(line3, color='black', linewidth=1.0)
 # for i in range(1,n):
 #     plt.annotate("%2i"% (tblCart[i]), [tblXmidN[i,0]+0.4,tblXmidN[i,1]-0.1],
@@ -177,15 +178,15 @@ plt.grid(True)
 plt.xlabel('b2 - b2(nominal), pix')
 plt.ylabel('r2 - r2(nominal), pix')
 plt.title('sp2 xmid', size=15)
-tolerance = plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
+plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
                      [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
-tolerance1 = plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
+plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
                       [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
                       linewidth=0.6)
-curCart = plt.plot(sosXmidN[2], sosXmidN[3], 'rs')
+plt.plot(sosXmidN[2], sosXmidN[3], 'rs')
 plt.annotate("current", [sosXmidN[2] + 0.5, sosXmidN[3] - 0.1], color="r",
              size=13)
-line3 = plt.plot([xmin, xmax], [ymin, ymax], color='black', linewidth=0.6)
+plt.plot([xmin, xmax], [ymin, ymax], color='black', linewidth=0.6)
 # for i in range(1,n):
 #     plt.annotate("%2i"% (tblCart[i]), [tblXmidN[i,2]+0.4,tblXmidN[i,3]-0.1],
 #     color="b", size=12)

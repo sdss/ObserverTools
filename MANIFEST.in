@@ -1,0 +1,1 @@
+include conda_env.yml CHANGELOG.md requirements.txt dat/master_dome_flat_1.npy

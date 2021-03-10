@@ -28,6 +28,7 @@ In order to run it locally, you will need to either have access to /data, or
 2020-06-17      dgatlin     Moved telemetry to epics_fetch
 2020-06-30      dgatlin     Added morning option for morning cals
 2020-08-12      dgatlin     Added apogee object offsets and a quickred aptest
+2020-10-18      dgatlin     Made some minor changes to support SDSS-V
 """
 import argparse
 import sys
@@ -40,13 +41,14 @@ import numpy as np
 try:
     import epics_fetch
     import get_dust
+    import m4l
+    import telescope_status
 except ImportError as e:
     try:
-        from bin import epics_fetch, get_dust
+        from bin import epics_fetch, get_dust, m4l, telescope_status
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
                           '\n    {}'.format(e))
-
 
 try:
     import fitsio
@@ -77,10 +79,14 @@ warnings.filterwarnings('ignore', category=UserWarning, append=True)
 # For numpy boolean arrays
 warnings.filterwarnings('ignore', category=FutureWarning, append=True)
 
-__version__ = '3.6.0'
+__version__ = '3.7.2'
 
 ap_dir = Path('/data/apogee/archive/')
+if not ap_dir.exists():
+    ap_dir = Path.home() / 'data/apogee/archive'
 b_dir = Path('/data/spectro/')
+if not b_dir.exists():
+    b_dir = Path.home() / 'data/spectro'
 
 
 class Logging:
@@ -111,7 +117,7 @@ class Logging:
 
     def __init__(self, ap_images, m_images, args):
         self.ap_images = ap_images
-        self.m_images = m_images
+        self.b_images = m_images
         self.args = args
         # Dictionary keys that begin with c are of len(carts_in_a_night),
         # keys that begin with i are of len(images_in_a_night), keys that begin
@@ -129,7 +135,7 @@ class Logging:
                         'iSeeing': [], 'iDetector': [], 'iDither': [],
                         'iNRead': [], 'iEType': [], 'iCart': [], 'iPlate': [],
                         'dCart': [], 'dTime': [], 'dMissing': [], 'dFaint': [],
-                        'dNMissing': [], 'dNFaint': [], 'aTime': [],
+                        'dNMissing': [], 'dNFaint': [], 'dAvg': [], 'aTime': [],
                         'aOffset': [], 'aID': [], 'aLamp': [], 'oTime': [],
                         'oOffset': [], 'oDither': []}
         self.b_data = {'cCart': [], 'cTime': [],
@@ -143,7 +149,7 @@ class Logging:
         # time, since some boss carts use shorter exposures. All these are
         # combined to fill Summary in self.count_dithers
         self.cart_data = {'cNAPA': [], 'cNAPB': [], 'cNBN': [], 'cNBS': [],
-                          'cNBE': [], 'cNBC': [], 'cBdt': [],
+                          'cNBE': [], 'cNBC': [], 'cBdt': [], 'cNB': [],
                           'cAPSummary': [],
                           'cBSummary': []}
         self.test_procs = []
@@ -152,9 +158,45 @@ class Logging:
         # self.ap_tester = ap_test.ApogeeFlat(
         #     Path(__file__).absolute().parent.parent
         #     / 'dat/ap_master_flat_col_array.dat', self.args)
-        master_data = fitsio.read('/data/apogee/quickred/59011/ap1D-a-34490027'
-                                  '.fits.fz')
-        self.ap_master = np.average(master_data[:, 900:910], axis=1)
+        imax1 = 500
+        imax2 = 100  # vm cutoff=120
+        self.n_fibers = 300
+        self.dome_flat_shape = np.zeros((imax1, imax2), dtype=np.int64)
+        if self.args.legacy_aptest:
+            master_path = (Path(apogee_data.__file__).absolute().parent.parent
+                           / 'dat/utr_master_flat_21180043.npy')
+            self.ap_master_all = np.load(master_path.as_posix())
+            # Cut and paste from aptest, don't ask how it works
+            cutoff = 200.
+            self.n_fibers = 0  # fiber number
+            k = 0  # pix number in fiber
+            qj = False
+            for i in range(2048):
+                if (self.n_fibers >= imax1) or (k >= imax2):
+                    print("break", self.n_fibers, k)
+                    break
+                if self.ap_master_all[i] >= cutoff:
+                    self.dome_flat_shape[self.n_fibers, k] = i
+                    qj = True
+                    k = k + 1
+                else:
+                    if qj:
+                        qj = False
+                        self.n_fibers += 1
+                        k = 0
+            self.ap_master = np.zeros(300)
+            for j in range(self.n_fibers):
+                self.ap_master[j] = 0
+                for k in range(10):
+                    if self.dome_flat_shape[j, k] != 0:
+                        self.ap_master[j] += self.ap_master_all[
+                            self.dome_flat_shape[j, k]]
+
+        else:
+            master_path = (Path(apogee_data.__file__).absolute().parent.parent
+                           / 'dat/master_dome_flat_1.npy')
+            master_data = np.load(master_path.as_posix())
+            self.ap_master = np.average(master_data[:, 900:910], axis=1)
 
         self.morning_filter = None
 
@@ -164,10 +206,13 @@ class Logging:
         """
         # This is from ap_test
         self.args.plot = False
-        missing, faint = img.ap_test((900, 910), self.ap_master)
+        missing, faint, avg = img.ap_test((900, 910), self.ap_master,
+                                          legacy=self.args.legacy_aptest,
+                                          dome_flat_shape=self.dome_flat_shape,
+                                          n_fibers=self.n_fibers)
         # test = sub.Popen((Path(__file__).absolute().parent.parent
         #                   / 'old_bin/aptest').__str__() + ' {} {}'
-        #                  ''.format(self.args.mjd, img.exp_id), shell=True,
+        #                  ''.format(self.args.sjd, img.exp_id), shell=True,
         #                  stdout=sub.PIPE, stderr=sub.PIPE)
         # lines = test.stdout.read().decode('utf-8').splitlines()[3:]
         # err = test.stderr.read().decode('utf-8')
@@ -202,6 +247,7 @@ class Logging:
         self.ap_data['dNFaint'].append(n_faint)
         self.ap_data['dMissing'].append(missing)
         self.ap_data['dFaint'].append(faint)
+        self.ap_data['dAvg'].append(avg)
         self.ap_data['dCart'].append(img.cart_id)
         self.ap_data['dTime'].append(img.isot)
 
@@ -209,7 +255,7 @@ class Logging:
         """Goes through every image in ap_images and m_images to put them in
         dictionaries."""
         if self.args.apogee:
-            print('Reading APOGEE Data')
+            print('Reading APOGEE Data ({})'.format(len(self.ap_images)))
             for image in tqdm(self.ap_images):
                 # print(image)
                 img = apogee_data.APOGEERaw(image, self.args, 1)
@@ -237,7 +283,7 @@ class Logging:
                               " type {}".format(img.file, img.exp_type))
                 elif ('Object' in img.exp_type) and ('-a-' in img.file.name):
                     # TODO check an object image for a good FWHM (last
-                    #  input)
+                    # input)
                     self.ap_data['oTime'].append(img.isot)
                     self.ap_data['oOffset'].append(
                         img.compute_offset((30, 35), 1090, 40, 2))
@@ -262,21 +308,29 @@ class Logging:
                         self.ap_data['cTime'].pop(i)
                         self.ap_data['cTime'].insert(i, img.isot)
                 detectors = []
+                arch_dir = Path('/data/apogee/archive/{}/'.format(
+                    self.args.sjd))
                 red_dir = Path('/data/apogee/quickred/{}/'.format(
-                    self.args.mjd))
-                red_fil = red_dir / 'ap1D-a-{}.fits.fz'.format(img.exp_id)
-                if red_fil.exists():
+                    self.args.sjd))
+                red_name = 'apR-a-{}.apz'.format(img.exp_id)
+                if (arch_dir / red_name).exists():
                     detectors.append('a')
+                # elif (red_dir / red_name.replace('1D', '2D')).exists():
+                    # detectors.append('2')
                 else:
                     detectors.append('x')
-                if (red_fil.parent / red_fil.name.replace(
-                        '-a-', '-b-')).exists():
+                if (arch_dir / red_name.replace('-a-', '-b-')).exists():
                     detectors.append('b')
+                # elif (red_dir / red_name.replace('-a-', '-b-').replace(
+                        # '1D', '2D')).exists():
+                    # detectors.append('2')
                 else:
                     detectors.append('x')
-                if (red_fil.parent / red_fil.name.replace(
-                        '-a-', '-c-')).exists():
+                if (arch_dir / red_name.replace('-a-', '-c-')).exists():
                     detectors.append('c')
+                # elif (red_dir / red_name.replace('-a-', '-c-').replace(
+                        # '1D', '2D')).exists():
+                    # detectors.append('2')
                 else:
                     detectors.append('x')
                 self.ap_data['iTime'].append(img.isot)
@@ -289,8 +343,8 @@ class Logging:
                 self.ap_data['iCart'].append(img.cart_id)
                 self.ap_data['iPlate'].append(img.plate_id)
         if self.args.boss:
-            print('Reading BOSS Data')
-            for image in tqdm(self.m_images):
+            print('Reading BOSS Data ({})'.format(len(self.b_images)))
+            for image in tqdm(self.b_images):
                 img = boss_data.BOSSRaw(image)
                 if img.cart_id not in self.data['cCart']:
                     self.data['cCart'].append(img.cart_id)
@@ -327,16 +381,17 @@ class Logging:
                     tend = (Time(img.isot) + 5 / 24 / 60).datetime
                     hart = self.telemetry.get([
                         '25m:hartmann:r1PistonMove',
-                        '25m:hartmann:r2PistonMove',
+                        # '25m:hartmann:r2PistonMove',
                         '25m:hartmann:b1RingMove',
-                        '25m:hartmann:b2RingMove',
+                        # '25m:hartmann:b2RingMove',
                         '25m:hartmann:sp1AverageMove',
-                        '25m:hartmann:sp2AverageMove',
-                        '25m:hartmann:sp1Residuals:deg',
-                        '25m:hartmann:sp2Residuals:deg',
-                        '25m:boss:sp1Temp:median', '25m:boss:sp2Temp:median',
+                        # '25m:hartmann:sp2AverageMove',
                         '25m:hartmann:sp1Residuals:steps',
-                        '25m:hartmann:sp2Residuals:steps'
+                        '25m:hartmann:sp1Residuals:deg',
+                        # '25m:hartmann:sp2Residuals:deg',
+                        '25m:boss:sp1Temp:median',
+                        # '25m:boss:sp2Temp:median',
+                        # '25m:hartmann:sp2Residuals:steps'
                     ],
                         start=tstart,
                         end=tend,
@@ -344,52 +399,52 @@ class Logging:
 
                     self.b_data['hHart'].append(hart)
                     self.b_data['hTime'].append(img.isot)
-                m_detectors = []
+                sos_files = []
                 # img_mjd = int(Time(img.isot).mjd)
-                if 'BOSS' in img.lead:
-                    red_dir = Path('/data/boss/sos/{}/'.format(self.args.mjd))
+                if ('BOSS' in img.lead) or ('BHM' in img.lead):
+                    red_dir = Path('/data/boss/sos/{}/'.format(self.args.sjd))
                     red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                         img.exp_id)
                 else:  # MaNGA
                     if img.flavor == 'Science':
                         red_dir = Path('/data/manga/dos/{}/'.format(
-                            self.args.mjd))
+                            self.args.sjd))
                         red_fil = red_dir / 'mgscisky-{}-r1-{:0>8}.fits'.format(
                             img.plate_id, img.exp_id)
                     elif img.flavor == 'Flat':
                         red_dir = Path('/data/manga/dos/{}/'.format(
-                            self.args.mjd))
+                            self.args.sjd))
                         red_fil = red_dir / 'mgtset-{}-{}-{:0>8}-r1.fits' \
-                                            ''.format(self.args.mjd,
+                                            ''.format(self.args.sjd,
                                                       img.plate_id, img.exp_id)
                     elif img.flavor == 'Arc':
                         red_dir = Path('/data/manga/dos/{}/'.format(
-                            self.args.mjd))
+                            self.args.sjd))
                         red_fil = red_dir / 'mgwset-{}-{}-{:0>8}-r1.fits' \
-                                            ''.format(self.args.mjd,
+                                            ''.format(self.args.sjd,
                                                       img.plate_id, img.exp_id)
                     else:  # Harts and Bias, no file written there
                         red_dir = Path('/data/manga/dos/{}/logs/'.format(
-                            self.args.mjd))
+                            self.args.sjd))
                         red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                             img.exp_id)
                 if red_fil.exists():
-                    m_detectors.append('r1')
+                    sos_files.append('r1')
                 else:
-                    m_detectors.append('xx')
+                    sos_files.append('xx')
                 if (red_fil.parent / red_fil.name.replace('r1', 'b1')).exists():
-                    m_detectors.append('b1')
+                    sos_files.append('b1')
                 else:
-                    m_detectors.append('xx')
+                    sos_files.append('xx')
                 if (red_fil.parent / red_fil.name.replace('r1', 'r2')).exists():
-                    m_detectors.append('r2')
-                else:
-                    m_detectors.append('xx')
+                    sos_files.append('r2')
+                # else:
+                #     m_detectors.append('xx')
                 if (red_fil.parent / red_fil.name.replace('r1', 'b2')).exists():
-                    m_detectors.append('b2')
-                else:
-                    m_detectors.append('xx')
-                self.b_data['iDetector'].append('-'.join(m_detectors))
+                    sos_files.append('b2')
+                # else:
+                #     m_detectors.append('xx')
+                self.b_data['iDetector'].append('-'.join(sos_files))
 
     def sort(self):
         """Sorts self.ap_data by cart time and by image time and converts to
@@ -451,7 +506,7 @@ class Logging:
                                     prev_time))
                     else:
                         was_dark = False
-                upper = Time(self.args.mjd + 1, format='mjd')
+                upper = Time(self.args.sjd + 1, format='mjd')
                 if lower is None:
                     raise Exception('Morning cals not completed for this date')
                 self.morning_filter = ((lower <= self.ap_data['iTime'])
@@ -487,84 +542,86 @@ class Logging:
                 (self.ap_data['iCart'] == cart)
                 & (self.ap_data['iDither'] == 'B')
                 & (self.ap_data['iEType'] == 'Object')))
-            self.cart_data['cNBN'].append(np.sum(
+            # self.cart_data['cNBN'].append(np.sum(
+            # (self.b_data['iCart'] == cart)
+            # & (self.b_data['iDither'] == 'N')
+            # & (self.b_data['iEType'] == 'Science')))
+            # self.cart_data['cNBS'].append(np.sum(
+            # (self.b_data['iCart'] == cart)
+            # & (self.b_data['iDither'] == 'S')
+            # & (self.b_data['iEType'] == 'Science')))
+            # self.cart_data['cNBE'].append(np.sum(
+            # (self.b_data['iCart'] == cart)
+            # & (self.b_data['iDither'] == 'E')
+            # & (self.b_data['iEType'] == 'Science')))
+            # self.cart_data['cNBC'].append(np.sum(
+            # (self.b_data['iCart'] == cart)
+            # & (self.b_data['iDither'] == 'C')
+            # & (self.b_data['iEType'] == 'Science')))
+            self.cart_data['cNB'].append(np.sum(
                 (self.b_data['iCart'] == cart)
-                & (self.b_data['iDither'] == 'N')
                 & (self.b_data['iEType'] == 'Science')))
-            self.cart_data['cNBS'].append(np.sum(
-                (self.b_data['iCart'] == cart)
-                & (self.b_data['iDither'] == 'S')
-                & (self.b_data['iEType'] == 'Science')))
-            self.cart_data['cNBE'].append(np.sum(
-                (self.b_data['iCart'] == cart)
-                & (self.b_data['iDither'] == 'E')
-                & (self.b_data['iEType'] == 'Science')))
-            self.cart_data['cNBC'].append(np.sum(
-                (self.b_data['iCart'] == cart)
-                & (self.b_data['iDither'] == 'C')
-                & (self.b_data['iEType'] == 'Science')))
-            if np.any((self.b_data['iCart'] == cart)
-                      & (self.b_data['iEType'] == 'Science')):
+            if self.cart_data['cNB'][-1] != 0:
                 self.cart_data['cBdt'].append(np.max(
-                    self.b_data['idt'][(self.b_data['iCart'] == cart)
-                                       & (self.b_data['iEType'] == 'Science')]
-                ))
+                    self.b_data['idt'][
+                        (self.b_data['iCart'] == cart)
+                        & (self.b_data['iEType'] == 'Science')]))
+            else:
+                self.cart_data['cBdt'].append(0)
 
         for i, cart in enumerate(self.data['cCart']):
             """To determine the number of apogee a dithers per cart (cNAPA),
             as well as b dithers (cNAPB), and the same for NSE dithers."""
             # APOGEE dithers
             if self.cart_data['cNAPA'][i] == self.cart_data['cNAPB'][i]:
-                self.cart_data['cAPSummary'].append(
-                    '{}xAB'.format(self.cart_data['cNAPA'][i]))
+                if self.cart_data['cNAPA'][i] != 0:
+                    self.cart_data['cAPSummary'].append(
+                        '{}xAB'.format(self.cart_data['cNAPA'][i]))
+                else:
+                    self.cart_data['cAPSummary'].append('No APOGEE')
             else:
                 self.cart_data['cAPSummary'].append(
                     '{}xA {}xB'.format(self.cart_data['cNAPA'][i],
                                        self.cart_data['cNAPB'][i]))
             # BOSS (MaNGA) dithers
-            if self.cart_data['cNBC'][i] == 0:
-                if (self.cart_data['cNBN'][i]
-                        == self.cart_data['cNBS'][i]
-                        == self.cart_data['cNBE'][i]):
-                    self.cart_data['cBSummary'].append(
-                        '{}xNSE'.format(self.cart_data['cNBN'][i]))
-                else:
-                    self.cart_data['cBSummary'].append(
-                        '{}xN {}xS {}xE'.format(self.cart_data['cNBN'][i],
-                                                self.cart_data['cNBS'][i],
-                                                self.cart_data['cNBE'][i]))
-            else:
+            # if self.cart_data['cNBC'][i] == 0:
+            # if (self.cart_data['cNBN'][i]
+            # == self.cart_data['cNBS'][i]
+            # == self.cart_data['cNBE'][i]):
+            # self.cart_data['cBSummary'].append(
+            # '{}xNSE'.format(self.cart_data['cNBN'][i]))
+            # else:
+            # self.cart_data['cBSummary'].append(
+            # '{}xN {}xS {}xE'.format(self.cart_data['cNBN'][i],
+            # self.cart_data['cNBS'][i],
+            # self.cart_data['cNBE'][i]))
+            # else:
+            if self.cart_data['cNB'][i] != 0:
                 self.cart_data['cBSummary'].append(
-                    '{}xC'.format(self.cart_data['cNBC'][i]))
-            if len(self.cart_data['cBdt']):
-                try:
-                    if self.cart_data['cBdt'][i] != 900:
-                        self.cart_data['cBSummary'][-1] += '@{}s'.format(
-                            self.cart_data['cBdt'][i])
-                except IndexError:
-                    # Happens if there is no science frame yet with an exposure
-                    # time.
-                    pass
+                    '{}x{}s'.format(self.cart_data['cNB'][i],
+                                    self.cart_data['cBdt'][i]))
+            else:
+                self.cart_data['cBSummary'].append('No BOSS')
 
     @staticmethod
     def hartmann_parse(hart):
-        output = ''  # .format((Time(hart[0].times[-1])).isot)
+        output = '{}\n'.format(str(hart[0].times[-1])[:19])
         output += 'r1: {:>6.0f}, b1: {:>6.1f}\n'.format(
-            hart[0].values[-1], hart[2].values[-1])
-        output += 'r2: {:>6.0f}, b2: {:>6.1f}\n'.format(
-            hart[1].values[-1], hart[3].values[-1])
-        output += 'Average Moves:\n'
-        output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
-            hart[4].values[-1], hart[5].values[-1])
-        output += 'Red Residuals:\n'
-        output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
-            hart[10].values[-1], hart[11].values[-1])
-        output += 'Blue Residuals:\n'
-        output += 'SP1: {:>6.1f}, SP2: {:>6.1f}\n'.format(
-            hart[6].values[-1], hart[7].values[-1])
-        output += 'Spectrograph Temperatures:\n'
-        output += 'SP1: {:>6.1f}, SP2: {:>6.1f}'.format(
-            hart[8].values[-1], hart[9].values[-1])
+            hart[0].values[-1], hart[1].values[-1])
+        # output += 'r2: {:>6.0f}, b2: {:>6.1f}\n'.format(
+        #  hart[1].values[-1], hart[3].values[-1])
+        output += 'Average Move: {:>6.0f}\n'.format(hart[2].values[-1])
+        # output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
+        # hart[4].values[-1], hart[5].values[-1])
+        output += 'R Residuals: {:>6.0f}\n'.format(hart[3].values[-1])
+        # output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
+        # hart[10].values[-1], hart[11].values[-1])
+        output += 'B Residuals: {:>6.1f}\n'.format(hart[4].values[-1])
+        # output += 'SP1: {:>6.1f}, SP2: {:>6.1f}\n'.format(
+        # hart[6].values[-1], hart[7].values[-1])
+        output += 'SP1 Temperature: {:>6.1f}\n'.format(hart[5].values[-1])
+        # output += 'SP1: {:>6.1f}, SP2: {:>6.1f}'.format(
+        # hart[8].values[-1], hart[9].values[-1])
         return output
 
     def p_summary(self):
@@ -579,14 +636,16 @@ class Logging:
                                  self.cart_data['cBSummary'][i]))
             try:
                 j = np.where(self.ap_data['dCart'] == cart)[0][0]
-                print('Missing Fibers: {}, Faint fibers: {}'.format(
+                print('Missing Fibers: {:2}, Faint fibers: {:2},'
+                      ' Average Throughput: {:.1f}%'.format(
                     self.ap_data['dNMissing'][j],
-                    self.ap_data['dNFaint'][j]))
+                    self.ap_data['dNFaint'][j],
+                    self.ap_data['dAvg'][j]*100))
             except IndexError:
                 pass
         print()
         print('### Notes:\n')
-        dust_sum = get_dust.get_dust(self.args.mjd, self.args)
+        dust_sum = get_dust.get_dust(self.args.sjd, self.args)
         print('- Integrated Dust Counts: ~{:5.0f} dust-hrs'.format(
             dust_sum - dust_sum % 100))
         print('\n')
@@ -608,7 +667,7 @@ class Logging:
         except IndexError:
             try:
                 window = ((data['iTime'] >= data['cTime'][i])
-                          & (data['iTime'] < Time.now() + 0.25))
+                          & (data['iTime'] < Time.now() + 0.3))
             except IndexError:
                 window = np.array([False] * len(data['iTime']))
 
@@ -620,21 +679,21 @@ class Logging:
         print('=' * 80 + '\n')
         for i, cart in enumerate(self.data['cCart']):
             print('### Cart {}, Plate {}, {}\n'.format(cart,
-                                                     self.data['cPlate'][i],
-                                                     self.data['cLead'][i]))
+                                                       self.data['cPlate'][i],
+                                                       self.data['cLead'][i]))
             if cart in self.ap_data['cCart']:
                 ap_cart = np.where(cart == self.ap_data['cCart'])[0][0]
 
                 print('# APOGEE')
-                print('{:<5} {:<8} {:<8} {:<12} {:<4} {:<6} {:<9}'
+                print('{:<5} {:<8} {:<8} {:<12} {:<4} {:<6} {:<5}'
                       ' {:<4}'.format('MJD', 'UTC', 'Exposure', 'Type',
-                                      'Dith', 'nReads', 'Pipeline',
+                                      'Dith', 'Reads', 'Arch',
                                       'Seeing'))
                 print('-' * 80)
                 window = self.get_window(self.ap_data, ap_cart)
                 for (mjd, iso, exp_id, exp_type, dith, nread,
                      detectors, see) in zip(
-                    self.ap_data['iTime'][window].mjd + 0.25,
+                    self.ap_data['iTime'][window].mjd + 0.3,
                     self.ap_data['iTime'][window].iso,
                     self.ap_data['iID'][window],
                     self.ap_data['iEType'][window],
@@ -643,8 +702,8 @@ class Logging:
                     self.ap_data['iDetector'][window],
                     self.ap_data['iSeeing'][window]
                 ):
-                    print('{:<5.0f} {:0>8} {:<8.0f} {:<12} {:<4} {:>6} {:<9}'
-                          ' {:>4.1f}'.format(int(mjd), iso[12:19], exp_id,
+                    print('{:<5.0f} {:0>8} {:<8.0f} {:<12} {:<4} {:>5} {:<5}'
+                          ' {:>4.1f}'.format(int(mjd), iso[11:19], exp_id,
                                              exp_type,
                                              dith, nread, detectors, see))
                 print()
@@ -652,17 +711,17 @@ class Logging:
                     for j, dome in enumerate(self.ap_data['dCart']):
                         if dome == cart:
                             print(self.ap_data['dTime'][j].iso)
-                            print('Missing fibers: {}'.format(
-                                self.ap_data['dMissing'][j]))
-                            print('Faint fibers: {}'.format(
-                                self.ap_data['dFaint'][j]))
+                            print(textwrap.fill('Missing fibers: {}'.format(
+                                self.ap_data['dMissing'][j]), 80))
+                            print(textwrap.fill('Faint fibers: {}'.format(
+                                self.ap_data['dFaint'][j]), 80))
                             print()
 
             if cart in self.b_data['cCart']:
                 print('# BOSS')
                 print('{:<5} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
                       ''.format('MJD', 'UTC', 'Exposure', 'Type',
-                                'Dith', 'Pipeline', 'ETime', 'Hart'))
+                                'Dith', 'SOS', 'ETime', 'Hart'))
                 print('-' * 80)
                 # i is an index for data, but it will disagree with b_data
                 # if there is an apogee-only cart
@@ -670,7 +729,7 @@ class Logging:
                 window = self.get_window(self.b_data, b_cart)
                 for (mjd, iso, exp_id, exp_type, dith,
                      detectors, etime, hart) in zip(
-                    self.b_data['iTime'][window].mjd + 0.25,
+                    self.b_data['iTime'][window].mjd + 0.3,
                     self.b_data['iTime'][window].iso,
                     self.b_data['iID'][window],
                     self.b_data['iEType'][window],
@@ -681,7 +740,7 @@ class Logging:
                 ):
                     print('{:<5.0f} {:0>8} {:0>8.0f} {:<7} {:<4} {:<11}'
                           ' {:>5.0f} {:<5}'
-                          ''.format(int(mjd), iso[12:19], exp_id,
+                          ''.format(int(mjd), iso[11:19], exp_id,
                                     exp_type.strip(),
                                     dith.strip(), detectors, etime,
                                     hart))
@@ -696,12 +755,13 @@ class Logging:
                     window = ((self.b_data['hTime']
                                >= self.data['cTime'][i])
                               & (self.b_data['hTime'] < Time.now()))
+                if self.b_data['hTime'][window]:
+                    print()
+                    print('Hartmanns')
                 for t, hart in zip(self.b_data['hTime'][window],
                                    self.b_data['hHart'][window]):
-                    print()
-                    print(t.iso)
                     print(self.hartmann_parse(hart))
-                print('\n')
+                print()
 
     def p_boss(self):
         print('=' * 80)
@@ -709,10 +769,10 @@ class Logging:
         print('=' * 80 + '\n')
         print('{:<5} {:<8} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
               ''.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type', 'Dith',
-                        'Pipeline', 'ETime', 'Hart'))
+                        'SOS', 'ETime', 'Hart'))
         print('-' * 80)
         for (mjd, iso, cart, plate, exp_id, exp_type, dith, detectors, etime,
-             hart) in zip(self.b_data['iTime'].mjd + 0.25,
+             hart) in zip(self.b_data['iTime'].mjd + 0.3,
                           self.b_data['iTime'].iso,
                           self.b_data['iCart'],
                           self.b_data['iPlate'],
@@ -725,7 +785,7 @@ class Logging:
             print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:0>8.0f} {:<7} {:<4}'
                   ' {:<11}'
                   ' {:>5.0f} {:<5}'
-                  ''.format(int(mjd), iso[12:19], cart, plate, exp_id,
+                  ''.format(int(mjd), iso[11:19], cart, plate, exp_id,
                             exp_type.strip(),
                             dith.strip(), detectors, etime, hart))
         print()
@@ -734,15 +794,15 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('APOGEE Data Summary'))
         print('=' * 80 + '\n')
-        print('{:<5} {:<8} {:<8} {:<8} {:<12} {:<4} {:<6} {:<8}'
+        print('{:<5} {:<8} {:<8} {:<8} {:<12} {:<4} {:<5} {:<5}'
               ' {:<6}'.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type',
-                              'Dith', 'nReads', 'Pipeline',
+                              'Dith', 'Reads', 'Arch',
                               'Seeing'))
         print('-' * 80)
         if self.args.morning:
             for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
                  detectors, see) in zip(
-                self.ap_data['iTime'].mjd[self.morning_filter] + 0.25,
+                self.ap_data['iTime'].mjd[self.morning_filter] + 0.3,
                 self.ap_data['iTime'].iso[self.morning_filter],
                 self.ap_data['iCart'][self.morning_filter],
                 self.ap_data['iPlate'][self.morning_filter],
@@ -754,8 +814,8 @@ class Logging:
                 self.ap_data['iSeeing'][self.morning_filter]
             ):
                 print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
-                      ' {:>6}'
-                      ' {:<8}'
+                      ' {:>5}'
+                      ' {:<5}'
                       ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
                                          exp_id, exp_type,
                                          dith, nread, detectors, see))
@@ -775,7 +835,7 @@ class Logging:
                 print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
                       ' {:>6}'
                       ' {:<8}'
-                      ' {:>6.1f}'.format(int(mjd), iso[12:19], cart, plate,
+                      ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
                                          exp_id, exp_type,
                                          dith, nread, detectors, see))
         # Usually, there are 4 ThAr and 4 UNe arcs in a night, and they're
@@ -783,25 +843,33 @@ class Logging:
         # other, you'll have only one type, that's the first slicing, and the
         # second slicing is that you only care about the diffs between two
         # dithers taken back to back.
-        print('ThAr Offsets: {}'.format(['{:.3f}'.format(f) for f in np.diff(
-            self.ap_data['aOffset'][self.ap_data['aLamp'] == 'ThAr'])]))
-        print('UNe Offsets: {}'.format(['{:.3f}'.format(f) for f in np.diff(
-            self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])]))
-        obj_offsets = []
-        prev_dither = None
-        prev_f = 0.
-        for d, f in zip(self.ap_data['oDither'], self.ap_data['oOffset']):
-            if d != prev_dither:
-                obj_offsets.append('{:.3f}'.format(f - prev_f))
-            prev_dither = d
-            prev_f = f
-        print('Object Offsets:\n{}'.format(textwrap.fill(str(
-            obj_offsets), 80)))
+        wrapper = textwrap.TextWrapper(80)
+        thar_str = 'ThAr Offsets: {}'.format(
+            ['{:.3f}'.format(f) for f in np.diff(
+                self.ap_data['aOffset'][self.ap_data['aLamp'] == 'ThAr'])])
+        print('\n'.join(wrapper.wrap(thar_str)))
+        une_str = 'UNe Offsets: {}'.format(
+            ['{:.3f}'.format(f) for f in np.diff(
+                self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])])
+        print('\n'.join(wrapper.wrap(une_str)))
+        obj_str = 'Object Offsets: {}'.format(
+            ['{:>6.3f}'.format(f) for f in np.diff(
+                self.ap_data['oOffset'])])
+        print('\n'.join(wrapper.wrap(obj_str)))
+        # obj_offsets = []
+        # prev_dither = None
+        # prev_f = 0.
+        # for d, f in zip(self.ap_data['oDither'], self.ap_data['oOffset']):
+        #     if d != prev_dither:
+        #         obj_offsets.append('{:.3f}'.format(f - prev_f))
+        #     prev_dither = d
+        #     prev_f = f
+        # obj_str = 'Object Offsets: {}'.format(obj_offsets)
         print('\n')
 
     def log_support(self):
-        start = Time(self.args.mjd, format='mjd').isot
-        end = Time(self.args.mjd + 1, format='mjd').isot
+        start = Time(self.args.sjd, format='mjd')
+        end = Time(self.args.sjd + 1, format='mjd')
         tel = log_support.LogSupport(start, end, self.args)
         tel.set_callbacks()
         tel.get_offsets()
@@ -816,6 +884,28 @@ class Logging:
         print()
         print(tel.hartmann)
 
+    @staticmethod
+    def mirror_numbers():
+        print('=' * 80)
+        print('{:^80}'.format('Mirror Numbers'))
+        print('=' * 80 + '\n')
+        try:
+            mirror_nums = m4l.mirrors()
+            print(mirror_nums)
+        except (ConnectionRefusedError, TimeoutError) as me:
+            print('Could not fetch mirror numbers:\n{}'.format(me))
+
+    @staticmethod
+    def tel_status():
+        print('=' * 80)
+        print('{:^80}'.format('Telescope Status'))
+        print('=' * 80 + '\n')
+        try:
+            status = telescope_status.query()
+            print(status)
+        except OSError as oe:
+            print(f"Couldn't get telescope status:\n{oe}")
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -825,7 +915,10 @@ def parse_args():
                              " Note: must be run after 18:00Z to get the"
                              " correct sjd")
     parser.add_argument('-m', '--mjd', type=int,
-                        help='If not today (-t), the mjd to search')
+                        help='If not today (-t), the mjd to search (actually'
+                             ' sjd)')
+    parser.add_argument('--mirrors', '--mirror', action='store_true',
+                        help='Print mirror numbers using m4l.py')
     parser.add_argument('-s', '--summary', help='Print the data summary',
                         action='store_true')
     parser.add_argument('-d', '--data', action='store_true',
@@ -841,10 +934,15 @@ def parse_args():
     parser.add_argument('-n', '--noprogress', action='store_true',
                         help='Show no progress in processing images. WARNING:'
                              ' Might be slower, but it could go either way.')
+    parser.add_argument('--telstatus', action='store_true',
+                        help='Print telescope status')
     parser.add_argument('--morning', action='store_true',
                         help='Only output apogee morning cals')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Increased printing for debugging')
+    parser.add_argument('--legacy-aptest', action='store_true',
+                        help='Use utr_cdr images for aptest instead of'
+                             ' quickred for the ap_test')
     args = parser.parse_args()
     return args
 
@@ -852,16 +950,16 @@ def parse_args():
 def main():
     args = parse_args()
     if args.mjd:
-        args.mjd = args.mjd
+        args.sjd = args.mjd
     elif args.today:
-        now = Time.now() + 0.25
-        args.mjd = int(now.mjd)
+        now = Time.now() + 0.3
+        args.sjd = int(now.mjd)
     else:
-        raise argparse.ArgumentError(args.mjd,
+        raise argparse.ArgumentError(args.sjd,
                                      'Must provide -t or -m in arguments')
 
-    ap_data_dir = ap_dir / '{}'.format(args.mjd)
-    b_data_dir = b_dir / '{}'.format(args.mjd)
+    ap_data_dir = ap_dir / '{}'.format(args.sjd)
+    b_data_dir = b_dir / '{}'.format(args.sjd)
     ap_images = Path(ap_data_dir).glob('apR-a*.apz')
     b_images = Path(b_data_dir).glob('sdR-r1*fit.gz')
 
@@ -878,7 +976,9 @@ def main():
         args.apogee = True
         p_boss = True
         p_apogee = True
-        args.log_support = True
+        # args.log_support = True  # Because this usually produces wrong results
+        args.mirrors = True
+        args.telstatus = True
 
     if args.summary:
         args.boss = True
@@ -911,6 +1011,12 @@ def main():
 
     if args.log_support:
         log.log_support()
+
+    if args.mirrors:
+        log.mirror_numbers()
+
+    if args.telstatus:
+        log.tel_status()
     return log
 
 
