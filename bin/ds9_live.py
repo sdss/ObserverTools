@@ -240,7 +240,8 @@ class DS9Window:
                 if self.verbose:
                     print('Handled error: {}'.format(e))
             # Because BOSS has 4 cameras, it must loop 4 times
-            if 'BOSS' in self.name:
+
+            if '/data/spectro' in self.fits_dir.as_posix():
                 for i, cam in enumerate(boss_cams):
                     if self.verbose:
                         print(i, fil.name.replace('r1', cam), type(fil))

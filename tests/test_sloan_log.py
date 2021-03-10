@@ -36,6 +36,7 @@ class TestSloanLog(unittest.TestCase):
         args.noprogress = False
         args.mirrors = True
         args.telstatus = True
+        args.legacy_aptest = False
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -73,6 +74,7 @@ class TestSloanLog(unittest.TestCase):
         args.verbose = True
         args.mirrors = False
         args.telstatus = False
+        args.legacy_aptest = False
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -106,6 +108,7 @@ class TestSloanLog(unittest.TestCase):
         args.verbose = True
         args.morrors = False
         args.telstatus = False
+        args.legacy_aptest = False
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -137,6 +140,7 @@ class TestSloanLog(unittest.TestCase):
         args.verbose = True
         args.mirrors = False
         args.telstatus = False
+        args.legacy_aptest = False
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -168,6 +172,7 @@ class TestSloanLog(unittest.TestCase):
         args.verbose = True
         args.mirrors = False
         args.telstatus = False
+        args.legacy_aptest = False
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -199,6 +204,7 @@ class TestSloanLog(unittest.TestCase):
         args.verbose = True
         args.mirrors = True
         args.telstatus = False
+        args.legacy_aptest = False
 
         ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
         b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)
@@ -232,6 +238,7 @@ def test_tel_status(self):
     args.verbose = True
     args.mirrors = False
     args.telstatus = True
+    args.legacy_aptest = False
 
     ap_data_dir = sloan_log.ap_dir / '{}'.format(args.sjd)
     b_data_dir = sloan_log.b_dir / '{}'.format(args.sjd)

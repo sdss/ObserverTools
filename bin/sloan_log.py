@@ -158,11 +158,45 @@ class Logging:
         # self.ap_tester = ap_test.ApogeeFlat(
         #     Path(__file__).absolute().parent.parent
         #     / 'dat/ap_master_flat_col_array.dat', self.args)
-        master_path = (Path(apogee_data.__file__).absolute().parent.parent
-                       / 'dat/master_dome_flat_1.npy')
-        master_data = np.load(master_path.as_posix())
+        imax1 = 500
+        imax2 = 100  # vm cutoff=120
+        self.n_fibers = 300
+        self.dome_flat_shape = np.zeros((imax1, imax2), dtype=np.int64)
+        if self.args.legacy_aptest:
+            master_path = (Path(apogee_data.__file__).absolute().parent.parent
+                           / 'dat/utr_master_flat_21180043.npy')
+            self.ap_master_all = np.load(master_path.as_posix())
+            # Cut and paste from aptest, don't ask how it works
+            cutoff = 200.
+            self.n_fibers = 0  # fiber number
+            k = 0  # pix number in fiber
+            qj = False
+            for i in range(2048):
+                if (self.n_fibers >= imax1) or (k >= imax2):
+                    print("break", self.n_fibers, k)
+                    break
+                if self.ap_master_all[i] >= cutoff:
+                    self.dome_flat_shape[self.n_fibers, k] = i
+                    qj = True
+                    k = k + 1
+                else:
+                    if qj:
+                        qj = False
+                        self.n_fibers += 1
+                        k = 0
+            self.ap_master = np.zeros(300)
+            for j in range(self.n_fibers):
+                self.ap_master[j] = 0
+                for k in range(10):
+                    if self.dome_flat_shape[j, k] != 0:
+                        self.ap_master[j] += self.ap_master_all[
+                            self.dome_flat_shape[j, k]]
 
-        self.ap_master = np.average(master_data[:, 900:910], axis=1)
+        else:
+            master_path = (Path(apogee_data.__file__).absolute().parent.parent
+                           / 'dat/master_dome_flat_1.npy')
+            master_data = np.load(master_path.as_posix())
+            self.ap_master = np.average(master_data[:, 900:910], axis=1)
 
         self.morning_filter = None
 
@@ -172,7 +206,10 @@ class Logging:
         """
         # This is from ap_test
         self.args.plot = False
-        missing, faint, avg = img.ap_test((900, 910), self.ap_master)
+        missing, faint, avg = img.ap_test((900, 910), self.ap_master,
+                                          legacy=self.args.legacy_aptest,
+                                          dome_flat_shape=self.dome_flat_shape,
+                                          n_fibers=self.n_fibers)
         # test = sub.Popen((Path(__file__).absolute().parent.parent
         #                   / 'old_bin/aptest').__str__() + ' {} {}'
         #                  ''.format(self.args.sjd, img.exp_id), shell=True,
@@ -674,10 +711,10 @@ class Logging:
                     for j, dome in enumerate(self.ap_data['dCart']):
                         if dome == cart:
                             print(self.ap_data['dTime'][j].iso)
-                            print('Missing fibers: {}'.format(
-                                self.ap_data['dMissing'][j]))
-                            print('Faint fibers: {}'.format(
-                                self.ap_data['dFaint'][j]))
+                            print(textwrap.fill('Missing fibers: {}'.format(
+                                self.ap_data['dMissing'][j]), 80))
+                            print(textwrap.fill('Faint fibers: {}'.format(
+                                self.ap_data['dFaint'][j]), 80))
                             print()
 
             if cart in self.b_data['cCart']:
@@ -903,6 +940,9 @@ def parse_args():
                         help='Only output apogee morning cals')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Increased printing for debugging')
+    parser.add_argument('--legacy-aptest', action='store_true',
+                        help='Use utr_cdr images for aptest instead of'
+                             ' quickred for the ap_test')
     args = parser.parse_args()
     return args
 

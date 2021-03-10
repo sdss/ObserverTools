@@ -334,4 +334,12 @@
 
 - Changed a variety of tests to support Macs that can't make /data and must
   instead use ~/data
+ 
+## [3.6.1] - 2021-03-09
+
+- Fixed a bug in time_track.py where images taken with NoBOSS bypass would
+  replace the lead survey from BHM to MWM.
   
+- Added support for the legacy aptest in sloan_log.py
+
+- Added test suite for 

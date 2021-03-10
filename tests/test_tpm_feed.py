@@ -20,7 +20,8 @@ class TestTPMFeed(unittest.TestCase):
         self.args.dt = 5
         self.args.list_channels = False
 
-    def handler(self, signum, frame):
+    @staticmethod
+    def handler(signum, frame):
         print('Exiting call')
         raise TimeoutError('The function reached timeout without other errors')
 

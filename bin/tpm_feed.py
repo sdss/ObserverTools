@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import tpmdata
-import socket
-import struct
+import pprint
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import dates
@@ -93,7 +92,7 @@ def main(args=parseargs()):
 
     if args.list_channels:
         data = tpmdata.packet(1, 1)
-        print(data.keys())
+        pprint.pprint(data.keys())
 
     if args.plot:
         charts = []

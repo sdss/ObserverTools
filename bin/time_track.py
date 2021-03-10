@@ -31,6 +31,8 @@ from typing import Union, Tuple
 
 # warnings.filterwarnings('ignore')
 sys.setrecursionlimit(10000)  # This is a very dangerous operation that
+
+
 # BeautifulSoup seems to need for many SOS pages. It needs to recursively look
 # through the whole html file to make a fancy python object out of it. If this
 # number is too high, it could easily trigger a segmentation fault
@@ -45,14 +47,15 @@ class Plate:
         self.a_count = 0
 
     def __str__(self):
-        return(f'{self.plate_id:5}, {self.lead_survey:11},'
-               f' {self.b_count:3} BOSS, {self.a_count:3} APOGEE')
+        return (f'{self.plate_id:5}, {self.lead_survey:11},'
+                f' {self.b_count:3} BOSS, {self.a_count:3} APOGEE')
 
     def __eq__(self, other: str):
         return other == self.lead_survey
 
 
-def summarize(mission_name: str, mission_key: Union[str, Tuple[str, str]], plates: dict, verbose:bool=False):
+def summarize(mission_name: str, mission_key: Union[str, Tuple[str, str]],
+              plates: dict, verbose: bool = False):
     print('=' * 80)
     print(f'{mission_name:^80}')
     print('=' * 80)
@@ -62,7 +65,7 @@ def summarize(mission_name: str, mission_key: Union[str, Tuple[str, str]], plate
     for plate_id in sorted(plates.keys()):
         plate = plates[plate_id]
         condition = (mission_key == plate if isinstance(mission_key, str)
-                else any([key == plate for key in mission_key]))
+                     else any([key == plate for key in mission_key]))
         if condition:
             if verbose:
                 print(plate)
@@ -114,7 +117,7 @@ def main(args=parse_args()):
         # you can't make /data, so a ~/data directory with 1D quickreds will
         # work.
         if not qr_path.exists():
-            qr_path = Path(f'~/data/apogee/quickred/{mjd}/')
+            qr_path = Path.home() / f'data/apogee/quickred/{mjd}/'
             if not qr_path.exists():
                 if not args.force:
                     raise FileNotFoundError('No path to apogee quickred files'
@@ -122,7 +125,7 @@ def main(args=parse_args()):
                                             f'{qr_path.as_posix()}')
                 else:
                     print(f'Failed to parse APOGEE quickred on {mjd} with'
-                          f' plate {plate_id}')
+                          f' plate {qr_path}')
                     continue
         # Checks each 1D-a- image for plate info, and add it to the count if
         # it's a science image
@@ -130,7 +133,19 @@ def main(args=parse_args()):
             header = fitsio.read_header(fits.as_posix())
             if header['EXPTYPE'] == 'OBJECT':
                 if header['PLATEID'] in plates.keys():
-                    plates[header['PLATEID']].a_count += 1
+                    # If a BHM plate is observed with a MWM bypass, then it will
+                    # be saved with SRVYMODE="MWM lead". To fix this, I need
+                    # to see if they match, and if they don't check to see if
+                    # either is BHM, and if so, replace the lead with BHM.
+                    # This won't be an issue if glob finds a non-bypassed plate
+                    # first, which is kinda random, so it doesn't show up all
+                    # the time.
+                    if plates[header['PLATEID']] != header['SRVYMODE']:
+                        if ((header['SRVYMODE'] == 'BHM lead')
+                                or (plates[header["PLATEID"]] == "BHM lead")):
+                            plates[header["PLATEID"]].lead_survey = "BHM lead"
+
+                    plates[header["PLATEID"]].a_count += 1
                 else:
                     if header['SRVYMODE'] != 'None':
                         plates[header['PLATEID']] = Plate(header['PLATEID'],
@@ -143,7 +158,7 @@ def main(args=parse_args()):
                                                           header['CARTID'])
                         plates[header['PLATEID']].a_count += 1
 
-        # SOSS Check
+        # SOS Check
         sos_path = Path(f'/data/boss/sos/{mjd}/logfile-{mjd}.html')
         if not sos_path.exists():
             sos_path = Path(f'/data/manga/dos/{mjd}/web/logfile-{mjd}.html')
@@ -207,4 +222,3 @@ def main(args=parse_args()):
 
 if __name__ == "__main__":
     main()
-
