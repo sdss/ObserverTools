@@ -206,10 +206,16 @@ class Logging:
         """
         # This is from ap_test
         self.args.plot = False
-        missing, faint, avg = img.ap_test((900, 910), self.ap_master,
-                                          legacy=self.args.legacy_aptest,
-                                          dome_flat_shape=self.dome_flat_shape,
-                                          n_fibers=self.n_fibers)
+        if self.args.legacy_aptest:
+            missing, faint, avg = img.ap_test((2952, 2953), self.ap_master,
+                                              legacy=self.args.legacy_aptest,
+                                              dome_flat_shape=self.dome_flat_shape,
+                                              n_fibers=self.n_fibers)
+        else:
+            missing, faint, avg = img.ap_test((900, 910), self.ap_master,
+                                              legacy=self.args.legacy_aptest,
+                                              dome_flat_shape=self.dome_flat_shape,
+                                              n_fibers=self.n_fibers)
         # test = sub.Popen((Path(__file__).absolute().parent.parent
         #                   / 'old_bin/aptest').__str__() + ' {} {}'
         #                  ''.format(self.args.sjd, img.exp_id), shell=True,
@@ -852,9 +858,12 @@ class Logging:
             ['{:.3f}'.format(f) for f in np.diff(
                 self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])])
         print('\n'.join(wrapper.wrap(une_str)))
-        obj_str = 'Object Offsets: {}'.format(
-            ['{:>6.3f}'.format(f) for f in np.diff(
-                self.ap_data['oOffset'])])
+        obj_str = 'Object Offsets: Max: {}, Min: {}, Mean: {}'.format(
+            np.abs(self.ap_data['oOffset']).max(),
+            np.abs(self.ap_data['oOffset']).min(),
+            np.abs(self.ap_data['oOffset']).mean())
+            # ['{:>6.3f}'.format(f) for f in np.diff(
+            #     self.ap_data['oOffset'])])
         print('\n'.join(wrapper.wrap(obj_str)))
         # obj_offsets = []
         # prev_dither = None

@@ -153,11 +153,13 @@ class APOGEERaw:
                     print('APTest for {} produced this error\n{}'.format(
                         self.file, e))
             slc0 = np.average(self.utr_data[::-1, ws[0]:ws[1]], axis=1)
+            # print(slc0.mean(), slc0.shape, slc0[0])
             slc = np.zeros(n_fibers)
             for j in range(n_fibers):
                 for k in range(10):
                     if dome_flat_shape[j, k] != 0:
                         slc[j] += slc0[dome_flat_shape[j, k]]
+            # print(slc.mean(), slc.shape, slc[100])
 
         else:
             if self.quickred_data.size == 0:
@@ -172,7 +174,11 @@ class APOGEERaw:
                         print('APTest for {} produced this error\n{}'.format(
                             self.file, e))
             slc = np.average(self.quickred_data[:, ws[0]:ws[1]], axis=1)
+        # print(master_col.mean(), master_col.shape, master_col[100])
         flux_ratio = slc / master_col
+        # flux_ratio = flux_ratio / flux_ratio.sum() / flux_ratio.shape[0]
+        flux_ratio = flux_ratio / flux_ratio.sum() * flux_ratio.shape[0]
+        # print(flux_ratio.mean(), flux_ratio.shape, flux_ratio[100])
         bad_data = ((flux_ratio == np.inf)
                     | (flux_ratio == -np.inf)
                     | np.isnan(flux_ratio))
@@ -273,7 +279,7 @@ def main():
         data_dir = '/data/apogee/archive/{}/'.format(args.mjd)
     else:
         raise Exception('No date specified')
-    print(data_dir)
+    # print(data_dir)
     for path in Path(data_dir).rglob('apR*.apz'):
         print(path)
 

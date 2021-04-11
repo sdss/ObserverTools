@@ -131,9 +131,10 @@ masFlux = flux(dat, ndat, nfibers)
 # masAver=sum(masFlux)/float(len(masFlux))
 # masFlux=masFlux/masAver
 # masFlux=masFlux/(sum(masFlux)/len(masFlux))
-print('Flat mean', flat.mean(), flat.shape, flat[0])
+# print('Flat mean', flat.mean(), flat.shape, flat[0])
 flatFlux = flux(flat, ndat, nfibers)
-print(flatFlux.mean())
+# print(flatFlux.mean(), flatFlux.shape, flatFlux[100])
+# print(masFlux.mean(), masFlux.shape, masFlux[100])
 # flatAver=sum(flatFlux)/float(len(flatFlux))
 # flatFlux=flatFlux/flatAver
 # flatFlux=float(flatFlux/(sum(flatFlux)/len(flatFlux)))
@@ -147,6 +148,7 @@ for j in range(nfibers):
 ratio = flatFlux / masFlux  # * (sum(masFlux)/sum(flatFlux) )
 # print "average ratio=", sum(ratio)/len(ratio)
 ratio = ratio / (sum(ratio) / len(ratio))
+# print(ratio.mean(), ratio.shape, ratio[100])
 
 # for j in range(nfibers):
 #   print j, flatFlux[j], masFlux[j], ratio[j]

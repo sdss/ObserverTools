@@ -342,4 +342,8 @@
   
 - Added support for the legacy aptest in sloan_log.py
 
-- Added test suite for 
+## [3.6.2] - 2021-04-11
+
+- Added test suite for legacy aptest
+
+- Changed the apogee data print to a max min and average instead of a long list
