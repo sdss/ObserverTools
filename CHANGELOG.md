@@ -347,3 +347,11 @@
 - Added test suite for legacy aptest
 
 - Changed the apogee data print to a max min and average instead of a long list
+
+## [3.6.3] - 2021-04-11
+
+- Fixed a printing bug in sloan_log.py
+
+## [3.6.4] - 2021-04-11
+
+- Fixed the object dither to be in the right units

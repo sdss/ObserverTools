@@ -79,7 +79,7 @@ warnings.filterwarnings('ignore', category=UserWarning, append=True)
 # For numpy boolean arrays
 warnings.filterwarnings('ignore', category=FutureWarning, append=True)
 
-__version__ = '3.7.2'
+__version__ = '3.7.3'
 
 ap_dir = Path('/data/apogee/archive/')
 if not ap_dir.exists():
@@ -858,10 +858,10 @@ class Logging:
             ['{:.3f}'.format(f) for f in np.diff(
                 self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])])
         print('\n'.join(wrapper.wrap(une_str)))
-        obj_str = 'Object Offsets: Max: {}, Min: {}, Mean: {}'.format(
-            np.abs(self.ap_data['oOffset']).max(),
-            np.abs(self.ap_data['oOffset']).min(),
-            np.abs(self.ap_data['oOffset']).mean())
+        rel_offsets = np.abs(np.diff(self.ap_data['oOffset']))
+        obj_str = ('Object Offsets: Max: {:.2f}, Min: {:.2f}, Mean: {:.2f}'
+                   ''.format(rel_offsets.max(), rel_offsets.min(),
+                             rel_offsets.mean()))
             # ['{:>6.3f}'.format(f) for f in np.diff(
             #     self.ap_data['oOffset'])])
         print('\n'.join(wrapper.wrap(obj_str)))
