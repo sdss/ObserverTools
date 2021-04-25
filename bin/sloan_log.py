@@ -858,13 +858,15 @@ class Logging:
             ['{:.3f}'.format(f) for f in np.diff(
                 self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])])
         print('\n'.join(wrapper.wrap(une_str)))
-        rel_offsets = np.abs(np.diff(self.ap_data['oOffset']))
-        obj_str = ('Object Offsets: Max: {:.2f}, Min: {:.2f}, Mean: {:.2f}'
-                   ''.format(rel_offsets.max(), rel_offsets.min(),
-                             rel_offsets.mean()))
+        if len(self.ap_data['oOffset']) > 0:
+            # Put it under an if in case we didn't open.
+            rel_offsets = np.abs(np.diff(self.ap_data['oOffset']))
+            obj_str = ('Object Offsets: Max: {:.2f}, Min: {:.2f}, Mean: {:.2f}'
+                       ''.format(rel_offsets.max(), rel_offsets.min(),
+                                 rel_offsets.mean()))
             # ['{:>6.3f}'.format(f) for f in np.diff(
             #     self.ap_data['oOffset'])])
-        print('\n'.join(wrapper.wrap(obj_str)))
+            print('\n'.join(wrapper.wrap(obj_str)))
         # obj_offsets = []
         # prev_dither = None
         # prev_f = 0.
