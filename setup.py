@@ -14,7 +14,7 @@ requirements = (here / 'requirements.txt').open('r').readlines()
 setup(
     name='sdss-obstools',
     version=version,
-    scripts=[str(p) for p in (here / 'bin').glob('*')],
+    scripts=[p.as_posix() for p in (here / 'bin').glob('*')],
     package_data={
         '': ['*.dat', '*.fits', '*.npy', '*.txt'],
         'dat': ['*.npy', '*.dat'],

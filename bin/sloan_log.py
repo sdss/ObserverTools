@@ -165,6 +165,9 @@ class Logging:
         if self.args.legacy_aptest:
             master_path = (Path(apogee_data.__file__).absolute().parent.parent
                            / 'dat/utr_master_flat_21180043.npy')
+            if not master_path.exists():
+                master_path = (Path(apogee_data.__file__).absolute(
+                ).parent.parent.parent / 'dat/utr_master_flat_21180043.npy')
             self.ap_master_all = np.load(master_path.as_posix())
             # Cut and paste from aptest, don't ask how it works
             cutoff = 200.
@@ -193,9 +196,11 @@ class Logging:
                             self.dome_flat_shape[j, k]]
 
         else:
-            master_path = (Path(
-                apogee_data.__file__).absolute().parent.parent
+            master_path = (Path(apogee_data.__file__).absolute().parent.parent
                            / 'dat/master_dome_flat_1.npy')
+            if not master_path.exists():
+                master_path = (Path(apogee_data.__file__).absolute(
+                ).parent.parent.parent / 'dat/master_dome_flat_1.npy')
             master_data = np.load(master_path.as_posix())
             self.ap_master = np.average(master_data[:, 900:910], axis=1)
 

@@ -12,7 +12,6 @@ import astropy.units as u
 
 __version__ = '3.0.1'
 
-
 tpmdata.tinit()
 
 
@@ -82,7 +81,9 @@ def parseargs():
     return args
 
 
-def main(args=parseargs()):
+def main(args=None):
+    if args is None:
+            args = parseargs()
 
     if args.list_channels:
         args.channels = []

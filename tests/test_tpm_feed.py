@@ -28,7 +28,9 @@ class TestTPMFeed(unittest.TestCase):
     def test_print(self):
         signal.signal(signal.SIGALRM, self.handler)
         signal.alarm(10)
+        self.args.version = True
         try:
+            pass
             tpm_feed.main(args=self.args)
         except TimeoutError as t:
             print(t)
@@ -36,6 +38,8 @@ class TestTPMFeed(unittest.TestCase):
     def test_list_channels(self):
         self.args.plot = False
         self.args.list_channels = True
+        signal.signal(signal.SIGALRM, self.handler)
+        signal.alarm(10)
         tpm_feed.main(args=self.args)
 
 
