@@ -2,7 +2,7 @@
 import unittest
 import signal
 from pathlib import Path
-from bin import tpm_feed
+import tpm_feed
 
 
 class TestTPMFeed(unittest.TestCase):

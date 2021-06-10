@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import unittest
-from bin import m4l
+import m4l
 
 
 class TestM4L(unittest.TestCase):

@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from pathlib import Path
 
 here = Path(__file__).parent
@@ -19,7 +19,7 @@ setup(
         '': ['*.dat', '*.fits', '*.npy', '*.txt'],
         'dat': ['*.npy', '*.dat'],
     },
-    packages=['python', 'bin', 'dat', 'tests'],
+    packages=['python/sdssobstools', 'bin', 'dat', 'tests'],
     install_requires=requirements,
     description='A library of tools for SDSS telescope operations.',
     long_description=(here / 'README.md').open('r', encoding='utf-8').read(),

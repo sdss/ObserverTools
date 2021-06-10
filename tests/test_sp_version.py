@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import unittest
-from bin import sp_version
+import sp_version
 import subprocess as sub
 
 
