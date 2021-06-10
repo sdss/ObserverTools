@@ -355,3 +355,38 @@
 ## [3.6.4] - 2021-04-11
 
 - Fixed the object dither to be in the right units
+
+## [3.6.5] - 2021-05-11
+
+- Fixed a bug in object offsets in sloan_log.py
+
+- Added legacy aptest support to ap_test.py
+
+- Refactored python/* to python/sdssobstools/*
+
+## [3.6.6] - 2021-05-11
+
+- Trying a different method of setuptools that might be better, 3.6.5 doesn't
+ work once installed
+  
+## [3.6.7] - 2021-05-11
+
+- Same as 3.6.6...again
+
+## [3.6.8] - 2021-05-12
+
+- A method more like what it used to be, without calling the package python to
+ prevent mixups
+  
+## [3.6.9] - 2021-05-12
+
+- Caught some relative file path mixups that needed to be returned to what they
+ were
+  
+## [3.6.10] - 2021-05-12
+
+- Updated dependencies
+
+## [3.6.11] - 2021-06-09
+
+- Finally figured out how to get setuptools to handle a python library correctly

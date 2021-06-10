@@ -32,8 +32,8 @@ In order to run it locally, you will need to either have access to /data, or
 """
 import argparse
 import sys
-import warnings
 import textwrap
+import warnings
 
 import numpy as np
 
@@ -61,12 +61,12 @@ from tqdm import tqdm
 from astropy.time import Time
 
 try:
-    import apogee_data
-    import boss_data
-    import log_support
+    from sdssobstools import apogee_data, log_support, boss_data
 except ImportError as e:
     try:
-        from python import apogee_data, boss_data, log_support
+        import apogee_data
+        import boss_data
+        import log_support
     except ImportError as e:
         raise ImportError('Please add ObserverTools/python to your PYTHONPATH:'
                           '\n    {}'.format(e))
@@ -165,6 +165,9 @@ class Logging:
         if self.args.legacy_aptest:
             master_path = (Path(apogee_data.__file__).absolute().parent.parent
                            / 'dat/utr_master_flat_21180043.npy')
+            if not master_path.exists():
+                master_path = (Path(apogee_data.__file__).absolute(
+                ).parent.parent.parent / 'dat/utr_master_flat_21180043.npy')
             self.ap_master_all = np.load(master_path.as_posix())
             # Cut and paste from aptest, don't ask how it works
             cutoff = 200.
@@ -195,6 +198,9 @@ class Logging:
         else:
             master_path = (Path(apogee_data.__file__).absolute().parent.parent
                            / 'dat/master_dome_flat_1.npy')
+            if not master_path.exists():
+                master_path = (Path(apogee_data.__file__).absolute(
+                ).parent.parent.parent / 'dat/master_dome_flat_1.npy')
             master_data = np.load(master_path.as_posix())
             self.ap_master = np.average(master_data[:, 900:910], axis=1)
 
@@ -316,27 +322,27 @@ class Logging:
                 detectors = []
                 arch_dir = Path('/data/apogee/archive/{}/'.format(
                     self.args.sjd))
-                red_dir = Path('/data/apogee/quickred/{}/'.format(
-                    self.args.sjd))
+                # red_dir = Path('/data/apogee/quickred/{}/'.format(
+                #     self.args.sjd))
                 red_name = 'apR-a-{}.apz'.format(img.exp_id)
                 if (arch_dir / red_name).exists():
                     detectors.append('a')
                 # elif (red_dir / red_name.replace('1D', '2D')).exists():
-                    # detectors.append('2')
+                # detectors.append('2')
                 else:
                     detectors.append('x')
                 if (arch_dir / red_name.replace('-a-', '-b-')).exists():
                     detectors.append('b')
                 # elif (red_dir / red_name.replace('-a-', '-b-').replace(
-                        # '1D', '2D')).exists():
-                    # detectors.append('2')
+                # '1D', '2D')).exists():
+                # detectors.append('2')
                 else:
                     detectors.append('x')
                 if (arch_dir / red_name.replace('-a-', '-c-')).exists():
                     detectors.append('c')
                 # elif (red_dir / red_name.replace('-a-', '-c-').replace(
-                        # '1D', '2D')).exists():
-                    # detectors.append('2')
+                # '1D', '2D')).exists():
+                # detectors.append('2')
                 else:
                     detectors.append('x')
                 self.ap_data['iTime'].append(img.isot)
@@ -646,7 +652,7 @@ class Logging:
                       ' Average Throughput: {:.1f}%'.format(
                     self.ap_data['dNMissing'][j],
                     self.ap_data['dNFaint'][j],
-                    self.ap_data['dAvg'][j]*100))
+                    self.ap_data['dAvg'][j] * 100))
             except IndexError:
                 pass
         print()
@@ -763,7 +769,7 @@ class Logging:
                               & (self.b_data['hTime'] < Time.now()))
                 if self.b_data['hTime'][window]:
                     print()
-                    print('Hartmanns')
+                    # print('Hartmanns')
                 for t, hart in zip(self.b_data['hTime'][window],
                                    self.b_data['hHart'][window]):
                     print(self.hartmann_parse(hart))
@@ -858,13 +864,15 @@ class Logging:
             ['{:.3f}'.format(f) for f in np.diff(
                 self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])])
         print('\n'.join(wrapper.wrap(une_str)))
-        rel_offsets = np.abs(np.diff(self.ap_data['oOffset']))
-        obj_str = ('Object Offsets: Max: {:.2f}, Min: {:.2f}, Mean: {:.2f}'
-                   ''.format(rel_offsets.max(), rel_offsets.min(),
-                             rel_offsets.mean()))
+        if len(self.ap_data['oOffset']) > 1:
+            # Put it under an if in case we didn't open.
+            rel_offsets = np.abs(np.diff(self.ap_data['oOffset']))
+            obj_str = ('Object Offsets: Max: {:.2f}, Min: {:.2f}, Mean: {:.2f}'
+                       ''.format(rel_offsets.max(), rel_offsets.min(),
+                                 rel_offsets.mean()))
             # ['{:>6.3f}'.format(f) for f in np.diff(
             #     self.ap_data['oOffset'])])
-        print('\n'.join(wrapper.wrap(obj_str)))
+            print('\n'.join(wrapper.wrap(obj_str)))
         # obj_offsets = []
         # prev_dither = None
         # prev_f = 0.
@@ -1012,11 +1020,11 @@ def main():
     if args.data:
         log.p_data()
 
-    if p_boss:
-        log.p_boss()
-
     if p_apogee:
         log.p_apogee()
+
+    if p_boss:
+        log.p_boss()
 
     if args.log_support:
         log.log_support()

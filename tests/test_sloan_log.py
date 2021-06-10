@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
 from pathlib import Path
-from bin import sloan_log, sjd
+import sloan_log, sjd
 
 
 class TestSloanLog(unittest.TestCase):

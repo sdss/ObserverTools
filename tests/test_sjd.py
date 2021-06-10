@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import unittest
-from bin import sjd
+import sjd
 from astropy.time import Time
 
 
