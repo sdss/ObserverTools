@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
+"""
+This is a prototype script that can't really be tested until we have an
+InfluxDB key, but it's a work in progress.
+Author: Dylan Gatlin
+"""
 import platform    # For getting the operating system name
 import getpass
 import subprocess as sub
 
-from influxdb import InfluxDBClient
+from influxdb_client import InfluxDBClient
 
 
 def ping(host):
