@@ -129,7 +129,7 @@ def main(args=parse_args()):
                     continue
         # Checks each 1D-a- image for plate info, and add it to the count if
         # it's a science image
-        if len(list(qr_path.glob())) == 0:
+        if len(list(qr_path.glob("ap1D-a-*.fits.fz"))) == 0:
             ap_re = "ap2D-a-*.fits.fz"
         else:
             ap_re = "ap1D-a-*.fits.fz"
