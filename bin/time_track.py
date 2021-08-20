@@ -129,7 +129,11 @@ def main(args=parse_args()):
                     continue
         # Checks each 1D-a- image for plate info, and add it to the count if
         # it's a science image
-        for fits in qr_path.glob('ap1D-a-*.fits.fz'):
+        if len(list(qr_path.glob())) == 0:
+            ap_re = "ap2D-a-*.fits.fz"
+        else:
+            ap_re = "ap1D-a-*.fits.fz"
+        for fits in qr_path.glob(ap_re):
             header = fitsio.read_header(fits.as_posix())
             if header['EXPTYPE'] == 'OBJECT':
                 if header['PLATEID'] in plates.keys():
