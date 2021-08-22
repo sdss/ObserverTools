@@ -272,7 +272,7 @@ class Logging:
                 # print(image)
                 img = apogee_data.APOGEERaw(image, self.args, 1)
                 # img.parse_layer(1)
-                if not img.plate_id:  # If the first exposure is still
+                if img.plate_id is None:  # If the first exposure is still
                     # writing, plate_id will be empty and without this if,
                     # it would fail. With this if, it will skip the plate
                     continue

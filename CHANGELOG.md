@@ -390,3 +390,13 @@
 ## [3.6.11] - 2021-06-09
 
 - Finally figured out how to get setuptools to handle a python library correctly
+
+## [3.6.12] - 2021-08-20
+
+- Added initial influx support
+
+- Modified time_track.py to support ap2D images.
+
+## [3.6.13] - 2021-08-22
+
+- Fixed a bug in sloan_log.py where images with plate_id==0 didn't display
