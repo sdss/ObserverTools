@@ -400,3 +400,7 @@
 ## [3.6.13] - 2021-08-22
 
 - Fixed a bug in sloan_log.py where images with plate_id==0 didn't display
+
+## [3.6.14] - 2021-08-27
+
+- Major changes to epics_fetch.py to parse multiple keys into one table
