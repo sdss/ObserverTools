@@ -73,7 +73,7 @@ def _print_data(datasets: list, channel_names: list, verbose=False):
                 print("Unique times sets were merged")
             times = Time(times)
             times = times[np.argsort(times)]
-    fmt_stem = "# {:20}" + "{:10}" * len(datasets)
+    fmt_stem = "# {:20}" + "{:15}" * len(datasets)
     print(fmt_stem.format(
         "Time", *[channel.split(":")[-1] for channel in channel_names]))
     print("=" * 80)
