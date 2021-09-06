@@ -77,7 +77,7 @@ class ECamData:
                                                            s["ycentroid"]])
                         continue
 
-        return self.coord_pairs
+        return self.coord_pairs, master_i
 
     def to_json(self, outfile):
         output = {}
@@ -186,6 +186,10 @@ def parse_args():
                         " arguments.")
     parser.add_argument("-p", "--plot", action="store_true",
                         help="Show plot to analyze fit quality")
+    parser.add_argument("-k", "--plot-file", help="Filename to save plot to."
+                        " only works with --plot and --window together. If not"
+                        " included, the plot will show up in a new window (or"
+                        " maybe not depending on your terminal type).")
     parser.add_argument("-j", "--json", type=str,
                         help="Output a dataset to a json file")
     args = parser.parse_args()
@@ -221,25 +225,30 @@ def main(args=parse_args()):
                 ecam_path_stem / f"{args.mjd}/proc-gimg-{j:04.0f}.fits.gz")
             analyze_ecam(ecam_path, ecam, args)
         ecam.sort()
-        coord_pairs = ecam.build_set(args.master_field)
+        coord_pairs, master_ind = ecam.build_set(args.master_field)
         if args.json:
             ecam.to_json(Path(args.json))
         if args.plot:
-            fig, ax = plt.subplots(1, 1, figsize=(8, 6))
-            for j, star in enumerate(coord_pairs[:, :, 0].T):
-                ax.plot_date(ecam.times.plot_date[~np.isnan(star)],
-                             star[~np.isnan(star)] - star[0],
-                             fmt="-", label=f"({coord_pairs[0, j, 0]:.1f},"
-                                            f" {coord_pairs[0, j, 1]:.1f})",
-                             alpha=0.4)
-            ax.plot_date(ecam.times.plot_date,
-                         np.nanmean(coord_pairs[:, :, 0]
-                                    - coord_pairs[0, :, 0], axis=1),
-                         fmt="-", label="Mean")
-            ax.set_xlabel("Time")
-            ax.set_ylabel("X axis drift")
-            ax.legend()
-            plt.show()
+            fig, axs = plt.subplots(1, 2, figsize=(16, 6))
+            labels = ["x", "y"]
+            for i, ax in enumerate(axs):
+                for j, star in enumerate(coord_pairs[:, :, i].T):
+                    ax.plot_date(ecam.times.plot_date[~np.isnan(star)],
+                                 star[~np.isnan(star)] - star[master_ind],
+                                 fmt="-", label=f"({coord_pairs[master_ind, j, 0]:.1f},"
+                                                f" {coord_pairs[master_ind, j, 1]:.1f})",
+                                 alpha=0.4)
+                ax.plot_date(ecam.times.plot_date,
+                             np.nanmean(coord_pairs[:, :, i]
+                                        - coord_pairs[master_ind, :, i], axis=1),
+                             fmt="-", label="Mean")
+                ax.set_xlabel("Time")
+                ax.set_ylabel(f"{labels[i]} axis drift")
+                ax.legend()
+            if args.plot_file:
+                fig.savefig(args.plot_file)
+            else:
+                plt.show()
 
     else:
         day_path = (ecam_path_stem / f"{args.mjd}").absolute()

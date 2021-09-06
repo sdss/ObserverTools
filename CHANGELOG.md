@@ -404,3 +404,10 @@
 ## [3.6.14] - 2021-08-27
 
 - Major changes to epics_fetch.py to parse multiple keys into one table
+
+
+## [3.6.15] - 2021-09-06
+
+- Added eval_pointing.py to study ecam images
+
+- Added pydl to requirements
