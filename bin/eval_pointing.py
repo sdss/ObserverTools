@@ -89,7 +89,7 @@ class ECamData:
         output["Az"] = np.ndarray.tolist(self.azs)
         output["Rot"] = np.ndarray.tolist(self.rots)
         output["Coords"] = np.ndarray.tolist(self.coord_pairs)
-        json.dump(output, outfile.open('w'))
+        json.dump(output, outfile.open('w'), indent=4)
         return
 
     def __iter__(self):
