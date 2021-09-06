@@ -272,9 +272,10 @@ class Logging:
                 # print(image)
                 img = apogee_data.APOGEERaw(image, self.args, 1)
                 # img.parse_layer(1)
-                if img.plate_id is None:  # If the first exposure is still
+                if img.lead is None:  # If the first exposure is still
                     # writing, plate_id will be empty and without this if,
                     # it would fail. With this if, it will skip the plate
+                    print(f"Skipping {image}")
                     continue
                 if (img.exp_type == 'Domeflat') and ('-a-' in img.file.name):
                     self.ap_test(img)
@@ -650,9 +651,9 @@ class Logging:
                 j = np.where(self.ap_data['dCart'] == cart)[0][0]
                 print('Missing Fibers: {:2}, Faint fibers: {:2},'
                       ' Average Throughput: {:.1f}%'.format(
-                    self.ap_data['dNMissing'][j],
-                    self.ap_data['dNFaint'][j],
-                    self.ap_data['dAvg'][j] * 100))
+                          self.ap_data['dNMissing'][j],
+                          self.ap_data['dNFaint'][j],
+                          self.ap_data['dAvg'][j] * 100))
             except IndexError:
                 pass
         print()
