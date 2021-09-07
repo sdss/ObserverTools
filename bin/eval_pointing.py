@@ -63,7 +63,7 @@ class ECamData:
         if round(avg_stars) != master_n_stars:
             print(f"The number of stars in the master image"
                   f" ({master_n_stars}) doesn't match the"
-                  f" average number of stars ({avg_stars})")
+                  f" average number of stars ({avg_stars:.1f})")
 
         self.coord_pairs = np.empty(
             (len(self.stars), master_n_stars, 2), dtype=float)
@@ -117,7 +117,10 @@ def analyze_ecam(img_path, data_class, args):
     data_class.rots.append(img[0].header["ROTPOS"])
     data_class.seeings.append(img[0].header["SEEING"])  # Usually 0
     mean, median, std = sigma_clipped_stats(img[0].data)
-    daofind = DAOStarFinder(fwhm=5, threshold=mean + std * 3)
+    if not args.threshold:
+        daofind = DAOStarFinder(fwhm=5, threshold=mean + std * 3)
+    else:
+        daofind = DAOStarFinder(fwhm=5, threshold=args.threshold)
     sources = daofind(img[0].data, mask=ecam_mask)
     if sources is None:
         if args.verbose:
@@ -134,7 +137,7 @@ def analyze_ecam(img_path, data_class, args):
     return img
 
 
-def plot_img(fits_obj, sources):
+def plot_img(fits_obj, sources, args):
     mean, median, std = sigma_clipped_stats(fits_obj[0].data)
     positions = np.transpose((sources["xcentroid"], sources["ycentroid"]))
     apertures = CircularAperture(positions, r=10)
@@ -145,7 +148,10 @@ def plot_img(fits_obj, sources):
     mask = Rectangle((5, 5), width=524-15, height=512-10, alpha=1, fill=False,
                      linestyle="--", color="red", label="Mask")
     ax.add_patch(mask,)
-    plt.show()
+    if args.plot_file:
+        fig.savefig(args.plot_file)
+    else:
+        plt.show()
 
 
 def print_fit_table(data_class):
@@ -172,6 +178,11 @@ def parse_args():
                             " split by the specified windows. If a file is"
                             " specified, you can check a single image.")
     parser.add_argument("-m", "--mjd", default=sjd.sjd())
+    parser.add_argument("-t", "--threshold", type=int,
+                        help="A lower limit on the peak"
+                             " flux of a target. By default, it is 3 sigma"
+                             " above the mean, but an integer could be provided"
+                             " instead.")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="Verbose debugging output")
     parser.add_argument("-f", "--file", nargs="+",
@@ -210,7 +221,7 @@ def main(args=parse_args()):
                 raise FileNotFoundError(
                     f"File {fil_path.absolute()} not found")
             if args.plot:
-                plot_img(fits_img, ecam.stars[i])
+                plot_img(fits_img, ecam.stars[i], args)
     elif args.window:
         low, high = args.window.split("-")
         try:
