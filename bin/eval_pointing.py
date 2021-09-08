@@ -94,7 +94,7 @@ class ECamData:
 
     def __iter__(self):
         return zip(self.times, self.img_nums, self.ras, self.decs, self.azs,
-                   self.alts, self.rots, self.stars)
+                   self.alts, self.rots, self.coord_pairs)
 
 
 ecam_mask = np.zeros((512, 524), dtype=bool)
@@ -154,19 +154,29 @@ def plot_img(fits_obj, sources, args):
         plt.show()
 
 
-def print_fit_table(data_class):
+def print_fit_table(data_class, master_img: int = None):
     print(f"{'Time':20}{'Image':6}{'RA':6}{'Dec':6}{'Alt':6}{'Az':6}{'Rot':6}"
-          f"{'Offset':17}")
+          f"{'Offset':6}")
     print('=' * 80)
     for t, n, r, d, al, az, rot, s in data_class:
         try:
-            brightest = s["flux"] == s["flux"].max()
+            brightest = (data_class.stars[master_img]["flux"]
+                         == data_class.stars[master_img]["flux"].max())
         except (ValueError, TypeError):  # For some empty star lists
             continue
-        offset = np.sqrt((s[brightest]["xcentroid"] - 524 // 2)**2
-                         + (s[brightest]["ycentroid"] - 512 // 2)**2)[0]
+
+        if master_img is None:
+            offset = np.sqrt((s[brightest, 0] - 524 // 2)**2
+                             + (s[brightest, 1] - 512 // 2)**2)[0]
+        else:
+            offset = np.sqrt(
+                (s[brightest, 0]
+                    - data_class.coord_pairs[master_img, brightest, 0])**2
+                + (s[brightest, 1]
+                    - data_class.coord_pairs[master_img, brightest, 1])**2)[0]
+
         print(f"{t.iso[:19]:19}{n:6.0f}{r:6.1f}{d:6.1f}{al:6.1f}{az:6.1f}"
-              f"{rot:6.1f}{offset:17.1f}")
+              f"{rot:6.1f}{offset:6.1f}")
 
 
 def parse_args():
@@ -240,26 +250,46 @@ def main(args=parse_args()):
         if args.json:
             ecam.to_json(Path(args.json))
         if args.plot:
-            fig, axs = plt.subplots(1, 2, figsize=(16, 6))
+            fig, axs = plt.subplots(2, 2, figsize=(16, 8), sharex=True)
+            fig.set_tight_layout("tight")
+            # TODO set a suptitle of the field position
             labels = ["x", "y"]
-            for i, ax in enumerate(axs):
+            brightest = (ecam.stars[master_ind]["flux"]
+                         == ecam.stars[master_ind]["flux"].max())
+            for i, ax in enumerate(axs[0]):
                 for j, star in enumerate(coord_pairs[:, :, i].T):
                     ax.plot_date(ecam.times.plot_date[~np.isnan(star)],
-                                 star[~np.isnan(star)] - star[master_ind],
-                                 fmt="-", label=f"({coord_pairs[master_ind, j, 0]:.1f},"
-                                                f" {coord_pairs[master_ind, j, 1]:.1f})",
-                                 alpha=0.4)
+                                 (star[~np.isnan(star)] -
+                                  star[master_ind]) * 0.428,
+                                 fmt="-", alpha=0.3)
                 ax.plot_date(ecam.times.plot_date,
                              np.nanmean(coord_pairs[:, :, i]
-                                        - coord_pairs[master_ind, :, i], axis=1),
+                                        - coord_pairs[master_ind, :, i],
+                                        axis=1) * 0.428,
                              fmt="-", label="Mean")
-                ax.set_xlabel("Time")
-                ax.set_ylabel(f"{labels[i]} axis drift")
+                ax.plot_date(ecam.times.plot_date,
+                             (coord_pairs[:, brightest, i]
+                              - coord_pairs[master_ind, brightest, i]) * 0.428,
+                             fmt="-", label="Brightest")
+                ax.set_ylabel(f"{labels[i]} Axis Drift (arcsec)")
                 ax.legend()
+            axs[1, 0].plot_date(ecam.times.plot_date[~np.isnan(ecam.coord_pairs[:, brightest, 0]).T[0]],
+                                np.sqrt((ecam.coord_pairs[~np.isnan(ecam.coord_pairs[:, brightest, 0].T[0]), brightest, 0]
+                                         - ecam.coord_pairs[master_ind, brightest, 0])**2
+                                + (ecam.coord_pairs[~np.isnan(ecam.coord_pairs[:, brightest, 0]).T[0], brightest, 1]
+                                   - ecam.coord_pairs[master_ind, brightest, 1])**2) * 0.428,
+                                fmt="-", label="Brightest")
+            axs[1, 0].set_xlabel("Time")
+            axs[1, 0].set_ylabel(
+                r"Total Drift $\sqrt{\Delta x^2+\Delta y^2}$ (arcsec)")
+            axs[1, 0].legend()
+            axs[1, 1].set_xlabel("Time")
             if args.plot_file:
                 fig.savefig(args.plot_file)
             else:
                 plt.show()
+        else:
+            print_fit_table(ecam, master_ind)
 
     else:
         day_path = (ecam_path_stem / f"{args.mjd}").absolute()

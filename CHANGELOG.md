@@ -408,6 +408,6 @@
 
 ## [3.6.15] - 2021-09-06
 
-- Added eval_pointing.py to study ecam images
+- Added eval_pointing.py to study ecam images with plots, tables, and more
 
 - Added pydl to requirements
