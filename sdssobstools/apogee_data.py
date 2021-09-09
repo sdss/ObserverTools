@@ -57,6 +57,8 @@ class APOGEERaw:
                 self.exp_type = 'UNe Arc'
             elif header['LAMPTHAR']:
                 self.exp_type = 'ThAr Arc'
+            elif "FPI" in header["OBSCMNT"]:
+                self.exp_type = "FPI Lamp"
             else:
                 print('Could not process exposure type of {}'.format(self.file))
         else:
