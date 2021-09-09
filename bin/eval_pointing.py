@@ -253,7 +253,7 @@ def main(args=parse_args()):
                 ecam_path_stem / f"{args.mjd}/proc-gimg-{j:04.0f}.fits.gz")
             analyze_ecam(ecam_path, ecam, args)
         ecam.sort()
-        coord_pairs, master_ind = ecam.build_set(args.master_field)
+        coord_pairs, master_ind = ecam.build_set()
         if args.json:
             ecam.to_json(Path(args.json))
         if args.plot:
