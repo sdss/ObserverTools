@@ -30,7 +30,7 @@ if not ecam_path_stem.exists():
 
 
 class ECamData:
-    def __init__(self):
+    def __init__(self, master_img: int = None):
         self.times = []
         self.img_nums = []
         self.ras = []
@@ -40,6 +40,7 @@ class ECamData:
         self.rots = []
         self.stars = []
         self.seeings = []
+        self.master_img = master_img
 
     def sort(self):
         self.times = Time(self.times)
@@ -55,10 +56,13 @@ class ECamData:
         # self.stars = np.array(self.stars)[sorter]
         self.stars = [tmp_stars[i] for i in sorter]
         self.seeings = np.array(self.seeings)[sorter]
+        if self.master_img is not None:
+            self.brightest_i = np.where(self.stars[self.master_img]["flux"]
+                                        == self.stars[self.master_img]["flux"].max())[0][0]
 
-    def build_set(self, master_img: int):
+    def build_set(self):
         avg_stars = np.mean([len(s) for s in self.stars])
-        master_i = np.where(self.img_nums == master_img)[0][0]
+        master_i = np.where(self.img_nums == self.master_img)[0][0]
         master_n_stars = len(self.stars[master_i])
         if round(avg_stars) != master_n_stars:
             print(f"The number of stars in the master image"
@@ -89,6 +93,7 @@ class ECamData:
         output["Az"] = np.ndarray.tolist(self.azs)
         output["Rot"] = np.ndarray.tolist(self.rots)
         output["Coords"] = np.ndarray.tolist(self.coord_pairs)
+        output["Brightest"] = self.brightest_i
         json.dump(output, outfile.open('w'), indent=4)
         return
 
@@ -221,8 +226,8 @@ def main(args=parse_args()):
     if args.verbose:
         print(f"ECamera mask covers {ecam_mask.sum()/ecam_mask.size:.1f}%"
               f" of the total image")
-    ecam = ECamData()
     if args.file:
+        ecam = ECamData()
         for i, fil in enumerate(args.file):
             fil_path = Path(fil)
             if fil_path.exists():
@@ -240,7 +245,7 @@ def main(args=parse_args()):
         except ValueError:
             raise ValueError(f"Window range must be filled with ints"
                              f" {args.window}")
-        ecam = ECamData()
+        ecam = ECamData(args.master_field)
         for j in tqdm.tqdm(list(range(low, high+1))):
             ecam_path = (
                 ecam_path_stem / f"{args.mjd}/proc-gimg-{j:04.0f}.fits.gz")
@@ -292,6 +297,7 @@ def main(args=parse_args()):
             print_fit_table(ecam, master_ind)
 
     else:
+        ecam = ECamData()
         day_path = (ecam_path_stem / f"{args.mjd}").absolute()
         if not day_path.exists():
             raise NotADirectoryError(
