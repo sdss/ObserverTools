@@ -94,6 +94,8 @@ class ECamData:
         output["Rot"] = np.ndarray.tolist(self.rots)
         output["Coords"] = np.ndarray.tolist(self.coord_pairs)
         output["Brightest"] = self.brightest_i
+        if self.master_img:
+            output["MasterID"] = self.master_img
         json.dump(output, outfile.open('w'), indent=4)
         return
 

@@ -411,3 +411,5 @@
 - Added eval_pointing.py to study ecam images with plots, tables, and more
 
 - Added pydl to requirements
+
+- Added FPI support to sloan_log.py
