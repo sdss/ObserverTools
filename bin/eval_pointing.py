@@ -58,7 +58,7 @@ class ECamData:
         self.seeings = np.array(self.seeings)[sorter]
         if self.master_img is not None:
             self.brightest_i = np.where(self.stars[self.master_img]["flux"]
-                                        == self.stars[self.master_img]["flux"].max())[0][0]
+                            == self.stars[self.master_img]["flux"].max())[0][0]
 
     def build_set(self):
         avg_stars = np.mean([len(s) for s in self.stars])
@@ -75,8 +75,8 @@ class ECamData:
         for j, stars in enumerate(self.stars):
             for k, ref in enumerate(self.stars[master_i]):
                 for s in stars:
-                    if ((np.abs(s["xcentroid"] - ref["xcentroid"]) < 10)
-                            and np.abs(s["ycentroid"] - ref["ycentroid"]) < 10):
+                    if ((np.abs(s["xcentroid"] - ref["xcentroid"]) < 15)
+                            and np.abs(s["ycentroid"] - ref["ycentroid"]) < 15):
                         self.coord_pairs[j, k] = np.array([s["xcentroid"],
                                                            s["ycentroid"]])
                         continue
@@ -93,9 +93,9 @@ class ECamData:
         output["Az"] = np.ndarray.tolist(self.azs)
         output["Rot"] = np.ndarray.tolist(self.rots)
         output["Coords"] = np.ndarray.tolist(self.coord_pairs)
-        output["Brightest"] = self.brightest_i
+        output["Brightest"] = int(self.brightest_i)
         if self.master_img:
-            output["MasterID"] = self.master_img
+            output["MasterID"] = int(self.master_img)
         json.dump(output, outfile.open('w'), indent=4)
         return
 
@@ -125,7 +125,7 @@ def analyze_ecam(img_path, data_class, args):
     data_class.seeings.append(img[0].header["SEEING"])  # Usually 0
     mean, median, std = sigma_clipped_stats(img[0].data)
     if not args.threshold:
-        daofind = DAOStarFinder(fwhm=5, threshold=mean + std * 3)
+        daofind = DAOStarFinder(fwhm=5, threshold=mean + std * 5)
     else:
         daofind = DAOStarFinder(fwhm=5, threshold=args.threshold)
     sources = daofind(img[0].data, mask=ecam_mask)
