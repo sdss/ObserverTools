@@ -95,8 +95,8 @@ class ECamData:
         output["Coords"] = np.ndarray.tolist(self.coord_pairs)
         output["Brightest"] = int(self.brightest_i)
         if self.master_img:
-            output["MasterID"] = self.master_img
-            output["MasterInd"] = self.master_i
+            output["MasterID"] = int(self.master_img)
+            output["MasterInd"] = int(self.master_i)
         json.dump(output, outfile.open('w'), indent=4)
         return
 
