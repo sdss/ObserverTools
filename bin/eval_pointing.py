@@ -56,14 +56,14 @@ class ECamData:
         # self.stars = np.array(self.stars)[sorter]
         self.stars = [tmp_stars[i] for i in sorter]
         self.seeings = np.array(self.seeings)[sorter]
+        self.master_i = np.where(self.master_img == self.img_nums)[0][0]
         if self.master_img is not None:
-            self.brightest_i = np.where(self.stars[self.master_img]["flux"]
-                            == self.stars[self.master_img]["flux"].max())[0][0]
+            self.brightest_i = np.where(self.stars[self.master_i]["flux"]
+                                        == self.stars[self.master_i]["flux"].max())[0][0]
 
     def build_set(self):
         avg_stars = np.mean([len(s) for s in self.stars])
-        master_i = np.where(self.img_nums == self.master_img)[0][0]
-        master_n_stars = len(self.stars[master_i])
+        master_n_stars = len(self.stars[self.master_i])
         if round(avg_stars) != master_n_stars:
             print(f"The number of stars in the master image"
                   f" ({master_n_stars}) doesn't match the"
@@ -73,7 +73,7 @@ class ECamData:
             (len(self.stars), master_n_stars, 2), dtype=float)
         self.coord_pairs[:] = np.nan  # Guilty until proven innocent
         for j, stars in enumerate(self.stars):
-            for k, ref in enumerate(self.stars[master_i]):
+            for k, ref in enumerate(self.stars[self.master_i]):
                 for s in stars:
                     if ((np.abs(s["xcentroid"] - ref["xcentroid"]) < 15)
                             and np.abs(s["ycentroid"] - ref["ycentroid"]) < 15):
@@ -81,7 +81,7 @@ class ECamData:
                                                            s["ycentroid"]])
                         continue
 
-        return self.coord_pairs, master_i
+        return self.coord_pairs
 
     def to_json(self, outfile):
         output = {}
@@ -95,7 +95,8 @@ class ECamData:
         output["Coords"] = np.ndarray.tolist(self.coord_pairs)
         output["Brightest"] = int(self.brightest_i)
         if self.master_img:
-            output["MasterID"] = int(self.master_img)
+            output["MasterID"] = self.master_img
+            output["MasterInd"] = self.master_i
         json.dump(output, outfile.open('w'), indent=4)
         return
 
@@ -161,26 +162,26 @@ def plot_img(fits_obj, sources, args):
         plt.show()
 
 
-def print_fit_table(data_class, master_img: int = None):
+def print_fit_table(data_class, master_i: int = None):
     print(f"{'Time':20}{'Image':6}{'RA':6}{'Dec':6}{'Alt':6}{'Az':6}{'Rot':6}"
           f"{'Offset':6}")
     print('=' * 80)
     for t, n, r, d, al, az, rot, s in data_class:
         try:
-            brightest = (data_class.stars[master_img]["flux"]
-                         == data_class.stars[master_img]["flux"].max())
+            brightest = (data_class.stars[master_i]["flux"]
+                         == data_class.stars[master_i]["flux"].max())
         except (ValueError, TypeError):  # For some empty star lists
             continue
 
-        if master_img is None:
+        if master_i is None:
             offset = np.sqrt((s[brightest, 0] - 524 // 2)**2
                              + (s[brightest, 1] - 512 // 2)**2)[0]
         else:
             offset = np.sqrt(
                 (s[brightest, 0]
-                    - data_class.coord_pairs[master_img, brightest, 0])**2
+                    - data_class.coord_pairs[master_i, brightest, 0])**2
                 + (s[brightest, 1]
-                    - data_class.coord_pairs[master_img, brightest, 1])**2)[0]
+                    - data_class.coord_pairs[master_i, brightest, 1])**2)[0]
 
         print(f"{t.iso[:19]:19}{n:6.0f}{r:6.1f}{d:6.1f}{al:6.1f}{az:6.1f}"
               f"{rot:6.1f}{offset:6.1f}")
@@ -217,7 +218,7 @@ def parse_args():
     parser.add_argument("-k", "--plot-file", help="Filename to save plot to."
                         " only works with --plot and --window together. If not"
                         " included, the plot will show up in a new window (or"
-                        " maybe not depending on your terminal type).")
+                        " maybe not depending on X11).")
     parser.add_argument("-j", "--json", type=str,
                         help="Output a dataset to a json file")
     args = parser.parse_args()
@@ -253,7 +254,7 @@ def main(args=parse_args()):
                 ecam_path_stem / f"{args.mjd}/proc-gimg-{j:04.0f}.fits.gz")
             analyze_ecam(ecam_path, ecam, args)
         ecam.sort()
-        coord_pairs, master_ind = ecam.build_set()
+        coord_pairs = ecam.build_set()
         if args.json:
             ecam.to_json(Path(args.json))
         if args.plot:
@@ -261,30 +262,30 @@ def main(args=parse_args()):
             fig.set_tight_layout("tight")
             # TODO set a suptitle of the field position
             labels = ["x", "y"]
-            brightest = (ecam.stars[master_ind]["flux"]
-                         == ecam.stars[master_ind]["flux"].max())
+            brightest = (ecam.stars[ecam.master_i]["flux"]
+                         == ecam.stars[ecam.master_i]["flux"].max())
             for i, ax in enumerate(axs[0]):
                 for j, star in enumerate(coord_pairs[:, :, i].T):
                     ax.plot_date(ecam.times.plot_date[~np.isnan(star)],
                                  (star[~np.isnan(star)] -
-                                  star[master_ind]) * 0.428,
+                                  star[ecam.master_i]) * 0.428,
                                  fmt="-", alpha=0.3)
                 ax.plot_date(ecam.times.plot_date,
                              np.nanmean(coord_pairs[:, :, i]
-                                        - coord_pairs[master_ind, :, i],
+                                        - coord_pairs[ecam.master_i, :, i],
                                         axis=1) * 0.428,
                              fmt="-", label="Mean")
                 ax.plot_date(ecam.times.plot_date,
                              (coord_pairs[:, brightest, i]
-                              - coord_pairs[master_ind, brightest, i]) * 0.428,
+                              - coord_pairs[ecam.master_i, brightest, i]) * 0.428,
                              fmt="-", label="Brightest")
                 ax.set_ylabel(f"{labels[i]} Axis Drift (arcsec)")
                 ax.legend()
             axs[1, 0].plot_date(ecam.times.plot_date[~np.isnan(ecam.coord_pairs[:, brightest, 0]).T[0]],
                                 np.sqrt((ecam.coord_pairs[~np.isnan(ecam.coord_pairs[:, brightest, 0].T[0]), brightest, 0]
-                                         - ecam.coord_pairs[master_ind, brightest, 0])**2
+                                         - ecam.coord_pairs[ecam.master_i, brightest, 0])**2
                                 + (ecam.coord_pairs[~np.isnan(ecam.coord_pairs[:, brightest, 0]).T[0], brightest, 1]
-                                   - ecam.coord_pairs[master_ind, brightest, 1])**2) * 0.428,
+                                   - ecam.coord_pairs[ecam.master_i, brightest, 1])**2) * 0.428,
                                 fmt="-", label="Brightest")
             axs[1, 0].set_xlabel("Time")
             axs[1, 0].set_ylabel(
@@ -296,7 +297,7 @@ def main(args=parse_args()):
             else:
                 plt.show()
         else:
-            print_fit_table(ecam, master_ind)
+            print_fit_table(ecam, ecam.master_i)
 
     else:
         ecam = ECamData()
