@@ -9,6 +9,8 @@ import tqdm
 import json
 import copy
 import numpy as np
+import matplotlib as mpl
+# mpl.use("GTK3Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from pathlib import Path
@@ -20,6 +22,7 @@ from photutils.detection import DAOStarFinder
 from photutils.aperture import CircularAperture
 
 from bin import sjd
+
 
 ecam_path_stem = Path("/data/ecam/")
 if not ecam_path_stem.exists():
@@ -221,6 +224,7 @@ def parse_args():
                         " maybe not depending on X11).")
     parser.add_argument("-j", "--json", type=str,
                         help="Output a dataset to a json file")
+    # TODO Add a way to ignore stars within a field's window
     args = parser.parse_args()
     return args
 

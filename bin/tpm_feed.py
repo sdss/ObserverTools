@@ -2,6 +2,8 @@
 import tpmdata
 import pprint
 import numpy as np
+import matplotlib as mpl
+mpl.use("GTK3Agg")
 import matplotlib.pyplot as plt
 from matplotlib import dates
 from astropy.time import Time
