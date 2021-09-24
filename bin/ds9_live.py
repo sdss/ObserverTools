@@ -22,10 +22,9 @@ import numpy as np
 # import tracemalloc
 from argparse import ArgumentParser
 from pathlib import Path
+from sdssobstools import sdss_paths
 
-default_dir = Path('/data/apogee/utr_cdr/')
-if not default_dir.exists():
-    default_dir = Path.home() / 'data/apogee/utr_cdr/'
+default_dir = sdss_paths.ap_utr
 boss_cams = ['r1', 'b1', 'r2', 'b2']
 file_sizes = {'APOGEE': 67115520, 'BOSS': 9e6, 'Guider': 4e5,
               'Engineering': 9e5}
@@ -95,7 +94,7 @@ class DS9Window:
         if self.verbose:
             print(self.name)
         self.ds9 = pyds9.DS9(self.name)
-        if '/data/spectro' in self.fits_dir.as_posix():
+        if sdss_paths.boss.as_posix() in self.fits_dir.as_posix():
             self.ds9.set('tile yes')
 
         if not self.info:
@@ -241,7 +240,7 @@ class DS9Window:
                     print('Handled error: {}'.format(e))
             # Because BOSS has 4 cameras, it must loop 4 times
 
-            if '/data/spectro' in self.fits_dir.as_posix():
+            if sdss_paths.boss.as_posix() in self.fits_dir.as_posix():
                 for i, cam in enumerate(boss_cams):
                     if self.verbose:
                         print(i, fil.name.replace('r1', cam), type(fil))
@@ -329,14 +328,14 @@ def parseargs():
         if Path('/summary-ics/').exists():
             args.fits_dir = Path('/summary-ics')
         else:
-            args.fits_dir = Path('/data/apogee/utr_cdr/')
+            args.fits_dir = sdss_paths.ap_utr
         if args.name == 'Scanner':
             args.name = 'APOGEE'
         args.scale = args.scale
         args.zoom = args.zoom
 
     elif args.boss:
-        args.fits_dir = Path('/data/spectro/')
+        args.fits_dir = sdss_paths.boss
         if args.name == 'Scanner':
             args.name = 'BOSS'
         args.scale = args.scale
@@ -344,14 +343,14 @@ def parseargs():
         args.regex = 'sdR-r1*'
 
     elif args.guider:
-        args.fits_dir = Path('/data/gcam/')
+        args.fits_dir = sdss_paths.gcam
         args.name = 'Guider'
         args.scale = args.scale
         args.zoom = args.zoom
         args.regex = 'gimg-*'
 
     elif args.ecam:
-        args.fits_dir = Path('/data/gcam/')
+        args.fits_dir = sdss_paths.ecam
         args.name = 'Engineering'
         args.scale = args.scale
         args.zoom = args.zoom

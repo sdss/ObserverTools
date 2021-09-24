@@ -14,6 +14,8 @@ try:
 except ImportError as e:
     from bin import sjd
 
+from sdssobstools import sdss_paths
+
 
 __version__ = '3.0.1'
 
@@ -36,7 +38,7 @@ class Plate:
     def parse_sjd(self, mjd):
         if self.args.verbose:
             print('Searching {}'.format(mjd))
-        log_html = Path('/data/boss/sos/{}/logfile-{}.html'.format(mjd, mjd))
+        log_html = sdss_paths.sos / f"{mjd}/logfile-{mjd}.html"
         if not log_html.exists():
             return
         log_soup = BeautifulSoup(log_html.open('r').read(), 'html.parser')

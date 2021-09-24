@@ -8,7 +8,8 @@ from matplotlib.dates import DateFormatter
 from astropy.time import Time
 from astropy.table import Table
 from argparse import ArgumentParser
-from pathlib import Path
+
+from sdssobstools import sdss_paths
 
 
 sns.set(style='darkgrid')
@@ -22,8 +23,7 @@ class TPMSJD:
         self.channels = channels
         self.verbose = verbose
         print('Searching through {}'.format(sjd))
-        uncompressed = Path('/data/logs/mcp/tpm-archive-{}.dat'
-                            ''.format(sjd))
+        uncompressed = sdss_paths.mcp_logs / f"tpm-archive-{sjd}.dat"
         if uncompressed.exists():
             if verbose:
                 print('    Reading uncompressed data')

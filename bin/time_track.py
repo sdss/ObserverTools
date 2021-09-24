@@ -28,6 +28,7 @@ from bs4 import BeautifulSoup
 import sys
 import textwrap
 from typing import Union, Tuple
+from sdssobstools import sdss_paths
 
 # warnings.filterwarnings('ignore')
 sys.setrecursionlimit(10000)  # This is a very dangerous operation that
@@ -112,7 +113,8 @@ def main(args=parse_args()):
     for mjd in tqdm.tqdm(list(range(args.m1, args.m2 + 1))):
 
         # APOGEE QL Check
-        qr_path = Path(f'/data/apogee/quickred/{mjd}/')
+
+        qr_path = sdss_paths.ap_qr / f"{mjd}"
         # The quickred image needs to exist. If you're on a Mac using Catalina,
         # you can't make /data, so a ~/data directory with 1D quickreds will
         # work.
@@ -163,18 +165,16 @@ def main(args=parse_args()):
                         plates[header['PLATEID']].a_count += 1
 
         # SOS Check
-        sos_path = Path(f'/data/boss/sos/{mjd}/logfile-{mjd}.html')
+        sos_path = sdss_paths.sos / f"{mjd}/logfile-{mjd}.html"
         if not sos_path.exists():
-            sos_path = Path(f'/data/manga/dos/{mjd}/web/logfile-{mjd}.html')
+            sos_path = sdss_paths.dos / f"{mjd}/web/logfile-{mjd}.html"
             if not sos_path.exists():
-                sos_path = Path(f'~/data/boss/sos/{mjd}/logfile-{mjd}.html')
-                if not sos_path.exists():
-                    if not args.force:
-                        raise FileNotFoundError('No path to SOS file'
-                                                ' found, cannot build plate'
-                                                f' list\n{sos_path.as_posix()}')
-                    else:
-                        continue
+                if not args.force:
+                    raise FileNotFoundError('No path to SOS file'
+                                            ' found, cannot build plate'
+                                            f' list\n{sos_path.as_posix()}')
+                else:
+                    continue
         sos_soup = BeautifulSoup(sos_path.open('r').read(), 'html.parser')
         for plate in sos_soup.find_all('caption'):
             plate_id = int(plate.find('b').decode().split()[2])

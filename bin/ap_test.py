@@ -13,7 +13,7 @@ import numpy as np
 import fitsio
 from argparse import ArgumentParser
 from pathlib import Path
-from sdssobstools import apogee_data
+from sdssobstools import apogee_data, sdss_paths
 
 __version__ = '3.2.1'
 
@@ -65,15 +65,9 @@ class ApogeeFlat:
     def run_inputs(self):
         for i, sjd in enumerate(self.args.sjds):
             for exp in self.args.exps[i]:
-                try:
-                    ap_img = apogee_data.APOGEERaw('/data/apogee/archive/{}/'
-                                                   'apR-a-{}.apz'.format(
-                        sjd, exp), self.args)
-                except OSError:
-                    ap_img = apogee_data.APOGEERaw(
-                        (Path.home() / ('data/apogee/archive/{}/apR-a-{}.apz'
-                                        ''.format(sjd, exp))).as_posix(),
-                        self.args)
+                ap_img = apogee_data.APOGEERaw(sdss_paths.ap_archive / 
+                                               f"{sjd}/apR-a-{exp}.apz",
+                                               self.args)
                 ap_img.ap_test((900, 910), master_col=self.ap_master,
                                 plot=self.args.plot, legacy=self.args.legacy,
                                 dome_flat_shape=self.dome_flat_shape)

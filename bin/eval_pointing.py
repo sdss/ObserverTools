@@ -22,15 +22,7 @@ from photutils.detection import DAOStarFinder
 from photutils.aperture import CircularAperture
 
 from bin import sjd
-
-
-ecam_path_stem = Path("/data/ecam/")
-if not ecam_path_stem.exists():
-    ecam_path_stem = (Path.home() / "data/ecam/").absolute()
-    if not ecam_path_stem.exists():
-        raise NotADirectoryError("The ecam data path /data/ecam could not be"
-                                 " found")
-
+from sdssobstools import sdss_paths
 
 class ECamData:
     def __init__(self, master_img: int = None):
@@ -255,7 +247,7 @@ def main(args=parse_args()):
         ecam = ECamData(args.master_field)
         for j in tqdm.tqdm(list(range(low, high+1))):
             ecam_path = (
-                ecam_path_stem / f"{args.mjd}/proc-gimg-{j:04.0f}.fits.gz")
+                sdss_paths.ecam / f"{args.mjd}/proc-gimg-{j:04.0f}.fits.gz")
             analyze_ecam(ecam_path, ecam, args)
         ecam.sort()
         coord_pairs = ecam.build_set()
@@ -305,7 +297,7 @@ def main(args=parse_args()):
 
     else:
         ecam = ECamData()
-        day_path = (ecam_path_stem / f"{args.mjd}").absolute()
+        day_path = (sdss_paths.ecam / f"{args.mjd}").absolute()
         if not day_path.exists():
             raise NotADirectoryError(
                 f"Directory {day_path.as_posix()} not found")
