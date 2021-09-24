@@ -20,8 +20,8 @@ except ImportError as e:
     try:
         import sjd
     except ImportError as e:
-        raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
-                          '    {}'.format(e))
+        raise ImportError(f"Please add ObserverTools/bin to your PYTHONPATH:\n"
+                          f"    {e}")
 
 from astropy.io import fits
 from astropy.time import Time
