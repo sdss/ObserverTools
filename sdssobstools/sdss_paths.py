@@ -9,8 +9,14 @@ if not data_path.exists():
         data_path = Path.home() / "data/"  # For testing, usually on a Mac
         if not data_path.exists():
             raise FileNotFoundError("Cannot find the SDSS data directory")
-
-ap_utr: Path = data_path / "apogee/utr_cdr"
+else:
+    ap_utr: Path = data_path / "apogee/utr_cdr"
+    try:
+        ap_utr.exists()
+    except PermissionError:  # This happens on obs1/2 with /data_hub, even
+        # though /data exists, it cannot be read.
+        data_path = Path("/data_hub/")
+        ap_utr: Path = data_path / "apogee/utr_cdr"
 ap_archive: Path = data_path / "apogee/archive"
 ap_qr: Path = data_path / "apogee/quickred"
 boss: Path = data_path / "spectro"
