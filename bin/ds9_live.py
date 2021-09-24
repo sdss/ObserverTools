@@ -347,7 +347,7 @@ def parseargs():
         args.name = 'Guider'
         args.scale = args.scale
         args.zoom = args.zoom
-        args.regex = 'gimg-*'
+        args.regex = 'proc-gimg-*'
 
     elif args.ecam:
         args.fits_dir = sdss_paths.ecam
