@@ -10,7 +10,6 @@ DG: A rewrite of Elena's aptest script.
 """
 
 import numpy as np
-import fitsio
 from argparse import ArgumentParser
 from pathlib import Path
 from sdssobstools import apogee_data, sdss_paths

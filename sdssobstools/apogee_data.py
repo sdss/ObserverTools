@@ -191,8 +191,10 @@ class APOGEERaw:
         missing_bundles = self.create_bundles(i_missing)
         faint_bundles = self.create_bundles(i_faint)
         if print_it:
-            print('Missing Fibers: {}'.format(missing_bundles))
-            print('Faint Fibers: {}'.format(faint_bundles))
+
+            print(textwrap.fill('Missing Fibers: {}'.format(missing_bundles),
+                                80))
+            print(textwrap.fill('Faint Fibers: {}'.format(faint_bundles), 80))
             print()
 
         if plot:
