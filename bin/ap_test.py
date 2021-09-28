@@ -70,7 +70,8 @@ class ApogeeFlat:
                                                self.args)
                 ap_img.ap_test((900, 910), master_col=self.ap_master,
                                 plot=self.args.plot, legacy=self.args.legacy,
-                                dome_flat_shape=self.dome_flat_shape)
+                                dome_flat_shape=self.dome_flat_shape,
+                                print_it=True)
 
 
 def parse_args():
