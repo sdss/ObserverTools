@@ -19,7 +19,7 @@ __version__ = '3.2.1'
 
 
 class ApogeeFlat:
-    def __init__(self, master_flat, args):
+    def __init__(self, args):
         self.args = args
         # self.args.verbose = True
         imax1 = 500
@@ -76,10 +76,17 @@ class ApogeeFlat:
                 ap_img = apogee_data.APOGEERaw(sdss_paths.ap_archive / 
                                                f"{sjd}/apR-a-{exp}.apz",
                                                self.args)
-                ap_img.ap_test((900, 910), master_col=self.ap_master,
-                                plot=self.args.plot, legacy=self.args.legacy,
-                                dome_flat_shape=self.dome_flat_shape,
-                                print_it=True)
+                if self.args.legacy:
+                    ap_img.ap_test((2952, 2953), master_col=self.ap_master,
+                                   plot=self.args.plot, legacy=self.args.legacy,
+                                   dome_flat_shape=self.dome_flat_shape,
+                                   print_it=True)
+
+                else:
+                    ap_img.ap_test((900, 910), master_col=self.ap_master,
+                                   plot=self.args.plot, legacy=self.args.legacy,
+                                   dome_flat_shape=self.dome_flat_shape,
+                                   print_it=True)
 
 
 def parse_args():
@@ -123,16 +130,8 @@ def parse_args():
 
 def main():
     args = parse_args()
-    if args.legacy:
-        master_path = (Path(apogee_data.__file__).absolute().parent.parent
-                       / 'dat/utr_master_flat_21180043.npy')
 
-    else:
-        master_path = (Path(apogee_data.__file__).absolute().parent.parent
-                       / 'dat/master_dome_flat_1.npy')
-    master_data = np.load(master_path)
-
-    apogee = ApogeeFlat(master_data, args)
+    apogee = ApogeeFlat(args)
     apogee.run_inputs()
 
 
