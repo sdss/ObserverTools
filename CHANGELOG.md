@@ -413,3 +413,12 @@
 - Added pydl to requirements
 
 - Added FPI support to sloan_log.py
+
+
+## [3.7.0] - 2021-09-28
+
+- Added sdssobstools/sdss_paths to find /data on different machines
+
+- Fixed ap_test to work like sloan_log's implimentation
+
+- Added shortcut scripts called ads9.py and spds9.py
