@@ -22,43 +22,51 @@ class ApogeeFlat:
     def __init__(self, master_flat, args):
         self.args = args
         # self.args.verbose = True
-        if isinstance(master_flat, str) or isinstance(master_flat, Path):
-            master_data = fitsio.read(master_flat)
-        elif isinstance(master_flat, np.ndarray):
-            master_data = master_flat
-
         imax1 = 500
         imax2 = 100  # vm cutoff=120
+        self.n_fibers = 300
         self.dome_flat_shape = np.zeros((imax1, imax2), dtype=np.int64)
+        # Copied from sloan_log.py
         if self.args.legacy:
-            n_fibers = 300
-            ap_master_all = master_data
+            master_path = (Path(apogee_data.__file__).absolute().parent.parent
+                           / 'dat/utr_master_flat_21180043.npy')
+            if not master_path.exists():
+                master_path = (Path(apogee_data.__file__).absolute(
+                ).parent.parent.parent / 'dat/utr_master_flat_21180043.npy')
+            self.ap_master_all = np.load(master_path.as_posix())
             # Cut and paste from aptest, don't ask how it works
             cutoff = 200.
-            n_fibers = 0  # fiber number
+            self.n_fibers = 0  # fiber number
             k = 0  # pix number in fiber
             qj = False
             for i in range(2048):
-                if (n_fibers >= imax1) or (k >= imax2):
-                    print("break", n_fibers, k)
+                if (self.n_fibers >= imax1) or (k >= imax2):
+                    print("break", self.n_fibers, k)
                     break
-                if ap_master_all[i] >= cutoff:
-                    self.dome_flat_shape[n_fibers, k] = i
+                if self.ap_master_all[i] >= cutoff:
+                    self.dome_flat_shape[self.n_fibers, k] = i
                     qj = True
                     k = k + 1
                 else:
                     if qj:
                         qj = False
-                        n_fibers += 1
+                        self.n_fibers += 1
                         k = 0
             self.ap_master = np.zeros(300)
-            for j in range(n_fibers):
+            for j in range(self.n_fibers):
                 self.ap_master[j] = 0
                 for k in range(10):
                     if self.dome_flat_shape[j, k] != 0:
-                        self.ap_master[j] += ap_master_all[
+                        self.ap_master[j] += self.ap_master_all[
                             self.dome_flat_shape[j, k]]
+
         else:
+            master_path = (Path(apogee_data.__file__).absolute().parent.parent
+                           / 'dat/master_dome_flat_1.npy')
+            if not master_path.exists():
+                master_path = (Path(apogee_data.__file__).absolute(
+                ).parent.parent.parent / 'dat/master_dome_flat_1.npy')
+            master_data = np.load(master_path.as_posix())
             self.ap_master = np.average(master_data[:, 900:910], axis=1)
 
 
