@@ -135,7 +135,7 @@ class APOGEERaw:
         return diff
 
     def ap_test(self, ws=(900, 910), master_col=None, plot=False, legacy=False,
-                dome_flat_shape=None, n_fibers=300):
+                dome_flat_shape=None, n_fibers=300, print_it=False):
         if master_col is None:
             raise ValueError("APTest didn't receive a valid master_col: {}"
                              "".format(master_col))
@@ -190,7 +190,7 @@ class APOGEERaw:
         i_bright = np.where(bright)[0]
         missing_bundles = self.create_bundles(i_missing)
         faint_bundles = self.create_bundles(i_faint)
-        if self.args.verbose:
+        if print_it:
             print('Missing Fibers: {}'.format(missing_bundles))
             print('Faint Fibers: {}'.format(faint_bundles))
             print()
