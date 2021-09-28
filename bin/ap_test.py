@@ -88,6 +88,8 @@ def parse_args():
                              ' matplotlib')
     parser.add_argument('--legacy', action='store_true',
                         help='Whether or not to use the old aptest algorithm')
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Verbose debugging output")
     args = parser.parse_args()
 
     # The end result of this section is that you end up with a 1D array of mjds
