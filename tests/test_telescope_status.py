@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
 from pathlib import Path
-import telescope_status
+from bin import telescope_status
 import signal
 
 

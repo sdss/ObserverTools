@@ -78,7 +78,9 @@ def parse_args():
     return args
 
 
-def main(args=parse_args()):
+def main(args=None):
+    if args is None:
+        args = parse_args()
     if args.mjd:
         args.t1 = '{}'.format(Time(args.mjd, format='mjd').isot)
         args.t2 = '{}'.format(Time(args.mjd + 1, format='mjd').isot)

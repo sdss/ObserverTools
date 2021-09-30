@@ -359,9 +359,10 @@ def parseargs():
     return args
 
 
-def main():
+def main(args=None):
+    if args is None:
+        args = parseargs()
     # tracemalloc.start()
-    args = parseargs()
     # Start the display
     window = DS9Window(args.name, args.fits_dir, args.regex, args.scale,
                        args.zoom, args.verbose, args.info, args.vertical)

@@ -16,6 +16,7 @@ class TestEPICSFetch(unittest.TestCase):
         """Checks to see if the directory for new data is available to this
         computer"""
         # This serves no purpose because simply importing the library is a pass
+        print(epics_fetch.telemetry)
         return
 
     def test_help(self):

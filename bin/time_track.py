@@ -80,6 +80,7 @@ def summarize(mission_name: str, mission_key: Union[str, Tuple[str, str]],
 
 
 def parse_args():
+    print("Run")
     desc = 'Creates a report of all observed plates for time tracking'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--m1', help='start mjd, default current mjd',
@@ -106,7 +107,9 @@ def parse_args():
     return args
 
 
-def main(args=parse_args()):
+def main(args=None):
+    if args is None:
+        args = parse_args()
     if not any((args.apogee, args.bhm, args.mwm, args.eboss, args.manga)):
         raise args.error('No mission arguments given, nothing to do')
     plates = {}

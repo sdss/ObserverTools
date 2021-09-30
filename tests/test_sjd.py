@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
-import sjd
 from astropy.time import Time
+from bin import sjd
 
 
 class TestSJD(unittest.TestCase):
