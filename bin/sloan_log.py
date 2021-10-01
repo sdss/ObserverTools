@@ -36,26 +36,24 @@ import textwrap
 import warnings
 
 import numpy as np
-
 # import ap_test
 try:
-    import epics_fetch
-    import get_dust
-    import m4l
-    import telescope_status
+    from bin import epics_fetch, get_dust, m4l, telescope_status
 except ImportError as e:
     try:
-        from bin import epics_fetch, get_dust, m4l, telescope_status
+        import epics_fetch
+        import get_dust
+        import m4l
+        import telescope_status
+
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
                           '\n    {}'.format(e))
-
 try:
     import fitsio
 except ImportError:
     raise Exception('fitsio not found by interpreter\n'
                     '{}'.format(sys.executable))
-
 from pathlib import Path
 from tqdm import tqdm
 from astropy.time import Time
