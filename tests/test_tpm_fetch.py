@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
 from pathlib import Path
-import tpm_fetch
+from bin import tpm_fetch
 
 
 class TestTPMFetch(unittest.TestCase):

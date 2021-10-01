@@ -390,3 +390,40 @@
 ## [3.6.11] - 2021-06-09
 
 - Finally figured out how to get setuptools to handle a python library correctly
+
+## [3.6.12] - 2021-08-20
+
+- Added initial influx support
+
+- Modified time_track.py to support ap2D images.
+
+## [3.6.13] - 2021-08-22
+
+- Fixed a bug in sloan_log.py where images with plate_id==0 didn't display
+
+## [3.6.14] - 2021-08-27
+
+- Major changes to epics_fetch.py to parse multiple keys into one table
+
+
+## [3.6.15] - 2021-09-06
+
+- Added eval_pointing.py to study ecam images with plots, tables, and more
+
+- Added pydl to requirements
+
+- Added FPI support to sloan_log.py
+
+
+## [3.7.0] - 2021-09-28
+
+- Added sdssobstools/sdss_paths to find /data on different machines
+
+- Fixed ap_test to work like sloan_log's implimentation
+
+- Added shortcut scripts called ads9.py and spds9.py
+
+- Fixed argparse to work with main function by setting the default argument
+ in main to None, important for unittests
+
+- Changed many unittests to use new dates (SJD 59392)

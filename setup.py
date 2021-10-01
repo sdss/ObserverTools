@@ -18,13 +18,13 @@ setup(
     package_data={
         '': ['*.dat', '*.fits', '*.npy', '*.txt'],
         'dat': ['*.npy', '*.dat'],
+        'flux': ['*.flux']
     },
-    packages=['python/sdssobstools', 'bin', 'dat', 'tests'],
+    packages=['sdssobstools', 'bin', 'dat', 'tests'],
     install_requires=requirements,
     description='A library of tools for SDSS telescope operations.',
     long_description=(here / 'README.md').open('r', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
-
     url='https://wiki.sdss.org/display/APO/Observing+Scripts',
     author='Dylan Gatlin, Dmitry Bizyaev',
     author_email='dgatlin@apo.nmsu.edu',

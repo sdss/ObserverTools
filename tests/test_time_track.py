@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
 from pathlib import Path
-import time_track
+from bin import time_track
 
 
 class TestTPMFetch(unittest.TestCase):
