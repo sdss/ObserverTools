@@ -422,3 +422,8 @@
 - Fixed ap_test to work like sloan_log's implimentation
 
 - Added shortcut scripts called ads9.py and spds9.py
+
+- Fixed argparse to work with main function by setting the default argument
+ in main to None, important for unittests
+
+- Changed many unittests to use new dates (SJD 59392)
