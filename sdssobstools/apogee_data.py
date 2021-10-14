@@ -6,6 +6,7 @@ from scipy.optimize import leastsq
 import fitsio
 import numpy as np
 import textwrap
+from . import sdss_paths
 
 try:
     from bin import epics_fetch
@@ -33,6 +34,8 @@ class APOGEERaw:
 
     def __init__(self, fil, args, ext=1, ):
         self.file = Path(fil)
+        if not self.file.exists():
+            raise FileNotFoundError(f"Could not find file {self.file.absolute()}")
         self.ext = ext
         self.args = args
         header = fitsio.read_header(fil, ext=ext)
@@ -140,22 +143,15 @@ class APOGEERaw:
         return diff
 
     def ap_test(self, ws=(900, 910), master_col=None, plot=False, legacy=False,
-                dome_flat_shape=None, n_fibers=300):
+                dome_flat_shape=None, n_fibers=300, print_it=False):
         if master_col is None:
             raise ValueError("APTest didn't receive a valid master_col: {}"
                              "".format(master_col))
         if legacy:
             mjd = self.file.absolute().parent.name
-            self.utr_file = Path('/data/apogee/utr_cdr/{}/apRaw-{}.fits'.format(
-                mjd, self.exp_id))
+            self.utr_file = sdss_paths.ap_utr / f"{mjd}/apRaw-{self.exp_id}.fits"
             if not self.utr_file.exists():
-                self.utr_file = (Path.home() / 'data/apogee/utr_cdr/'
-                                               '{}/apRaw-{}.fits'.format(
-                    mjd, self.exp_id))
-                if not self.utr_file.exists():
-                    raise FileNotFoundError("Couldn't fine the file: {}".format(
-                        self.utr_file.as_posix()
-                    ))
+                raise FileNotFoundError(f"Couldn't fine the file: {self.utr_file.as_posix()}")
             try:
                 self.utr_data = fitsio.read(self.utr_file, 0)
             except OSError as e:
@@ -202,9 +198,11 @@ class APOGEERaw:
         i_bright = np.where(bright)[0]
         missing_bundles = self.create_bundles(i_missing)
         faint_bundles = self.create_bundles(i_faint)
-        if self.args.verbose:
-            print('Missing Fibers: {}'.format(missing_bundles))
-            print('Faint Fibers: {}'.format(faint_bundles))
+        if print_it:
+
+            print(textwrap.fill('Missing Fibers: {}'.format(missing_bundles),
+                                80))
+            print(textwrap.fill('Faint Fibers: {}'.format(faint_bundles), 80))
             print()
 
         if plot:
@@ -284,13 +282,13 @@ def main():
     args = parser.parse_args()
     if args.today:
         mjd_today = int(Time.now().sjd)
-        data_dir = '/data/apogee/archive/{}/'.format(mjd_today)
+        data_dir = sdss_paths.ap_archive / f"{mjd_today}/"
     elif args.mjd:
-        data_dir = '/data/apogee/archive/{}/'.format(args.mjd)
+        data_dir = sdss_paths.ap_archive / f"{args.mjd}"
     else:
         raise Exception('No date specified')
     # print(data_dir)
-    for path in Path(data_dir).rglob('apR*.apz'):
+    for path in data_dir.rglob('apR*.apz'):
         print(path)
 
 

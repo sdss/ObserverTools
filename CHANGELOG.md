@@ -415,6 +415,18 @@
 - Added FPI support to sloan_log.py
 
 
+## [3.7.0] - 2021-09-28
+
+- Added sdssobstools/sdss_paths to find /data on different machines
+
+- Fixed ap_test to work like sloan_log's implimentation
+
+- Added shortcut scripts called ads9.py and spds9.py
+
+- Fixed argparse to work with main function by setting the default argument
+ in main to None, important for unittests
+
+- Changed many unittests to use new dates (SJD 59392)
 ## [3.7.3] - 2021-10-13
 
 - With the (alleged) death of sdss-telemetry, epics_fetch now always fails, it

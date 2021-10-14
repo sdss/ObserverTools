@@ -36,7 +36,6 @@ import textwrap
 import warnings
 
 import numpy as np
-
 # import ap_test
 try:
     try:
@@ -56,19 +55,17 @@ except ImportError as e:
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
                           '\n    {}'.format(e))
-
 try:
     import fitsio
 except ImportError:
     raise Exception('fitsio not found by interpreter\n'
                     '{}'.format(sys.executable))
-
 from pathlib import Path
 from tqdm import tqdm
 from astropy.time import Time
 
 try:
-    from sdssobstools import apogee_data, log_support, boss_data
+    from sdssobstools import apogee_data, log_support, boss_data, sdss_paths
 except ImportError as e:
     try:
         import apogee_data
@@ -88,13 +85,8 @@ warnings.filterwarnings('ignore', category=FutureWarning, append=True)
 
 __version__ = '3.7.3'
 
-ap_dir = Path('/data/apogee/archive/')
-if not ap_dir.exists():
-    ap_dir = Path.home() / 'data/apogee/archive'
-b_dir = Path('/data/spectro/')
-if not b_dir.exists():
-    b_dir = Path.home() / 'data/spectro'
-
+ap_dir = sdss_paths.ap_archive
+b_dir = sdss_paths.boss
 
 class Logging:
     """
@@ -331,10 +323,11 @@ class Logging:
                         self.ap_data['cTime'].pop(i)
                         self.ap_data['cTime'].insert(i, img.isot)
                 detectors = []
-                arch_dir = Path('/data/apogee/archive/{}/'.format(
-                    self.args.sjd))
+                arch_dir = sdss_paths.ap_archive / f"{self.args.sjd}/"
                 # red_dir = Path('/data/apogee/quickred/{}/'.format(
                 #     self.args.sjd))
+                # This used to see if quickred processed, but others preferred
+                # to see if the archive image was written
                 red_name = 'apR-a-{}.apz'.format(img.exp_id)
                 if (arch_dir / red_name).exists():
                     detectors.append('a')
@@ -424,31 +417,27 @@ class Logging:
                     self.b_data['hTime'].append(img.isot)
                 sos_files = []
                 # img_mjd = int(Time(img.isot).mjd)
+                # All boss exposures write as splog, but manga writes different
                 if ('BOSS' in img.lead) or ('BHM' in img.lead):
-                    red_dir = Path('/data/boss/sos/{}/'.format(self.args.sjd))
+                    red_dir = sdss_paths.sos / f"{self.args.sjd}"
                     red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                         img.exp_id)
                 else:  # MaNGA
+                    red_dir = sdss_paths.dos / f"{self.args.sjd}"
+                    red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
+                        img.exp_id)
                     if img.flavor == 'Science':
-                        red_dir = Path('/data/manga/dos/{}/'.format(
-                            self.args.sjd))
                         red_fil = red_dir / 'mgscisky-{}-r1-{:0>8}.fits'.format(
                             img.plate_id, img.exp_id)
                     elif img.flavor == 'Flat':
-                        red_dir = Path('/data/manga/dos/{}/'.format(
-                            self.args.sjd))
                         red_fil = red_dir / 'mgtset-{}-{}-{:0>8}-r1.fits' \
                                             ''.format(self.args.sjd,
                                                       img.plate_id, img.exp_id)
                     elif img.flavor == 'Arc':
-                        red_dir = Path('/data/manga/dos/{}/'.format(
-                            self.args.sjd))
                         red_fil = red_dir / 'mgwset-{}-{}-{:0>8}-r1.fits' \
                                             ''.format(self.args.sjd,
                                                       img.plate_id, img.exp_id)
                     else:  # Harts and Bias, no file written there
-                        red_dir = Path('/data/manga/dos/{}/logs/'.format(
-                            self.args.sjd))
                         red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
                             img.exp_id)
                 if red_fil.exists():

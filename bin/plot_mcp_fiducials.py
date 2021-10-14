@@ -66,6 +66,8 @@ except ImportError:
 from pathlib import Path
 from astropy.time import Time
 
+from sdssobstools import sdss_paths
+
 import numpy as np
 np.seterr(all='raise')
 np.seterr(invalid='warn')
@@ -650,7 +652,7 @@ def main(argv=None):
 
     parser.add_argument("--mjd", default=getMJD(), type=int,
                         help="Read mcpFiducials file for this MJD")
-    parser.add_argument("-d", "--dir", default="/data/logs/mcp/",
+    parser.add_argument("-d", "--dir", default=sdss_paths.mcp_logs,
                         dest="mcp_log_dir",
                         help="Directory to search for input file")
 

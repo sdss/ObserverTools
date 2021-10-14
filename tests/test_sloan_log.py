@@ -60,7 +60,7 @@ class TestSloanLog(unittest.TestCase):
         only runs BOSS data summary
         """
 
-        self.args.sjd = 59011
+        self.args.sjd = 59392
         self.args.print = False
         self.args.summary = False
         self.args.data = False
@@ -90,7 +90,7 @@ class TestSloanLog(unittest.TestCase):
         only checks APOGEE and prints its summary
         """
 
-        self.args.sjd = 59011
+        self.args.sjd = 59392
         self.args.print = False
         self.args.summary = False
         self.args.data = False
@@ -118,7 +118,7 @@ class TestSloanLog(unittest.TestCase):
     def test_log_support(self):
         """Runs on an old dataset that I know used to run successfully"""
 
-        self.args.sjd = 59011
+        self.args.sjd = 59392
         self.args.print = False
         self.args.summary = False
         self.args.data = False

@@ -37,35 +37,27 @@ All scripts designed for users should follow the SDSS Coding Standards, include
  be left there, but they are intended primarily for reference and you should
  avoid using them.
  
-For now, avoid dependencies like opscore, actorkeys, and any other libraries
- that will be changing extensively as they upgrade to Python 3. RO has a Python
- 3 PR that should be usable.
- 
 If a script is moved to bin, it should have a test file in tests that will run
  it in a few ways that we will likely use it during normal observing. Tests
  are critical for us maintaining code dependability.
 
 ## TODO
- - This package should be installable on hub using a setuptools or module
- 
- - Add Travis CI to GitHub
- 
- - Hide info panel and magnifier in ds9_live
   
 ## TimeTracking
 Originally under sdss-hub:~/bin/time_tracking, it contains scripts designed for
  time tracking. These tools should generally be considered separate from the
  rest of the tools here, and are being left as their own "sub-repository" for
  the time being.
- 
+
+
 ## Dependencies
 
+
 ### Python
-The best way of installing all dependencies is to create an anaconda
- environment. This project will attempt to match STUI's version of Python.
-```bash
-conda create -f conda_env.yml
-```
+The best way of installing all dependencies is to create an pyenv
+ environment. This project is usually tested on Python 3.9. All the requirements
+ can be found in requirements.txt
+
 
 ### Ubuntu
 These libraries were needed on Ubuntu 20.04

@@ -1,1 +1,6 @@
-sp_version.py
+!/usr/bin/env python3
+import sys
+import subprocess as sub
+from pathlib import Path
+
+sub.call([Path(__file__).parent / "sp_version.py"]+ sys.argv)

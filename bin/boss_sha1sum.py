@@ -17,6 +17,7 @@ import hashlib
 from argparse import ArgumentParser
 from pathlib import Path
 from bin import sjd
+from sdssobstools import sdss_paths
 
 __version__ = '3.0.0'
 
@@ -57,9 +58,7 @@ def parseargs():
 def main():
     args = parseargs()
     for mj in args.mjds:
-        data_dir = Path('/data/spectro/{}'.format(mj))
-        if not data_dir.exists():
-            data_dir = Path.home() / 'data/spectro/{}'.format(mj)
+        data_dir = sdss_paths.boss / f"{mj}"
         if args.file:
             output_file = Path(args.file)
         else:
