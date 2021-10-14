@@ -14,7 +14,6 @@ Changelog:
 
 """
 
-from re import A
 import numpy as np
 from channelarchiver import Archiver
 from argparse import ArgumentParser

@@ -6,11 +6,13 @@ from bin import sp_version
 
 class TestSPVersion(unittest.TestCase):
     def test_no_args(self):
-        output = sub.check_output(sp_version.__file__, timeout=10)
+        output = sub.Popen(sp_version.__file__, stderr=sub.PIPE,
+                          stdout=sub.PIPE)
         for line in output.stderr.read().decode('utf-8').splitlines():
             print(line)
             self.assertNotIn('not found', line,
                              msg='Package manager or package not found')
+        # self.assertEqual(output.returncode, 0)
 
 
 if __name__ == '__main__':
