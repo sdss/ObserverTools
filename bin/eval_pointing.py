@@ -221,7 +221,9 @@ def parse_args():
     return args
 
 
-def main(args=parse_args()):
+def main(args=None):
+    if args is None:
+        args = parse_args()
     if args.verbose:
         print(f"ECamera mask covers {ecam_mask.sum()/ecam_mask.size:.1f}%"
               f" of the total image")
