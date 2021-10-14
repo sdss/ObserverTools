@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
+import sys
+import subprocess as sub
+from pathlib import Path
 
-import time
-from bin import ds9_live
-from sdssobstools import sdss_paths
-
-
-window = ds9_live.DS9Window("BOSS{:.10}".format(str(hash("BOSS"))),
-                            sdss_paths.boss, "sdR-r1*", "histequ",
-                            0.5, False, False, False)
-while True:
-    window.update()
-    time.sleep(60)
+args = [arg for arg in sys.argv if
+        ((Path(__file__).name not in arg) and ("python" not in arg))]
+sub.call([Path(__file__).parent / "ds9_live.py", "-b"] + args)

@@ -113,6 +113,8 @@ def parse_args():
     args.exps = [[]]
     day_i = 0
     for arg in args.positionals:
+        # if "test" in arg or "python" in arg:
+            # continue
         if len(str(arg)) <= 5:
             args.sjds.append(arg)
             args.exps.append([])
@@ -129,8 +131,16 @@ def parse_args():
 
 def main():
     args = parse_args()
+    if args.legacy:
+        master_path = (Path(apogee_data.__file__).absolute().parent.parent
+                       / 'dat/utr_master_flat_21180043.npy')
 
-    apogee = ApogeeFlat(args)
+    else:
+        master_path = (Path(apogee_data.__file__).absolute().parent.parent
+                       / 'dat/master_dome_flat_1.npy')
+    master_data = np.load(master_path)
+    args.verbose = True
+    apogee = ApogeeFlat(master_data, args)
     apogee.run_inputs()
 
 

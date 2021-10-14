@@ -10,11 +10,16 @@ import argparse
 import datetime
 from astropy.time import Time
 import numpy as np
-from bin import sjd, epics_fetch
+from bin import sjd
+try:
+    from bin import epics_fetch
+except ConnectionResetError:
+    epics_fetch = False
 
 __version__ = '3.2.2'
 
-telemetry = epics_fetch.telemetry
+if epics_fetch:
+    telemetry = epics_fetch.telemetry
 
 # TAI_UTC =34;
 TAI_UTC = 0
@@ -44,6 +49,8 @@ def parse_args():
 
 
 def get_dust(mjd, args):
+    if not epics_fetch:
+        return np.nan
     start, end = get_time_stamps(mjd)
     if args.verbose:
         print("mjd= {}".format(mjd))

@@ -427,3 +427,11 @@
  in main to None, important for unittests
 
 - Changed many unittests to use new dates (SJD 59392)
+## [3.7.3] - 2021-10-13
+
+- With the (alleged) death of sdss-telemetry, epics_fetch now always fails, it
+ has been resolved in all testable ways
+
+- After discovering that symlinks don't install with setuptools, some
+ mini-scripts have been added to bin with common aliases that point to the
+ desired location
