@@ -15,6 +15,8 @@ try:
 except ImportError as e:
     raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
                       '    {}'.format(e))
+except ConnectionResetError:
+    has_epics = False
 
 __version__ = '3.2.0'
 

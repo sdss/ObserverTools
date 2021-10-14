@@ -12,6 +12,8 @@ try:
 except ImportError as e:
     raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
                       '    {}'.format(e))
+except ConnectionResetError:
+    has_epics = False
 
 __version__ = '3.2.1'
 
@@ -34,11 +36,17 @@ class APOGEERaw:
         self.ext = ext
         self.args = args
         header = fitsio.read_header(fil, ext=ext)
-        self.telemetry = epics_fetch.telemetry
-        dithers = self.telemetry.get('25m:apogee:ditherNamedPositions',
-                                     start=(Time.now() - 5 / 24 / 60).datetime,
-                                     end=Time.now().datetime,
-                                     scan_archives=False, interpolation='raw')
+        if has_epics:
+            self.telemetry = epics_fetch.telemetry
+            dithers = self.telemetry.get('25m:apogee:ditherNamedPositions',
+                                         start=(Time.now() - 5 / 24 / 60).datetime,
+                                         end=Time.now().datetime,
+                                         scan_archives=False, interpolation='raw')
+        else:
+            class Null:
+                pass
+            dithers = Null()
+            dithers.values = np.array([[0., 0.,], [0., 0.]])
         # layer = self.image[layer_ind]
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
         if (header['DITHPIX'] - dithers.values[-1][0]) < 0.05:

@@ -13,8 +13,8 @@ class TestAPTest(unittest.TestCase):
             pass
 
         self.args = Dummy()
-        self.args.sjds = [59011]
-        self.args.exps = [[34490027, 34490042, 34490051, 34490056, 34490069]]
+        self.args.sjds = [59392]
+        self.args.exps = [[38300015, 38300028, 38300041, 38300052]]
         self.args.plot = False
         self.args.legacy = False
         self.args.verbose = True

@@ -39,13 +39,20 @@ import numpy as np
 
 # import ap_test
 try:
-    import epics_fetch
+    try:
+        import epics_fetch
+    except ConnectionResetError:
+        has_epics = False
     import get_dust
     import m4l
     import telescope_status
 except ImportError as e:
     try:
-        from bin import epics_fetch, get_dust, m4l, telescope_status
+        try:
+            from bin import epics_fetch
+        except ConnectionResetError:
+            has_epics = False
+        from bin import get_dust, m4l, telescope_status
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
                           '\n    {}'.format(e))
@@ -153,7 +160,10 @@ class Logging:
                           'cAPSummary': [],
                           'cBSummary': []}
         self.test_procs = []
-        self.telemetry = epics_fetch.telemetry
+        if has_epics:
+            self.telemetry = epics_fetch.telemetry
+        else:
+            self.telemetry = False
         # Commented out to test the apogee_data.APOGEERaw.ap_test method
         # self.ap_tester = ap_test.ApogeeFlat(
         #     Path(__file__).absolute().parent.parent
@@ -387,7 +397,7 @@ class Logging:
                 self.b_data['iHart'].append(img.hartmann)
                 self.b_data['iPlate'].append(img.plate_id)
 
-                if img.hartmann == 'Left':
+                if img.hartmann == 'Left' and self.telemetry:
                     # Note that times are sent in UTC and received in local, yet
                     # those times are marked as UTC
                     tstart = Time(img.isot).datetime
@@ -886,6 +896,8 @@ class Logging:
         print('\n')
 
     def log_support(self):
+        if not log_support.has_epics:
+            return
         start = Time(self.args.sjd, format='mjd')
         end = Time(self.args.sjd + 1, format='mjd')
         tel = log_support.LogSupport(start, end, self.args)

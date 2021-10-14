@@ -10,6 +10,10 @@ except ImportError as e:
         from bin import epics_fetch
     except ImportError:
         raise ImportError(f'epics_fetch.py not in PYTHONPATH:\n {sys.path}')
+    except ConnectionResetError:
+        has_epics = False
+except ConnectionResetError:
+    has_epics = False
 try:
     import tpmdata
     tpmdata.tinit()
@@ -23,6 +27,8 @@ __version__ = '3.0.0'
 def query():
     if tpmdata is None:
         raise ConnectionError('Cannot query the tpm without tpmdata installed')
+    if not has_epics:
+        raise ConnectionError("EPICS Unreachable")
 
     data = tpmdata.packet(1, 1)
 
