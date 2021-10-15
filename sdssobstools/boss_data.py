@@ -18,16 +18,19 @@ class BOSSRaw:
     def __init__(self, fil):
         self.fil = fil
         header = fitsio.read_header(fil)
-
-        self.dither = header['MGDPOS']
-        if not self.dither:  # This key started working instead during SDSS-V
+        if "MGDPOS" in header.keys():  # SDSS-IV
+            self.dither = header['MGDPOS']
+        else:  # Usually works in SDSS-V
             self.dither = header['POINTING'][0]
         self.exp_time = int(header['EXPTIME'])
         self.isot = Time(header['DATE-OBS'])  # UTC
-        self.plate_id = header['PLATEID']
-        self.cart_id = header['CARTID']
+        if "PLATEID" in header.keys():
+            self.plate_id = header['PLATEID']
+        if "CARTID" in header.keys():
+            self.cart_id = header['CARTID']
         self.exp_id = int(str(fil).split('-')[-1].split('.')[0])
-        self.lead = header['PLATETYP']
+        if "PLATETP" in header.keys():
+            self.lead = header['PLATETYP']
         if 'Closed' in header['HARTMANN']:
             self.hartmann = 'Closed'
             self.flavor = header['FLAVOR'].capitalize()
