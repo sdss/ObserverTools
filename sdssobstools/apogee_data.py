@@ -10,6 +10,7 @@ from . import sdss_paths
 
 try:
     from bin import epics_fetch
+    has_epics = True
 except ImportError as e:
     raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
                       '    {}'.format(e))
@@ -61,7 +62,14 @@ class APOGEERaw:
         self.exp_time = header['EXPTIME']
         self.isot = Time(header['DATE-OBS'])  # Local
         self.plate_id = header['PLATEID']
-        self.cart_id = header['CARTID']
+        if "CARTID" in header.keys():
+            if isinstance(header["CARTID"], int):
+                self.cart_id = header['CARTID']
+            else:
+                self.cart_id = 0
+        else:
+            self.cart_id = 0
+
         self.exp_id = int(str(fil).split('-')[-1].split('.')[0])
         if header['EXPTYPE'].capitalize() == 'Arclamp':
             if header['LAMPUNE']:

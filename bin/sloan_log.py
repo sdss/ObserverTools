@@ -40,6 +40,7 @@ import numpy as np
 try:
     try:
         import epics_fetch
+        has_epics = True
     except ConnectionResetError:
         has_epics = False
     import get_dust
@@ -49,6 +50,7 @@ except ImportError as e:
     try:
         try:
             from bin import epics_fetch
+            has_epics = False
         except ConnectionResetError:
             has_epics = False
         from bin import get_dust, m4l, telescope_status
@@ -308,7 +310,10 @@ class Logging:
                     self.data['cPlate'].append(img.plate_id)
                     self.data['cCart'].append(img.cart_id)
                     self.data['cTime'].append(img.isot)
-                    self.data['cLead'].append(img.lead)
+                    try:
+                        self.data['cLead'].append(img.lead)
+                    except AttributeError:
+                        self.data["cLead"].append("")
                 else:
                     i = self.data['cCart'].index(img.cart_id)
                     if img.isot < self.data['cTime'][i]:
@@ -365,7 +370,10 @@ class Logging:
                 if img.cart_id not in self.data['cCart']:
                     self.data['cCart'].append(img.cart_id)
                     self.data['cPlate'].append(img.plate_id)
-                    self.data['cLead'].append(img.lead)
+                    try:
+                        self.data['cLead'].append(img.lead)
+                    except AttributeError:
+                        self.data["cLead"].append("")    
                     self.data['cTime'].append(img.isot)
                 else:
                     i = self.data['cCart'].index(img.cart_id)
@@ -844,12 +852,19 @@ class Logging:
                 self.ap_data['iDetector'],
                 self.ap_data['iSeeing']
             ):
-                print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
+                # print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
+                #       ' {:>6}'
+                #       ' {:<8}'
+                #       ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
+                #                          exp_id, exp_type,
+                #                          dith, nread, detectors, see))
+                print('{:<5.0f} {:>8} {:>2.0f} {:<8.0f} {:<12} {:<4}'
                       ' {:>6}'
                       ' {:<8}'
-                      ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
+                      ' {:>6.1f}'.format(int(mjd), iso[11:19], cart,
                                          exp_id, exp_type,
                                          dith, nread, detectors, see))
+
         # Usually, there are 4 ThAr and 4 UNe arcs in a night, and they're
         # assumed to be alternating ThAr UNe ThAr UNe. When you grab every
         # other, you'll have only one type, that's the first slicing, and the

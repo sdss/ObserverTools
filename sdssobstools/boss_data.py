@@ -27,10 +27,15 @@ class BOSSRaw:
         if "PLATEID" in header.keys():
             self.plate_id = header['PLATEID']
         if "CARTID" in header.keys():
-            self.cart_id = header['CARTID']
+            if isinstance(header["CARTID"], int):
+                self.cart_id = header['CARTID']
+            else:
+                self.cart_id = 0
         self.exp_id = int(str(fil).split('-')[-1].split('.')[0])
         if "PLATETP" in header.keys():
             self.lead = header['PLATETYP']
+        else:
+            self.lead = ""
         if 'Closed' in header['HARTMANN']:
             self.hartmann = 'Closed'
             self.flavor = header['FLAVOR'].capitalize()
