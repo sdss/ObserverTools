@@ -435,3 +435,8 @@
 - After discovering that symlinks don't install with setuptools, some
  mini-scripts have been added to bin with common aliases that point to the
  desired location
+
+- Fixed several keywords like cart id and plateid in apogee_data, boss_data,
+ and sloan_log.py
+
+- Added /Volumes/data to the sdss_paths library
