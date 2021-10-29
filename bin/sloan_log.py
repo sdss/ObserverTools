@@ -259,7 +259,8 @@ class Logging:
         if self.args.apogee:
             print('Reading APOGEE Data ({})'.format(len(self.ap_images)))
             for image in tqdm(self.ap_images):
-                # print(image)
+                if self.args.verbose:
+                    print(image.name)
                 img = apogee_data.APOGEERaw(image, self.args, 1)
                 # img.parse_layer(1)
                 if img.lead is None:  # If the first exposure is still
@@ -819,10 +820,10 @@ class Logging:
                 self.ap_data['iDetector'][self.morning_filter],
                 self.ap_data['iSeeing'][self.morning_filter]
             ):
-                print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
+                print('{:<5.0f} {:>8} {:>5.0f} {:<8.0f} {:<12} {:<4}'
                       ' {:>5}'
                       ' {:<5}'
-                      ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
+                      ' {:>6.1f}'.format(int(mjd), iso[11:19], cart,
                                          exp_id, exp_type,
                                          dith, nread, detectors, see))
 
@@ -844,7 +845,7 @@ class Logging:
                 #       ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
                 #                          exp_id, exp_type,
                 #                          dith, nread, detectors, see))
-                print('{:<5.0f} {:>8} {:>2.0f} {:<8.0f} {:<12} {:<4}'
+                print('{:<5.0f} {:>8} {:>5.0f} {:<8.0f} {:<12} {:<4}'
                       ' {:>6}'
                       ' {:<8}'
                       ' {:>6.1f}'.format(int(mjd), iso[11:19], cart,

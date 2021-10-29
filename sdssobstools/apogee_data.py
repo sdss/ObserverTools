@@ -134,8 +134,13 @@ class APOGEERaw:
         lower = w0 - dw // 2
         upper = w0 + dw // 2
         line_inds = np.arange(self.quickred_data.shape[1])[lower:upper]
-        line = np.average(self.quickred_data[fibers[0]:fibers[1], lower:upper],
+        try:
+            line = np.average(self.quickred_data[fibers[0]:fibers[1], lower:upper],
                           axis=0)
+        except ZeroDivisionError:
+            print(f"Couldn't find dither offsets of image {self.file} with"
+                  f" shape {self.quickred_data.shape}")
+            return np.nan
 
         def fit_func(w, x):
             return np.exp(-0.5 * ((x - w) / sigma) ** 2)
