@@ -276,10 +276,11 @@ def parseargs():
                              ' directory of dated folders, where the newest'
                              ' folder has the newest data.'
                              ' Default is {}'.format(default_dir))
-
     parser.add_argument('-e', '--ecam', action='store_true',
                         help='If included, will display engineering camera'
                              'images. Overrides most arguments.')
+    parser.add_argument("-f", "--fsc", action="store_true",
+                        help="If included, will display FSC images")
     parser.add_argument('-g', '--guider', action='store_true',
                         help='If included, will display guider images.'
                              ' Overrides most arguments.')
@@ -355,6 +356,11 @@ def parseargs():
         args.scale = args.scale
         args.zoom = args.zoom
         args.regex = 'proc-gimg-*'
+    
+    elif args.fsc:
+        args.fits_dir = sdss_paths.fsc
+        args.name = "FSC"
+        args.regex = "raw-*"
 
     return args
 

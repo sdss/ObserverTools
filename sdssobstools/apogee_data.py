@@ -16,6 +16,8 @@ except ImportError as e:
                       '    {}'.format(e))
 except ConnectionResetError:
     has_epics = False
+except ConnectionError:
+    has_epics = False
 
 __version__ = '3.2.1'
 
@@ -94,6 +96,7 @@ class APOGEERaw:
         self.quickred_file = ''
         self.utr_file = ''
         self.utr_data = np.array([[]])
+        self.mjd = self.file.absolute().parent.name
 
     # noinspection PyTupleAssignmentBalance,PyTypeChecker
     def compute_offset(self, fibers=(30, 35), w0=939, dw=40, sigma=1.2745):
@@ -116,18 +119,18 @@ class APOGEERaw:
         """
         w0 = int(w0)
         dw = int(dw)
-        mjd = self.file.absolute().parent.name
-        self.quickred_file = (self.file.absolute().parent.parent.parent
-                              / 'quickred/{}/ap1D-a-{}.fits.fz'
-                                ''.format(mjd, self.exp_id))
-        try:
-            if not self.quickred_data:
+        self.quickred_file = sdss_paths.ap_qr / f"{self.mjd}/apq-{self.exp_id}.fits"
+        if self.quickred_data.size == 0:
+            if self.quickred_file.exists():
+                self.quickred_data = fitsio.read(self.quickred_file, 3)[0][0]
+            else:
+                self.quickred_file = (sdss_paths.ap_qr
+                                      / 'quickred/{}/ap1D-a-{}.fits.fz'
+                                        ''.format(self.mjd, self.exp_id))
+                if not self.quickred_file.exists():
+                    print(f"Offsets for {self.file} could not be read")
+                    return np.nan
                 self.quickred_data = fitsio.read(self.quickred_file, 1)
-        except OSError as e:
-            if self.args.verbose:
-                print('Offsets for {} produced this error\n{}'.format(self.file,
-                                                                      e))
-            return np.nan
         lower = w0 - dw // 2
         upper = w0 + dw // 2
         line_inds = np.arange(self.quickred_data.shape[1])[lower:upper]
@@ -156,8 +159,7 @@ class APOGEERaw:
             raise ValueError("APTest didn't receive a valid master_col: {}"
                              "".format(master_col))
         if legacy:
-            mjd = self.file.absolute().parent.name
-            self.utr_file = sdss_paths.ap_utr / f"{mjd}/apRaw-{self.exp_id}.fits"
+            self.utr_file = sdss_paths.ap_utr / f"{self.mjd}/apRaw-{self.exp_id}.fits"
             if not self.utr_file.exists():
                 raise FileNotFoundError(f"Couldn't fine the file: {self.utr_file.as_posix()}")
             try:
@@ -177,16 +179,16 @@ class APOGEERaw:
 
         else:
             if self.quickred_data.size == 0:
-                mjd = self.file.absolute().parent.name
-                self.quickred_file = (self.file.absolute().parent.parent.parent
-                                      / 'quickred/{}/ap1D-a-{}.fits.fz'
-                                        ''.format(mjd, self.exp_id))
-                try:
+                if self.quickred_file.exists():
+                    self.quickred_data = fitsio.read(self.quickred_file, 3)[0][0]
+                else:
+                    self.quickred_file = (sdss_paths.ap_qr
+                                          / 'quickred/{}/ap1D-a-{}.fits.fz'
+                                            ''.format(self.mjd, self.exp_id))
+                    if not self.quickred_file.exists():
+                        print(f"Offsets for {self.file} could not be read")
+                        return np.nan
                     self.quickred_data = fitsio.read(self.quickred_file, 1)
-                except OSError as e:
-                    if self.args.verbose:
-                        print('APTest for {} produced this error\n{}'.format(
-                            self.file, e))
             slc = np.average(self.quickred_data[:, ws[0]:ws[1]], axis=1)
         # print(master_col.mean(), master_col.shape, master_col[100])
         flux_ratio = slc / master_col
@@ -284,15 +286,15 @@ def main():
                              " data, whether or not the night is complete."
                              " Note: must be run after 00:00Z")
     parser.add_argument('-m', '--mjd',
-                        help='If not today (-t), the mjd to search')
+                        help='If not today (-t), the self.mjd to search')
     parser.add_argument('-v', '--verbose', action='count', default=1,
                         help='Show details, can be stacked')
     args = parser.parse_args()
     if args.today:
         mjd_today = int(Time.now().sjd)
         data_dir = sdss_paths.ap_archive / f"{mjd_today}/"
-    elif args.mjd:
-        data_dir = sdss_paths.ap_archive / f"{args.mjd}"
+    elif args.self.mjd:
+        data_dir = sdss_paths.ap_archive / f"{args.self.mjd}"
     else:
         raise Exception('No date specified')
     # print(data_dir)

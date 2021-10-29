@@ -30,7 +30,7 @@ except (socket.gaierror, ConnectionRefusedError):
                              'telemetry/cgi/ArchiveDataServer.cgi')
         telemetry.scan_archives()
     except (socket.gaierror, ConnectionRefusedError) as e:
-        raise Exception('Cannot access EPICS Server, aborting, you should try\n'
+        raise ConnectionError('Cannot access EPICS Server, aborting, you should try\n'
                         'ssh -L 5080:sdss4-telemetry.apo.nmsu.edu:80 observer@'
                         'sdss-gateway.apo.nmsu.edu')
 

@@ -38,21 +38,11 @@ import warnings
 import numpy as np
 # import ap_test
 try:
-    try:
-        import epics_fetch
-        has_epics = True
-    except ConnectionResetError:
-        has_epics = False
     import get_dust
     import m4l
     import telescope_status
 except ImportError as e:
     try:
-        try:
-            from bin import epics_fetch
-            has_epics = False
-        except ConnectionResetError:
-            has_epics = False
         from bin import get_dust, m4l, telescope_status
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
@@ -74,7 +64,7 @@ except ImportError as e:
         import boss_data
         import log_support
     except ImportError as e:
-        raise ImportError('Please add ObserverTools/python to your PYTHONPATH:'
+        raise ImportError('Please add ObserverTools/sdssobstools to your PYTHONPATH:'
                           '\n    {}'.format(e))
 
 if sys.version_info.major < 3:
@@ -85,7 +75,7 @@ warnings.filterwarnings('ignore', category=UserWarning, append=True)
 # For numpy boolean arrays
 warnings.filterwarnings('ignore', category=FutureWarning, append=True)
 
-__version__ = '3.7.3'
+__version__ = '3.7.4'
 
 ap_dir = sdss_paths.ap_archive
 b_dir = sdss_paths.boss
@@ -154,10 +144,6 @@ class Logging:
                           'cAPSummary': [],
                           'cBSummary': []}
         self.test_procs = []
-        if has_epics:
-            self.telemetry = epics_fetch.telemetry
-        else:
-            self.telemetry = False
         # Commented out to test the apogee_data.APOGEERaw.ap_test method
         # self.ap_tester = ap_test.ApogeeFlat(
         #     Path(__file__).absolute().parent.parent
@@ -398,31 +384,31 @@ class Logging:
                 self.b_data['iHart'].append(img.hartmann)
                 self.b_data['iPlate'].append(img.plate_id)
 
-                if img.hartmann == 'Left' and self.telemetry:
-                    # Note that times are sent in UTC and received in local, yet
-                    # those times are marked as UTC
-                    tstart = Time(img.isot).datetime
-                    tend = (Time(img.isot) + 5 / 24 / 60).datetime
-                    hart = self.telemetry.get([
-                        '25m:hartmann:r1PistonMove',
-                        # '25m:hartmann:r2PistonMove',
-                        '25m:hartmann:b1RingMove',
-                        # '25m:hartmann:b2RingMove',
-                        '25m:hartmann:sp1AverageMove',
-                        # '25m:hartmann:sp2AverageMove',
-                        '25m:hartmann:sp1Residuals:steps',
-                        '25m:hartmann:sp1Residuals:deg',
-                        # '25m:hartmann:sp2Residuals:deg',
-                        '25m:boss:sp1Temp:median',
-                        # '25m:boss:sp2Temp:median',
-                        # '25m:hartmann:sp2Residuals:steps'
-                    ],
-                        start=tstart,
-                        end=tend,
-                        interpolation='raw', scan_archives=False)
+                # if img.hartmann == 'Left' and self.telemetry:
+                #     # Note that times are sent in UTC and received in local, yet
+                #     # those times are marked as UTC
+                #     tstart = Time(img.isot).datetime
+                #     tend = (Time(img.isot) + 5 / 24 / 60).datetime
+                #     hart = self.telemetry.get([
+                #         '25m:hartmann:r1PistonMove',
+                #         # '25m:hartmann:r2PistonMove',
+                #         '25m:hartmann:b1RingMove',
+                #         # '25m:hartmann:b2RingMove',
+                #         '25m:hartmann:sp1AverageMove',
+                #         # '25m:hartmann:sp2AverageMove',
+                #         '25m:hartmann:sp1Residuals:steps',
+                #         '25m:hartmann:sp1Residuals:deg',
+                #         # '25m:hartmann:sp2Residuals:deg',
+                #         '25m:boss:sp1Temp:median',
+                #         # '25m:boss:sp2Temp:median',
+                #         # '25m:hartmann:sp2Residuals:steps'
+                #     ],
+                #         start=tstart,
+                #         end=tend,
+                #         interpolation='raw', scan_archives=False)
 
-                    self.b_data['hHart'].append(hart)
-                    self.b_data['hTime'].append(img.isot)
+                #     self.b_data['hHart'].append(hart)
+                #     self.b_data['hTime'].append(img.isot)
                 sos_files = []
                 # img_mjd = int(Time(img.isot).mjd)
                 # All boss exposures write as splog, but manga writes different

@@ -18,6 +18,7 @@ else:
     except PermissionError:  # This happens on obs1/2 with /data_hub, even
         # though /data exists, it cannot be read.
         data_path = Path("/data_hub/")
+
 ap_utr: Path = data_path / "apogee/utr_cdr"
 ap_archive: Path = data_path / "apogee/archive"
 ap_qr: Path = data_path / "apogee/quickred"
@@ -26,5 +27,5 @@ dos: Path = data_path / "manga/dos"
 sos: Path = data_path / "boss/sos"
 ecam: Path = data_path / "ecam"
 gcam: Path = data_path / "gcam"
+fsc: Path = data_path / "fsc"
 mcp_logs: Path = data_path / "logs/mcp"
-

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #!/usr/bin/env python2
 
@@ -81,8 +81,8 @@ args=""
 import warnings
 warnings.filterwarnings('ignore')
 
-import apogeeThar
-import apogeeThar2
+from sdssobstools import apogeeThar
+from sdssobstools import apogeeThar2
 
 #p0 = scipy.c_[44941, 939.646, 1.287] #   A and B average for Line 2
 
