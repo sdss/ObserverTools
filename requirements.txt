@@ -7,7 +7,7 @@ pyds9~=1.8.1
 tqdm~=4.50.2
 channelarchiver~=1.0.0
 seaborn~=0.10.1
-scipy~=1.5.3
+scipy~=1.7.1
 setuptools>=47.1.1
 pytest-astropy
 datetime~=4.3
@@ -16,4 +16,3 @@ beautifulsoup4~=4.9.3
 influxdb-client~=1.19.0
 pydl~=0.6.0
 photutils~=1.1.0
-
