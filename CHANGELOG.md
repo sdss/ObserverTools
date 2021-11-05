@@ -440,3 +440,5 @@
  and sloan_log.py
 
 - Added /Volumes/data to the sdss_paths library
+
+- Added bin/fsc_coord_convert.py to help track coordinates in the fsc.
