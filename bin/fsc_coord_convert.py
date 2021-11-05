@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
+"""A tool to convert from the FSC coordinates of r, theta to standard RA, Dec
+ for tcc
+"""
 import numpy as np
 from argparse import ArgumentParser, ArgumentError
+
+__author__ = "Dylan Gatlin"
+__version__ = "3.0.0"
 
 
 def converter(r, theta):
@@ -8,12 +14,17 @@ def converter(r, theta):
 
 
 def arg_parse():
-    parser = ArgumentParser()
+    parser = ArgumentParser(description="A tool for converting coordinates to"
+            " from FSC's r, theta to RA and Dec offsets for tcc. If given with"
+            " arguments, give them in pairs of space-separated r and thetas."
+            " You can put multiple, as long as they're in order. If no pairs"
+            " are given, then a default value will be filled which will cover"
+            " the entire focal plane and is what we have done in the past.")
     parser.add_argument("rthetapairs",
             help="r and theta, separated by spaces, as many times as you like."
                  " in sky degrees (1.5deg = 333.3mm)", nargs='*', type=float)
     parser.add_argument("--tcc-offset", action="store_true", help="Print tcc"
-            " offset commands")
+            " offset commands instead of a table")
     return parser.parse_args()
 
 
