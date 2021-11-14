@@ -7,25 +7,25 @@ try:
     import tpmdata
     tpmdata.tinit()
 except ImportError:
-    print('tpmdata unavailable')
+    print("tpmdata unavailable")
     tpmdata = None
 
-__version__ = '3.0.0'
+__version__ = "3.0.0"
 
 
 def query():
     if tpmdata is None:
-        raise ConnectionError('Cannot query the tpm without tpmdata installed')
+        raise ConnectionError("Cannot query the tpm without tpmdata installed")
 
     data = tpmdata.packet(1, 1)
 
-    t = Time(data['ctime'], format='unix')
-    output = f'Status at:  {t.isot[12:19]}Z\n'
+    t = Time(data["ctime"], format="unix")
+    output = f"Status at:  {t.isot[12:19]}Z\n"
     output += (f"Telescope stowed at:  "
                f"{data['az_actual_pos']*data['az_spt']/3600:>5.1f},"
                f" {data['alt_actual_pos']*data['alt_spt']/3600:>5.1f},"
                f" {data['rot_actual_pos']*data['rot_spt']/3600:>5.1f} mount\n")
-    # epics_data = epics_fetch.get_data(['25m:mcp:instrumentNum'],
+    # epics_data = epics_fetch.get_data(["25m:mcp:instrumentNum"],
                                     #   start_time=Time.now().to_datetime(),
                                     #   end_time=Time.now().to_datetime())
     cart = "ECam" if data["inst_id_0"] == 0 else f"{data['inst_id_0']:.0f}"
@@ -46,5 +46,5 @@ def main():
     print(query())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
