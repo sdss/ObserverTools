@@ -16,6 +16,8 @@ import hashlib
 import pyds9
 import time
 import fitsio
+import sys
+import io
 # from astropy.time import Time, TimeDelta
 # import os
 import numpy as np
@@ -93,7 +95,17 @@ class DS9Window:
                     self.name = input('>')
         if self.verbose:
             print(self.name)
+
+        # pyds9.DS9 prints a completely misleading block of text when it
+        # launches about connecting to XPA. Strangely, it doesn't appear in
+        # ipython. This stringio tool is a way of suppressing all stdout for
+        # a few lines. It may have unintended consequences, but it's rather
+        # essential because other observers won't know to not trust it
+        text_black_hole = io.StringIO()
+        sys.stdout = text_black_hole
         self.ds9 = pyds9.DS9(self.name)
+        sys.stdout = sys.__stdout__
+
         if sdss_paths.boss.as_posix() in self.fits_dir.as_posix():
             self.ds9.set('tile yes')
 

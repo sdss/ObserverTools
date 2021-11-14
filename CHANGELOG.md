@@ -442,3 +442,9 @@
 - Added /Volumes/data to the sdss_paths library
 
 - Added bin/fsc_coord_convert.py to help track coordinates in the fsc.
+
+## [3.7.4] - 2021-11-14
+
+- Supppressed the output when pyds9 initializes a DS9 window
+
+- Removed epics_fetch.py from telescope_status.py
