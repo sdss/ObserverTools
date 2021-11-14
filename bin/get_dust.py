@@ -11,15 +11,10 @@ import datetime
 from astropy.time import Time
 import numpy as np
 from bin import sjd
-try:
-    from bin import epics_fetch
-except ConnectionResetError:
-    epics_fetch = False
 
 __version__ = '3.2.2'
 
-if epics_fetch:
-    telemetry = epics_fetch.telemetry
+raise NotImplementedError("get_dust.py is waiting for InfluxDB support")
 
 # TAI_UTC =34;
 TAI_UTC = 0

@@ -8,17 +8,6 @@ import numpy as np
 import textwrap
 from . import sdss_paths
 
-try:
-    from bin import epics_fetch
-    has_epics = True
-except ImportError as e:
-    raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
-                      '    {}'.format(e))
-except ConnectionResetError:
-    has_epics = False
-except ConnectionError:
-    has_epics = False
-
 __version__ = '3.2.1'
 
 
@@ -42,22 +31,22 @@ class APOGEERaw:
         self.ext = ext
         self.args = args
         header = fitsio.read_header(fil, ext=ext)
-        if has_epics:
-            self.telemetry = epics_fetch.telemetry
-            dithers = self.telemetry.get('25m:apogee:ditherNamedPositions',
-                                         start=(Time.now() - 5 / 24 / 60).datetime,
-                                         end=Time.now().datetime,
-                                         scan_archives=False, interpolation='raw')
-        else:
-            class Null:
-                pass
-            dithers = Null()
-            dithers.values = np.array([[0., 0.,], [0., 0.]])
+        # if has_epics:
+        #     self.telemetry = epics_fetch.telemetry
+        #     dithers = self.telemetry.get('25m:apogee:ditherNamedPositions',
+        #                                  start=(Time.now() - 5 / 24 / 60).datetime,
+        #                                  end=Time.now().datetime,
+        #                                  scan_archives=False, interpolation='raw')
+        # else:
+        #     class Null:
+        #         pass
+        #     dithers = Null()
+        #     dithers.values = np.array([[0., 0.,], [0., 0.]])
         # layer = self.image[layer_ind]
         # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
-        if (header['DITHPIX'] - dithers.values[-1][0]) < 0.05:
+        if (header['DITHPIX'] - 12.994) < 0.05:
             self.dither = 'A'
-        elif (header['DITHPIX'] - dithers.values[-1][1]) < 0.05:
+        elif (header['DITHPIX'] - 13.494) < 0.05:
             self.dither = 'B'
         else:
             self.dither = '{:.1f}'.format(header['DITHPIX'])

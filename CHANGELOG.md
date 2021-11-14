@@ -447,4 +447,5 @@
 
 - Supppressed the output when pyds9 initializes a DS9 window
 
-- Removed epics_fetch.py from telescope_status.py
+- Removed epics_fetch.py from telescope_status.py, log_support.py,
+ apogee_data.py, get_dust.py

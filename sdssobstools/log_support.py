@@ -10,16 +10,8 @@ STUI, but by bypassing STUI and directly accessing telemetry
 from astropy.time import Time
 import argparse
 
-try:
-    from bin import epics_fetch
-except ImportError as e:
-    raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
-                      '    {}'.format(e))
-except ConnectionResetError:
-    has_epics = False
-
 __version__ = '3.2.0'
-
+has_epics = False
 
 class LogSupport:
     def __init__(self, tstart, tend, args):

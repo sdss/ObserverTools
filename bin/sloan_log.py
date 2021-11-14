@@ -38,12 +38,12 @@ import warnings
 import numpy as np
 # import ap_test
 try:
-    import get_dust
+    # import get_dust
     import m4l
     import telescope_status
 except ImportError as e:
     try:
-        from bin import get_dust, m4l, telescope_status
+        from bin import m4l, telescope_status # , get_dust.py
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
                           '\n    {}'.format(e))
@@ -652,10 +652,10 @@ class Logging:
                 pass
         print()
         print('### Notes:\n')
-        dust_sum = get_dust.get_dust(self.args.sjd, self.args)
-        print('- Integrated Dust Counts: ~{:5.0f} dust-hrs'.format(
-            dust_sum - dust_sum % 100))
-        print('\n')
+        # dust_sum = get_dust.get_dust(self.args.sjd, self.args)
+        # print('- Integrated Dust Counts: ~{:5.0f} dust-hrs'.format(
+            # dust_sum - dust_sum % 100))
+        # print('\n')
 
         print('=' * 80)
         print('{:^80}'.format('Comments Timeline'))
