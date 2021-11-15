@@ -11,10 +11,12 @@ if bin_cache.exists():
     bin_cache.rmdir()
 version = changelog.split('[')[-1].split(']')[0]
 requirements = (here / 'requirements.txt').open('r').readlines()
+scripts=[p.relative_to(here).as_posix() for p in (here / 'bin').glob('*')]
+print(f"Inluded scripts: {scripts}")
 setup(
     name='sdss-obstools',
     version=version,
-    scripts=[p.as_posix() for p in (here / 'bin').glob('*')],
+    scripts=scripts,
     package_data={
         '': ['*.dat', '*.fits', '*.npy', '*.txt'],
         'dat': ['*.npy', '*.dat'],

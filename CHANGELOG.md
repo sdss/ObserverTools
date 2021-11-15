@@ -455,3 +455,8 @@
 - Added sdss_paths support to list_ap
 
 - Fixed a ds9_live bug with nfs file mounts that aren't always ready to be read
+
+## [3.7.5] - 2021-11-15
+
+- Fixed a bug where setuptools wouldn't include files that didn't end in py
+  

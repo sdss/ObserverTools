@@ -101,6 +101,8 @@ class DS9Window:
         # ipython. This stringio tool is a way of suppressing all stdout for
         # a few lines. It may have unintended consequences, but it's rather
         # essential because other observers won't know to not trust it
+        # TODO this doesn't work, possibly because the error message is
+        # generated elsewhere
         text_black_hole = io.StringIO()
         sys.stdout = text_black_hole
         self.ds9 = pyds9.DS9(self.name)
