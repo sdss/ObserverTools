@@ -67,5 +67,5 @@ def main():
         write_hashes(data_dir, output_file)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
