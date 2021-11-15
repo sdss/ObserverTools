@@ -449,3 +449,9 @@
 
 - Removed epics_fetch.py from telescope_status.py, log_support.py,
  apogee_data.py, get_dust.py
+
+- Changed apogee dither checker lines
+
+- Added sdss_paths support to list_ap
+
+- Fixed a ds9_live bug with nfs file mounts that aren't always ready to be read

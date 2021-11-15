@@ -220,8 +220,11 @@ class DS9Window:
 
     def update(self):
         """Update the display"""
-
-        fil = self.latest_fits_file(self.regex)
+        try:
+            fil = self.latest_fits_file(self.regex)
+        except OSError:  # This happens with nfs file mounts due to inactivity
+            # It always works with a second query
+            fil = self.latest_fits_file(self.regex)
         if fil is None:
             print("No files found in today's folder, skipping.")
             return
