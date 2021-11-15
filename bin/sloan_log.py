@@ -276,15 +276,17 @@ class Logging:
                     self.ap_data['aID'].append(img.exp_id)
                     if 'ThAr' in img.exp_type:
                         self.ap_data['aOffset'].append(
-                            img.compute_offset((30, 35), 939, 40, 1.27))
+                            img.compute_offset((60, 70), 1105, 40, 1.27))
                         self.ap_data['aLamp'].append('ThAr')
                     elif 'UNe' in img.exp_type:
                         self.ap_data['aOffset'].append(
-                            img.compute_offset((30, 35), 1761, 20, 3))
+                            img.compute_offset((60, 70), 1180, 30, 3))
                         self.ap_data['aLamp'].append('UNe')
                     else:
                         print("Couldn't parse the arc image: {} with exposure"
                               " type {}".format(img.file, img.exp_type))
+                        self.ap_data["aTime"].pop()
+                        self.ap_data["aID"].pop()
                 elif ('Object' in img.exp_type) and ('-a-' in img.file.name):
                     # TODO check an object image for a good FWHM (last
                     # input)
@@ -859,11 +861,11 @@ class Logging:
         # dithers taken back to back.
         wrapper = textwrap.TextWrapper(80)
         thar_str = 'ThAr Offsets: {}'.format(
-            ['{:.3f}'.format(f) for f in np.diff(
+            ['{:.2f}'.format(f) for f in np.diff(
                 self.ap_data['aOffset'][self.ap_data['aLamp'] == 'ThAr'])])
         print('\n'.join(wrapper.wrap(thar_str)))
         une_str = 'UNe Offsets: {}'.format(
-            ['{:.3f}'.format(f) for f in np.diff(
+            ['{:.2f}'.format(f) for f in np.diff(
                 self.ap_data['aOffset'][self.ap_data['aLamp'] == 'UNe'])])
         print('\n'.join(wrapper.wrap(une_str)))
         if len(self.ap_data['oOffset']) > 1:

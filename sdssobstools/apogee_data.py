@@ -70,7 +70,9 @@ class APOGEERaw:
             elif "FPI" in header["OBSCMNT"]:
                 self.exp_type = "FPI Lamp"
             else:
-                print('Could not process exposure type of {}'.format(self.file))
+                self.exp_type = "Arc"
+                if args.verbose:
+                    print('Could not process exposure type of {}'.format(self.file))
         else:
             self.exp_type = header['EXPTYPE'].capitalize()
         self.n_read = header['NREAD']
@@ -88,7 +90,7 @@ class APOGEERaw:
         self.mjd = self.file.absolute().parent.name
 
     # noinspection PyTupleAssignmentBalance,PyTypeChecker
-    def compute_offset(self, fibers=(30, 35), w0=939, dw=40, sigma=1.2745):
+    def compute_offset(self, fibers=(60, 70), w0: int=1105, dw:int=40, sigma:float=1.2745):
         """This is based off of apogeeThar.OneFileFitting written by Elena. It
         is supposed to generate a float for the pixel offsets of an APOGEE
         ThAr cal. Here is how it works:
