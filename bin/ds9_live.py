@@ -158,6 +158,8 @@ class DS9Window:
         #         if max_time < mtime:
         #             dirname = fil
         #             max_time = mtime
+        if self.verbose:
+            print(f"Latest fits dir: {dirname.as_posix()}")
 
         return dirname
 
