@@ -139,21 +139,25 @@ class DS9Window:
         dirname = ''
 
         # Obtain the files in the directory and add the full path to them
+        newest_dir = sorted([i.name for i in list(self.fits_dir.glob("*"))])[-1]
+        dirname = self.fits_dir / newest_dir
+       
+        # This old method failed with nfs file mounts because the latest mtime
+        # was a local variable that would update when the folder was rescanned 
+        # for fil in Path(self.fits_dir).glob('*'):
+        #     fil = fil.absolute()
 
-        for fil in Path(self.fits_dir).glob('*'):
-            fil = fil.absolute()
+        #     if fil.is_dir():
 
-            if fil.is_dir():
+        #         # Store the name and mtime of only the latest FITS file, reads
+        #         # through every file, checks its mtime, and keeps the most
+        #         # recent for the return
 
-                # Store the name and mtime of only the latest FITS file, reads
-                # through every file, checks its mtime, and keeps the most
-                # recent for the return
-
-                mtime = fil.stat().st_mtime
-                # print max_time, file, mtime
-                if max_time < mtime:
-                    dirname = fil
-                    max_time = mtime
+        #         mtime = fil.stat().st_mtime
+        #         # print max_time, file, mtime
+        #         if max_time < mtime:
+        #             dirname = fil
+        #             max_time = mtime
 
         return dirname
 
@@ -167,7 +171,11 @@ class DS9Window:
         # print 'dir = ', dir
         img_times = []
         imgs = []
-        for fil in Path(fits_dir).glob(pattern):
+        try:
+            globber = Path(fits_dir).glob(pattern)
+        except OSError:
+            globber = Path(fits_dir).glob(pattern)
+        for fil in globber:
             fil = fil.absolute()
 
             # See if the file name matches the pattern and the file is a FITS
