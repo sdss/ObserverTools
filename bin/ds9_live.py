@@ -139,7 +139,12 @@ class DS9Window:
         dirname = ''
 
         # Obtain the files in the directory and add the full path to them
-        newest_dir = sorted([i.name for i in list(self.fits_dir.glob("*"))])[-1]
+        dirs = sorted([i.name for i in list(self.fits_dir.glob("*"))])
+        newest_dir = dirs[-1]
+        try:
+            int(newest_dir)
+        except ValueError:
+            newest_dir = dirs[-2]
         dirname = self.fits_dir / newest_dir
        
         # This old method failed with nfs file mounts because the latest mtime
