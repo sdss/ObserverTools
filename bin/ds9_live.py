@@ -207,8 +207,6 @@ class DS9Window:
         # An attempt at making sure that if APOGEE isn't on the summary
         # directory, it won't crash because it won't try to read an image
         # that is still writing
-        print((Time.now() - Time(img_times[-1], format="unix")).sec,
-                        TimeDelta(15 * 60, format="sec").sec)
         try:
             if (('APOGEE' in self.name)
                     and ('summary' not in self.fits_dir.as_posix())
