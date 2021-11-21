@@ -10,6 +10,7 @@ Changelog:
 """
 
 import subprocess as sub
+import tpmdata
 
 __version__ = '3.0.0'
 
@@ -49,16 +50,38 @@ def main():
     # softwares.append('mangadrp')
     # versions.append(mangadrp.stdout.read().decode('utf-8').strip('\n'))
 
-    sdss_obstools = sub.Popen('pip list | grep sdss-obstools', shell=True,
-                              stdout=sub.PIPE).stdout.read().decode(
-        'utf-8').strip('\n')
+    sdss_obstools = sub.run('pip list | grep sdss-obstools', shell=True,
+                              stdout=sub.PIPE).stdout.decode('utf-8').strip('\n')
     if len(sdss_obstools) != 0:
         softwares.append(sdss_obstools.split()[0])
         versions.append(sdss_obstools.split()[-1])
     else:
         softwares.append("sdss-obstools")
-    versions.append("FAILED")
-
+        versions.append("FAILED")
+    
+    tpmdata.tinit()
+    tpm_packet = tpmdata.packet(1, 1)
+    softwares.append("TPM")
+    try:
+        versions.append(tpm_packet["tpm_vers"])
+    except:
+        versions.append("FAILED")
+    
+    softwares.append("MCP")
+    try:
+        versions.append(tpm_packet["mcp_vers"])
+    except:
+        versions.append("FAILED")
+    
+    has_module = bool(sub.run("which module", shell=True, stdout=sub.PIPE
+                              ).stdout)
+    if has_module:
+        idlspec = sub.run("module load idlspec2d; idlspec2d_version", shell=True,
+                          stdout=sub.PIPE).stdout.decode("utf-8").strip('\n')
+        softwares.append("idlspec2d")
+        versions.append(idlspec.split()[-1])
+    
+    
     print('{:-^42}'.format('Other Versions'))
     for s, v in zip(softwares, versions):
         print('{:<20}: {:<20}'.format(s, v))
