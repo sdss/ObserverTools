@@ -210,8 +210,8 @@ class DS9Window:
         try:
             if (('APOGEE' in self.name)
                     and ('summary' not in self.fits_dir.as_posix())
-                    and ((Time.now() - Time(img_times[-1], format="unix")) * 86400
-                         > TimeDelta(15 * 60, format="sec"))
+                    and ((Time.now() - Time(img_times[-1], format="unix")).sec
+                         > TimeDelta(15 * 60, format="sec").sec)
                     ):
                 fits_filename = imgs[-2].absolute()
             else:
