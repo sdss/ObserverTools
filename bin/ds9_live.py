@@ -18,7 +18,7 @@ import time
 import fitsio
 import sys
 import io
-# from astropy.time import Time, TimeDelta
+from astropy.time import Time, TimeDelta
 # import os
 import numpy as np
 # import tracemalloc
@@ -31,7 +31,7 @@ boss_cams = ['r1', 'b1', 'r2', 'b2']
 file_sizes = {'APOGEE': 67115520, 'BOSS': 9e6, 'Guider': 4e5,
               'Engineering': 9e5}
 
-__version__ = '3.1.1'
+__version__ = '3.1.2'
 
 
 class DS9Window:
@@ -178,7 +178,7 @@ class DS9Window:
         # print 'dir = ', dir
         img_times = []
         imgs = []
-        try:
+        try:  # To handle stale NFS file handler errors on the mac minis
             globber = Path(fits_dir).glob(pattern)
         except OSError:
             globber = Path(fits_dir).glob(pattern)
@@ -201,6 +201,7 @@ class DS9Window:
         img_times = np.array(img_times)
         imgs = np.array(imgs)
         sorter = img_times.argsort()
+        img_times = img_times[sorter]
         imgs = imgs[sorter]
         # img_times = img_times[sorter]
         # An attempt at making sure that if APOGEE isn't on the summary
@@ -208,7 +209,10 @@ class DS9Window:
         # that is still writing
         try:
             if (('APOGEE' in self.name)
-                    and ('summary' not in self.fits_dir.as_posix())):
+                    and ('summary' not in self.fits_dir.as_posix())
+                    and (Time.now() - Time(imgs[-1], format="unix")
+                         > TimeDelta(15 * 60, format="sec"))
+                    ):
                 fits_filename = imgs[-2].absolute()
             else:
                 fits_filename = imgs[-1].absolute()
