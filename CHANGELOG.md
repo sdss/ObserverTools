@@ -459,4 +459,10 @@
 ## [3.7.5] - 2021-11-15
 
 - Fixed a bug where setuptools wouldn't include files that didn't end in py
+
+## [3.7.6] - 2021-11-21
+
+- Fixed list_ap for non-hub
+- Fixed ds9_live.py to run on sdss5-display for multiple days
+- ds9_live.py now displays the most recent apogee images
   
