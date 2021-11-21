@@ -75,6 +75,8 @@ import datetime as dt
 import time
 import scipy.optimize
 import re
+from pathlib import Path
+import fitsio
 
 args=""
 
@@ -114,19 +116,21 @@ def getFiles(mask):
     files = glob.glob(mask)
     return sorted(files)
 
-#----------------------- 
-# def ifLamp(f, lamp ):   #  'LAMPUNE'; 'LAMPTHAR'
-#     fexp=f[33:41]
-#     fReduct= sdss_paths.ap_qr / "?????/ap2D-a-%s.fits.fz" % (fexp)  
-#     fileNames = glob.glob(fReduct)
-#     if len(fileNames) > 1:  sys.exit(" -- error: several reduced arc files found -- ")
-#     if len(fileNames) > 1:  sys.exit(" -- error: no reduced arc file found -- ")
-#     #lamp=pyfits.getval(fileNames[0],lamp,0)
-#     lamp = fits.getval(fileNames[0],lamp,0)
-#     if lamp == 1:  return True
-#     else: return False
+# ----------------------- 
+def ifLamp(f, lamp ):   #  'LAMPUNE'; 'LAMPTHAR'
+    fexp = f.split("Raw-")[-1].rstrip(".fits")
+    print(f)
+    sdss_paths.ap_qr / {}
+    fReduct= sdss_paths.ap_qr
+    fileNames = glob.glob(fReduct)
+    if len(fileNames) > 1:  sys.exit(" -- error: several reduced arc files found -- ")
+    if len(fileNames) > 1:  sys.exit(" -- error: no reduced arc file found -- ")
+    #lamp=pyfits.getval(fileNames[0],lamp,0)
+    lamp = fits.getval(fileNames[0],lamp,0)
+    if lamp == 1:  return True
+    else: return False
 
-#-------------  
+# -------------  
 def getMap(files):
     if len(files)==0:  return None
     files=sorted(files)
@@ -169,8 +173,7 @@ def getSequence(map, regex):
 def getOffset(qrfile1, mjd):
     try :
         #data1 = pyfits.getdata(qrfile1,0)
-        hdu1 = fits.open(qrfile1)
-        data1 = hdu1[1].data
+        data1 = fitsio.read(qrfile1, 3)[0][0]
     except  :
         return None
 	# replaced 150 --> 30
@@ -178,6 +181,10 @@ def getOffset(qrfile1, mjd):
     if mjd > 59440:
       # p0 = 
       p0[0][1] = 915.
+    if mjd > 59516:
+      p0[0][1] = 1560.
+
+
     success, p1, x, spe, ref, fit =apogeeThar.OneFileFitting(data1, fiber, p0)
     if success==5:
         return " err"
@@ -188,8 +195,7 @@ def getOffset(qrfile1, mjd):
 def getOffset_sci(qrfile1, mjd):
     try :
         #data1 = pyfits.getdata(qrfile1,0)
-        hdu1 = fits.open(qrfile1)
-        data1 = hdu1[1].data
+        data1 = fitsio.read(qrfile1, 3)[0][0]
     except  :
         return None
 	# replaced 150 --> 30
@@ -302,29 +308,19 @@ def getFlux(f):
                     
 def  list_one_file(i,f,mjd, dither1=False):
     path= (sdss_paths.ap_qr / "{}".format(mjd)).as_posix()
-    fexp=f[33:41]
-    qrfile1="%s/ap1D-a-%s.fits.fz" % (path,fexp)
-    qrfile2="%s/ap2D-a-%s.fits.fz" % (path,fexp)
-    qrfile1b="%s/ap1D-b-%s.fits.fz" % (path,fexp)
+    fexp = f.split("Raw-")[-1].rstrip(".fits")
+    # fexp=f[33:41]
+    qrfile="%s/apq-%s.fits" % (path,fexp)
 
     ff=f
-    if os.path.exists(qrfile2):  
-        ff=qrfile2
-
-    q=False
-    for j in range(3):
-      try :
-        #hdr = pyfits.getheader(ff)
-        hdu1 = fits.open(ff)
-        hdr = hdu1[0].header
-        q=True
-        break
-      except :    # it was except IOError:
-        continue 
-    if not q:
-       print ("    cannot read file : %s" % ff )
-       return
+    if Path(qrfile).exists():  
+        ff=qrfile
+    else:
+        if not Path(ff).exists():
+            print ("    cannot read file : %s" % ff )
+            return
     
+    hdr = fits.getheader(ff, 0)
     ct=hdr.get('CARTID'); plate=hdr.get('PLATEID'); 
     if ct == None: ct="--"
     if plate==None: plate="----"
@@ -353,7 +349,7 @@ def  list_one_file(i,f,mjd, dither1=False):
       if hdr.get('LAMPUNE')==1:  imtype=imtype+"-Une"
       elif hdr.get('LAMPTHAR')==1:
           imtype=imtype+"-Thar"
-          offs=getOffset(qrfile1, mjd)
+          offs=getOffset(qrfile, mjd)
           if offs != None: 
               offset=offs              
       else: imtype=imtype+"----"
@@ -361,7 +357,7 @@ def  list_one_file(i,f,mjd, dither1=False):
     if imtype=="InternalFlat": imtype="InteFlat"    
     imtype=imtype.center(10)
     if imtype=="  Object  ":
-      offs=getOffset_sci(qrfile1b, mjd)
+      offs=getOffset_sci(qrfile, mjd)
       if offs != None:
         offset=offs
 
@@ -382,7 +378,8 @@ def  list_one_file(i,f,mjd, dither1=False):
 # print information
     ss1="%s %3i "% (mjd, i+1)  #i
     ss1=ss1+"%s  " % (hdr['DATE-OBS'][11:16]) # UT time
-    ss1=ss1+"%s " % (f[33:41])  # exp number
+    ss1 += f.split("Raw-")[-1].rstrip(".fits")
+    # ss1=ss1+"%s " % (f[33:41])  # exp number
     
     if dither1:
         ss1=ss1+" %s " % (sdth)  # dither            
@@ -436,9 +433,10 @@ def list_one_mjd(mjd, args):
 
     files=sorted(files)
     lastNumber = files[-1].split("Raw-")[-1].rstrip(".fits")
-    dd=int(round(int(lastNumber)/10000)*10000)
+    ap_date = lastNumber[:4]
+    dd = int(ap_date + "0000")
     s2=int(lastNumber)-dd
-
+    
     files1=[]
     for i in range(1,s2+1):
         fItem="%s/%s/apRaw-%8i.fits"%(pp,mjd,dd+i)   # raw data 
@@ -463,7 +461,7 @@ def list_one_mjd(mjd, args):
     #    print mapRange[0], mapRange[1]
         files=files[mapRange[0]:mapRange[1]]
     #    print len(files)    
-                            
+    
     for i,f in enumerate(sorted(files)):
         if not os.path.isfile(f):
             ss1="%s %3i"% (mjd, i+1)  #i
