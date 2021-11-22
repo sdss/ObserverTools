@@ -12,7 +12,7 @@ Changelog:
 import subprocess as sub
 import tpmdata
 
-__version__ = '3.0.0'
+__version__ = '3.1.0'
 
 
 def main():
@@ -73,7 +73,8 @@ def main():
     except:
         versions.append("FAILED")
     
-    has_module = bool(sub.run("which module", shell=True, stdout=sub.PIPE
+    has_module = bool(sub.run("module --help", shell=True, stdout=sub.PIPE,
+                              stderr=sub.PIPE
                               ).stdout)
     if has_module:
         idlspec = sub.run("module load idlspec2d; idlspec2d_version", shell=True,
