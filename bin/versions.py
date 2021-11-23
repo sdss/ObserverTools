@@ -42,10 +42,10 @@ def main():
     except:
         versions.append("FAILED")
     
-    has_module = sub.run("module --help", shell=True, stdout=sub.PIPE,
+    module_help = sub.run("module --help", shell=True, stdout=sub.PIPE,
                               stderr=sub.PIPE
                               ).stderr.decode("utf-8")
-    has_module = "command not found" not in has_module
+    has_module = "command not found" not in module_help
 
     if has_module:
         idlspec = sub.run("module load idlspec2d; idlspec2d_version",
@@ -62,4 +62,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
