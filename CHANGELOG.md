@@ -465,4 +465,5 @@
 - Fixed list_ap for non-hub
 - Fixed ds9_live.py to run on sdss5-display for multiple days
 - ds9_live.py now displays the most recent apogee images
+- Added FVC to ds9_live.py with -k
   
