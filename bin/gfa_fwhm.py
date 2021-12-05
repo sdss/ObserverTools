@@ -110,10 +110,9 @@ class GFASet:
             fig.savefig(plot_file, dpi=100)
 
 
-
 def parse_args():
-    parser = argparse.ArgumentParser("Prints a table of FWHMs from GFAs, useful"
-                                     " for focus sweeps")
+    parser = argparse.ArgumentParser(description="Prints a table of FWHMs from"
+        " GFAs, useful for focus sweeps")
     parser.add_argument("-b", "--bias", help="The index of a bias frame")
     parser.add_argument("-m", "--mjd", default=sjd.sjd())
     parser.add_argument("-v", "--verbose", action="store_true",
@@ -147,7 +146,7 @@ def main(args=None):
     if args.bias:
         raise NotImplementedError("This script doesn't support bias reduction")
     if args.file:
-        print(f"{'File Name':20<} {'FWHM':6<} {'N Objects':9<}")
+        print(f"{'File Name':<20} {'FWHM':<6} {'N Objects':<9}")
         print('=' * 80)
         for file in args.file:
             if '*' not in file:
@@ -155,7 +154,7 @@ def main(args=None):
                 if not file.exists():
                     raise FileNotFoundError(f"Couldn't find {file.absolute()}")
                 fwhm, n_objs = gfas.get_fwhm(file)
-                print(f"{file.name:20<} {fwhm:6>.2f} {n_objs:9>.0f}")
+                print(f"{file.name:<20} {fwhm:>6.2f} {n_objs:>9.0f}")
             else:
                 file = Path(file)
                 for p in file.parent.glob(file.name):
