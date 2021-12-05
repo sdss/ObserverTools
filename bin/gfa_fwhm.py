@@ -96,7 +96,7 @@ class GFASet:
                 ) + f" {np.mean(self.n_objs[i]):>6.0f}"
             )
     
-    def plot(self):
+    def plot(self, plot_file):
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
         for i in range(6):
             ax.plot(self.im_nums, self.fwhms[:, i], linewidth=1, alpha=0.8)
@@ -106,6 +106,8 @@ class GFASet:
         ax.set_xlabel("Image Number")
         ax.set_ylabel("FWHM (arcseconds)")
         plt.show()
+        if plot_file:
+            fig.savefig(plot_file, dpi=100)
 
 
 
@@ -179,7 +181,7 @@ def main(args=None):
         gfas.sort()
         gfas.print()
         if args.plot:
-            gfas.plot()
+            gfas.plot(args.plot_file)
 
     return 0
 
