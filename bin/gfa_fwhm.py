@@ -8,12 +8,16 @@ import fitsio
 import sep
 import argparse
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from pathlib import Path
 
 from bin import sjd
 from sdssobstools import sdss_paths
 
+
+sns.set(style="darkgrid")
 
 class GFASet:
     def __init__(self, verbose=False):
@@ -53,13 +57,16 @@ class GFASet:
         data = fitsio.read(path, 1)
         bkg = sep.Background(data.astype(float))
         objects = sep.extract(data - bkg, 1.5, bkg.globalrms)
-        filt = (objects['a'] / objects['b'] < 2) & (objects['b'] / objects['a'] < 2)
+        filt = ((objects['a'] / objects['b'] < 2)
+            & (objects['b'] / objects['a'] < 2)
+            & (objects["flux"] > np.percentile(objects["flux"], 80))
+            )
         if verbose:
-            print(f"Using {filt.sum()}/{filt.shape[0]} point")
+            print(f"Using {filt.sum()}/{filt.shape[0]} points")
         fwhm = 0.216 * np.mean(2.0*np.sqrt(
             2.0*np.log(2)*(objects['a'][filt]**2 + objects['b'][filt]**2))
         )
-        return fwhm, objects.shape[0]
+        return fwhm, filt.sum()
 
     def sort(self):
         self.im_nums = np.array(self.im_nums)
@@ -88,6 +95,18 @@ class GFASet:
                     for (j, f) in enumerate(self.fwhms[i])]
                 ) + f" {np.mean(self.n_objs[i]):>6.0f}"
             )
+    
+    def plot(self):
+        fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+        for i in range(6):
+            ax.plot(self.im_nums, self.fwhms[:, i], linewidth=1, alpha=0.8)
+            ax.scatter(self.im_nums, self.fwhms[:, i], linewidth=1, alpha=0.8,
+                label=f"GFA {i+1}")
+        ax.legend()
+        ax.set_xlabel("Image Number")
+        ax.set_ylabel("FWHM (arcseconds)")
+        plt.show()
+
 
 
 def parse_args():
@@ -116,16 +135,13 @@ def parse_args():
                         " maybe not depending on X11).")
     args = parser.parse_args()
 
-    if args.plot:
-        raise NotImplementedError("--plot doesn't work yet")
-    
     return args
 
 
 def main(args=None):
     if args is None:
         args = parse_args()
-    gfas = GFASet()
+    gfas = GFASet(verbose=args.verbose)
     if args.bias:
         raise NotImplementedError("This script doesn't support bias reduction")
     if args.file:
@@ -162,6 +178,8 @@ def main(args=None):
             gfas.add_index(im_ps, im_num)
         gfas.sort()
         gfas.print()
+        if args.plot:
+            gfas.plot()
 
     return 0
 
