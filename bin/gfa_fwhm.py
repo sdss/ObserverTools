@@ -56,7 +56,7 @@ class GFASet:
         filt = (objects['a'] / objects['b'] < 2) & (objects['b'] / objects['a'] < 2)
         if verbose:
             print(f"Using {filt.sum()}/{filt.shape[0]} point")
-        fwhm = np.mean(2.0*np.sqrt(
+        fwhm = 0.216 * np.mean(2.0*np.sqrt(
             2.0*np.log(2)*(objects['a'][filt]**2 + objects['b'][filt]**2))
         )
         return fwhm, objects.shape[0]
@@ -76,6 +76,8 @@ class GFASet:
 
     
     def print(self):
+        if self.verbose:
+            print("Measurements in arcseconds with a place scale of 0.216")
         print(f"{'Img #':<6} {'GFA1':<6} {'GFA2':<6} {'GFA3':<6} {'GFA4':<6}"
             f" {'GFA5':<6} {'GFA6':<6} {'N Objs':<6}")
         print('=' * 80)
