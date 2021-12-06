@@ -3,6 +3,7 @@
 __author__ = "Dylan Gatlin"
 
 
+from os import path
 import tqdm
 import fitsio
 import sep
@@ -201,8 +202,20 @@ def main(args=None):
                 file = Path(file)
                 for p in file.parent.glob(file.name):
                     pass
+    elif not args.window:
+        path_stem = sdss_paths.gcam / f"{args.mjd}"
+        low = 1000
+        high = 0
+        for file in path_stem.glob("gimg-gfa5n-*.fits"):
+            ind = int(file.name.split("-")[-1].rstrip(".fits"))
+            if ind < low:
+                low = ind
+            if ind > high:
+                high = ind
+        if high > low:
+            args.window = f"{low:.0f}-{high:.0f}"
 
-    elif args.window:
+    if args.window:
         low, high = args.window.split("-")
         try:
             low = int(low)
@@ -223,6 +236,9 @@ def main(args=None):
         gfas.print()
         if args.plot:
             gfas.plot(args.plot_file)
+           
+        
+
 
     return 0
 
