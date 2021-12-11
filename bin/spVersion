@@ -5,4 +5,4 @@ from pathlib import Path
 
 args = [arg for arg in sys.argv if
         ((Path(__file__).name not in arg) and ("python" not in arg))]
-sub.call([Path(__file__).parent / "sp_version.py"] + args)
+sub.call([Path(__file__).parent / "versions.py"] + args)
