@@ -68,14 +68,14 @@ except ImportError as e:
                           '\n    {}'.format(e))
 
 if sys.version_info.major < 3:
-    raise Exception('Interpretter must be python 3 or newer')
+    raise Exception('Interpretter must be python 3.5 or newer')
 
 # For astropy
 warnings.filterwarnings('ignore', category=UserWarning, append=True)
 # For numpy boolean arrays
 warnings.filterwarnings('ignore', category=FutureWarning, append=True)
 
-__version__ = '3.7.4'
+__version__ = '3.7.5'
 
 ap_dir = sdss_paths.ap_archive
 b_dir = sdss_paths.boss
@@ -322,7 +322,7 @@ class Logging:
                 #     self.args.sjd))
                 # This used to see if quickred processed, but others preferred
                 # to see if the archive image was written
-                red_name = 'apR-a-{}.apz'.format(img.exp_id)
+                red_name = 'apq-{}.fits'.format(img.exp_id)
                 if (arch_dir / red_name).exists():
                     detectors.append('a')
                 # elif (red_dir / red_name.replace('1D', '2D')).exists():
@@ -776,7 +776,7 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('BOSS Data Summary'))
         print('=' * 80 + '\n')
-        print('{:<5} {:<8} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
+        print('{:<5} {:<8} {:<11} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
               ''.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type', 'Dith',
                         'SOS', 'ETime', 'Hart'))
         print('-' * 80)
@@ -791,7 +791,7 @@ class Logging:
                           self.b_data['iDetector'],
                           self.b_data['idt'],
                           self.b_data['iHart']):
-            print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:0>8.0f} {:<7} {:<4}'
+            print('{:<5.0f} {:>8} {:>5}-{:<5.0f} {:0>8.0f} {:<7} {:<4}'
                   ' {:<11}'
                   ' {:>5.0f} {:<5}'
                   ''.format(int(mjd), iso[11:19], cart, plate, exp_id,
@@ -822,7 +822,7 @@ class Logging:
                 self.ap_data['iDetector'][self.morning_filter],
                 self.ap_data['iSeeing'][self.morning_filter]
             ):
-                print('{:<5.0f} {:>8} {:>5.0f} {:<8.0f} {:<12} {:<4}'
+                print('{:<5.0f} {:>8} {:>5} {:<8.0f} {:<12} {:<4}'
                       ' {:>5}'
                       ' {:<5}'
                       ' {:>6.1f}'.format(int(mjd), iso[11:19], cart,
@@ -847,7 +847,7 @@ class Logging:
                 #       ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
                 #                          exp_id, exp_type,
                 #                          dith, nread, detectors, see))
-                print('{:<5.0f} {:>8} {:>5.0f} {:<8.0f} {:<12} {:<4}'
+                print('{:<5.0f} {:>8} {:>5} {:<8.0f} {:<12} {:<4}'
                       ' {:>6}'
                       ' {:<8}'
                       ' {:>6.1f}'.format(int(mjd), iso[11:19], cart,

@@ -21,16 +21,18 @@ class BOSSRaw:
         if "MGDPOS" in header.keys():  # SDSS-IV
             self.dither = header['MGDPOS']
         else:  # Usually works in SDSS-V
-            self.dither = header['POINTING'][0]
+            self.dither = "-"  # header['POINTING'][0]
         self.exp_time = int(header['EXPTIME'])
         self.isot = Time(header['DATE-OBS'])  # UTC
         if "PLATEID" in header.keys():
             self.plate_id = header['PLATEID']
+        elif "FIELDID" in header.keys():
+            self.plate_id = header["FIELDID"]
         if "CARTID" in header.keys():
             if isinstance(header["CARTID"], int):
-                self.cart_id = header['CARTID']
+                self.cart_id = f"{header['CARTID']:.0f}"
             else:
-                self.cart_id = 0
+                self.cart_id = header['CARTID']
         self.exp_id = int(str(fil).split('-')[-1].split('.')[0])
         if "PLATETP" in header.keys():
             self.lead = header['PLATETYP']

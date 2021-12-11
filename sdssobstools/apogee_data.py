@@ -8,7 +8,7 @@ import numpy as np
 import textwrap
 from . import sdss_paths
 
-__version__ = '3.2.1'
+__version__ = '3.2.2'
 
 
 class APOGEERaw:
@@ -55,9 +55,9 @@ class APOGEERaw:
         self.plate_id = header['PLATEID']
         if "CARTID" in header.keys():
             if isinstance(header["CARTID"], int):
-                self.cart_id = header['CARTID']
+                self.cart_id = f"{header['CARTID']:.0f}"
             else:
-                self.cart_id = 0
+                self.cart_id = header["CARTID"]
         else:
             self.cart_id = 0
 
@@ -82,12 +82,11 @@ class APOGEERaw:
             self.seeing = header['SEEING']
         else:
             self.seeing = 0.0
-
+        self.mjd = self.file.absolute().parent.name
         self.quickred_data = np.array([[]])
-        self.quickred_file = ''
+        self.quickred_file = sdss_paths.ap_qr / f"{self.mjd}/apq-{self.exp_id}.fits"
         self.utr_file = ''
         self.utr_data = np.array([[]])
-        self.mjd = self.file.absolute().parent.name
 
     # noinspection PyTupleAssignmentBalance,PyTypeChecker
     def compute_offset(self, fibers=(60, 70), w0: int=1105, dw:int=40, sigma:float=1.2745):
@@ -110,7 +109,6 @@ class APOGEERaw:
         """
         w0 = int(w0)
         dw = int(dw)
-        self.quickred_file = sdss_paths.ap_qr / f"{self.mjd}/apq-{self.exp_id}.fits"
         if self.quickred_data.size == 0:
             if self.quickred_file.exists():
                 self.quickred_data = fitsio.read(self.quickred_file, 3)[0][0]
@@ -183,7 +181,7 @@ class APOGEERaw:
                                             ''.format(self.mjd, self.exp_id))
                     if not self.quickred_file.exists():
                         print(f"Offsets for {self.file} could not be read")
-                        return np.nan
+                        return [], [], np.nan
                     self.quickred_data = fitsio.read(self.quickred_file, 1)
             slc = np.average(self.quickred_data[:, ws[0]:ws[1]], axis=1)
         # print(master_col.mean(), master_col.shape, master_col[100])
@@ -294,7 +292,7 @@ def main():
     else:
         raise Exception('No date specified')
     # print(data_dir)
-    for path in data_dir.rglob('apR*.apz'):
+    for path in data_dir.rglob('apq*.fits'):
         print(path)
 
 
