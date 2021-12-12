@@ -45,9 +45,10 @@ def main():
     has_module = "command not found" not in module_help
 
     if has_module:
-        names = ["idlspec2d, Kronos"]
+        names = ["idlspec2d", "Kronos", "roboscheduler"]
         cmds = ["module load idlspec2d; idlspec2d_version",
-                "module load kronos; kronosversion.py"]
+                "module load kronos; kronosversion.py",
+                "module load roboscheduler; roboschedulerversion.py"]
         for n, c in zip(names, cmds):
             ver = sub.run(c, shell=True, stdout=sub.PIPE, stderr=sub.PIPE
                           ).stdout.decode("utf-8").rstrip('\n')
