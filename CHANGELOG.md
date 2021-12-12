@@ -467,6 +467,8 @@
 - ds9_live.py now displays the most recent apogee images
 - Added FVC to ds9_live.py with -k
 
-## [3.7.7] - 2021-12-04
+## [3.7.7a] - 2021-12-04
 
 - Added gfa_fwhm.py that computes the fwhm of gfa exposures
+- Added kronos and roboscheduler to versions.py
+- Almost have a working version of influx_fetch.py
