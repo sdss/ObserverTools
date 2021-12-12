@@ -17,16 +17,19 @@ from matplotlib.patches import Ellipse
 from bin import sjd
 from sdssobstools import sdss_paths
 
-
 sns.set(style="darkgrid")
-
 
 def build_filt(obj_arr: np.ndarray):
     ecc = np.sqrt(obj_arr['a']**2 - obj_arr['b']**2) / obj_arr['a']
+    # print(np.percentile(ecc, 75))
+    # print(obj_arr["cpeak"], obj_arr["peak"].max())
     # print(ecc, np.mean(ecc), np.percentile(ecc, 95))
-    filt = ((obj_arr["flux"] > np.percentile(obj_arr["flux"], 80))
-        & ((obj_arr["a"] * 0.216) > 0.6)
-        & (ecc < np.percentile(ecc, 75))
+    filt = (
+        # (obj_arr["flux"] > np.percentile(obj_arr["flux"], 80))
+        ((obj_arr["a"] * 0.216) > 0.5)
+        & (obj_arr["cpeak"] < 60000)
+        # & (obj_arr["npix"] > 5)
+        & (ecc < 0.7)
         )
     # print(obj_arr["a"] * 0.216, obj_arr["b"] * 0.216, np.mean([obj_arr["a"], obj_arr["b"]]))
     return filt
@@ -53,7 +56,7 @@ def show_img(obj_arr: np.ndarray, obj_filt, data_sub: np.ndarray, plot_file=""):
 
 
 class GFASet:
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, exp_num_plot=False):
         self.paths = []
         self.filter = []
         self.isots = []
@@ -62,6 +65,7 @@ class GFASet:
         self.n_objs = []
         self.im_nums = []
         self.verbose = verbose
+        self.exp_num_plot = exp_num_plot
 
     def add_index(self, paths_iter, im_num):
         paths = []
@@ -139,20 +143,28 @@ class GFASet:
 
     def plot(self, plot_file):
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
-        flat_foc = self.focuses.flatten()
-        flat_fwhms = self.fwhms.flatten()
-        nan_filt = ~np.isnan(flat_fwhms)
-        a, b, c = np.polyfit(flat_foc[nan_filt], flat_fwhms[nan_filt], deg=2)
-        focs = np.linspace(flat_foc[nan_filt].min(), flat_foc[nan_filt].max(), 100)
-        print(f"Optimal Focus is at {-b / 2 /a:.0f}")
-        ax.plot(focs, self.quadratic(focs, a, b, c), label=f"Quad Fit, best={-b / 2 / a:.0f}", alpha=0.8)
-        ax.axvline(-b / 2 / a, c="r", linestyle="--", alpha=0.6)
+        if not self.exp_num_plot:
+            flat_foc = self.focuses.flatten()
+            flat_fwhms = self.fwhms.flatten()
+            nan_filt = ~np.isnan(flat_fwhms)
+            a, b, c = np.polyfit(flat_foc[nan_filt], flat_fwhms[nan_filt], deg=2)
+            focs = np.linspace(flat_foc[nan_filt].min(), flat_foc[nan_filt].max(), 100)
+            print(f"Optimal Focus is at {-b / 2 /a:.0f}")
+            ax.plot(focs, self.quadratic(focs, a, b, c), label=f"Quad Fit, best={-b / 2 / a:.0f}", alpha=0.8)
+            ax.axvline(-b / 2 / a, c="r", linestyle="--", alpha=0.6)
         for i in range(6):
-            # ax.plot(self.focuses[:, i], self.fwhms[:, i], linewidth=1, alpha=0.8)
-            ax.scatter(self.focuses[:, i], self.fwhms[:, i], s=6, alpha=0.8,
+            if self.exp_num_plot:
+                ax.plot(self.im_nums, self.fwhms[:, i], linewidth=1, alpha=0.8,
+                label=f"GFA {i+1}")
+                ax.scatter(self.im_nums, self.fwhms[:, i], s=6, alpha=0.8)
+            else:
+                ax.scatter(self.focuses[:, i], self.fwhms[:, i], s=6, alpha=0.8,
                 label=f"GFA {i+1}")
         ax.legend()
-        ax.set_xlabel("Focus ($\mu m$)")
+        if self.exp_num_plot:
+            ax.set_xlabel("Exposure Number")
+        else:
+            ax.set_xlabel("Focus ($\mu m$)")
         ax.set_ylabel("FWHM (arcseconds)")
         plt.show()
         if plot_file:
@@ -173,6 +185,9 @@ def parse_args():
                         help="A dash separated beginning and end of the window."
                              " Always include a --master-field with your window."
                              " Ex: -w 15-50 -s 35")
+    parser.add_argument("-e", "--exp-num", action="store_true",
+                        help="Don't fit the images to a curve,"
+                        " produce a time series across exposure numbers")
     # parser.add_argument("-s", "--master-field", type=int,
     #                     help="The master field with all stars you want. Only"
     #                     " used in conjunction with --window. You need both"
@@ -194,7 +209,7 @@ def parse_args():
 def main(args=None):
     if args is None:
         args = parse_args()
-    gfas = GFASet(verbose=args.verbose)
+    gfas = GFASet(verbose=args.verbose, exp_num_plot=args.exp_num)
     if args.bias:
         raise NotImplementedError("This script doesn't support bias reduction")
     if args.file:
@@ -253,10 +268,6 @@ def main(args=None):
         gfas.print()
         if args.plot:
             gfas.plot(args.plot_file)
-           
-        
-
-
     return 0
 
 
