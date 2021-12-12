@@ -60,7 +60,7 @@ def parse_args():
         " time for astropy.time to parse, preferable isot")
     parser.add_argument("--t2", "--end-time", dest="end_time", help="Start time"
         " for astropy.time to parse, preferable isot")
-    parser.add_argument("-f", "--file", nargs=1, help="A file path of a .flux"
+    parser.add_argument("-f", "--file", nargs='+', help="A file path of a .flux"
         " influxdb query file")
     parser.add_argument("-v", "--verbose", action="store_true",
         help="Verbose debugging")
@@ -81,20 +81,21 @@ def main(args=None):
         args = parse_args()
     user_id, org_id, token = get_key()
     client = get_client(org_id, token)
-    print(args.start_time, args.end_time)
-    qry_pth = Path(__file__).parent.parent / "flux/dust.flux"
-    if qry_pth.exists():
-        query = qry_pth.open('r').read()
-
-    print(query)
-    query = query.replace("v.timeRangeStart", args.start_time.isot)
-    query = query.replace("v.timeRangeStop", args.end_time.isot)
-    query_api = client.query_api()
-    result = query_api.query(query)
-    print(result)
-
-    print(dir(result))
-
+    if args.verbose:
+        print(f"Querying from {args.start_time.isot} to {args.end_time.isot}")
+    if args.file:
+        for f_path in args.file:
+            f_path = Path(f_path)
+            if f_path.exists():
+                print(f_path.absolute())
+                query = f_path.open('r').read()
+        print(query)
+        query_api = client.query_api()
+        query = query.replace("v.timeRangeStart", args.start_time.isot)
+        query = query.replace("v.timeRangeStop", args.end_time.isot)
+        result = query_api.query(query)
+        print(result)
+            
     return 0
 
 

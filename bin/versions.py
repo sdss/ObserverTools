@@ -28,32 +28,34 @@ def main():
         softwares.append("sdss-obstools")
         versions.append("FAILED")
     
-    tpmdata.tinit()
-    tpm_packet = tpmdata.packet(1, 1)
     softwares.append("TPM")
-    try:
-        versions.append(tpm_packet["tpm_vers"])
-    except:
-        versions.append("FAILED")
-    
     softwares.append("MCP")
-    try:
+    try: 
+        tpmdata.tinit()
+        tpm_packet = tpmdata.packet(1, 1)
+        versions.append(tpm_packet["tpm_vers"])
         versions.append(tpm_packet["mcp_vers"])
     except:
         versions.append("FAILED")
-    
+        versions.append("FAILED")
+        
     module_help = sub.run("module --help", shell=True, stdout=sub.PIPE,
                               stderr=sub.PIPE
                               ).stderr.decode("utf-8")
     has_module = "command not found" not in module_help
 
     if has_module:
-        idlspec = sub.run("module load idlspec2d; idlspec2d_version",
-                          shell=True,
-                          stdout=sub.PIPE).stdout.decode("utf-8").strip('\n')
-        softwares.append("idlspec2d")
-        versions.append(idlspec.split()[-1])
-    
+        names = ["idlspec2d, Kronos"]
+        cmds = ["module load idlspec2d; idlspec2d_version",
+                "module load kronos; kronosversion.py"]
+        for n, c in zip(names, cmds):
+            ver = sub.run(c, shell=True, stdout=sub.PIPE, stderr=sub.PIPE
+                          ).stdout.decode("utf-8").rstrip('\n')
+            softwares.append(n)
+            if ver:
+                versions.append(ver)
+            else:
+                versions.append("FAILED")
     
     print('{:-^42}'.format('Other Versions'))
     for s, v in zip(softwares, versions):
