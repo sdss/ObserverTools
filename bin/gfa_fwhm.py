@@ -59,6 +59,7 @@ class GFASet:
         self.filter = []
         self.isots = []
         self.fwhms = []
+        self.focuses = []
         self.n_objs = []
         self.im_nums = []
         self.verbose = verbose
@@ -66,6 +67,7 @@ class GFASet:
     def add_index(self, paths_iter, im_num):
         paths = []
         filter = []
+        focus = []
         isots = []
         fwhms = []
         n_objs = []
@@ -74,14 +76,18 @@ class GFASet:
             if p.exists():
                 filter.append(True)
                 fwhm, n, objs = self.get_fwhm(p, verbose=self.verbose)
+                hdr = fitsio.read_header(p, 1)
+                focus.append(header["FOCUS"]
                 fwhms.append(fwhm)
                 n_objs.append(n)
             else:
                 filter.append(False)
+                focus.append(np.nan)
                 fwhms.append(np.nan)
                 n_objs.append(0)
         self.im_nums.append(im_num)
         self.paths.append(paths)
+        self.focuses.append(focus)
         self.filter.append(filter)
         self.fwhms.append(fwhms)
         self.n_objs.append(n_objs)
@@ -109,6 +115,7 @@ class GFASet:
         sorter = self.im_nums.argsort()
         self.im_nums = self.im_nums[sorter]
         self.paths = self.paths[sorter]
+        self.focuses = self.focuses[sorter]
         self.filter = self.filter[sorter]
         self.fwhms = self.fwhms[sorter]
         self.n_objs = self.n_objs[sorter]
@@ -128,14 +135,21 @@ class GFASet:
                 ) + f" {np.mean(self.n_objs[i]):>6.0f}"
             )
     
+    @staticmethod
+    def quadratic(x, a, b, c): 
+        return x * a**2 + x * b + c
+
     def plot(self, plot_file):
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+        a, b, c = np.polyfit(self.focuses, self.fwhms, deg=2)
+        focs = np.linspace(self.focuses.min(), self.focuses.max(), 100)
+        ax.plot(focs, quadratic(focs, a, b, c), label="Quad Fit", alpha=0.8)
         for i in range(6):
-            ax.plot(self.im_nums, self.fwhms[:, i], linewidth=1, alpha=0.8)
+            ax.plot(self.focuses[:, i], self.fwhms[:, i], linewidth=1, alpha=0.8)
             ax.scatter(self.im_nums, self.fwhms[:, i], linewidth=1, alpha=0.8,
                 label=f"GFA {i+1}")
         ax.legend()
-        ax.set_xlabel("Image Number")
+        ax.set_xlabel("Focus ($\mu m$)")
         ax.set_ylabel("FWHM (arcseconds)")
         plt.show()
         if plot_file:
