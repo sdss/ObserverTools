@@ -3,7 +3,6 @@
 __author__ = "Dylan Gatlin"
 
 
-from os import path
 import tqdm
 import fitsio
 import sep
@@ -77,7 +76,7 @@ class GFASet:
                 filter.append(True)
                 fwhm, n, objs = self.get_fwhm(p, verbose=self.verbose)
                 hdr = fitsio.read_header(p, 1)
-                focus.append(header["FOCUS"]
+                focus.append(hdr["FOCUS"])
                 fwhms.append(fwhm)
                 n_objs.append(n)
             else:
@@ -105,10 +104,10 @@ class GFASet:
         )
         return fwhm, filt.sum(), objs
 
-
     def sort(self):
         self.im_nums = np.array(self.im_nums)
         self.paths = np.array(self.paths)
+        self.focuses = np.array(self.focuses)
         self.filter = np.array(self.filter)
         self.fwhms = np.array(self.fwhms)
         self.n_objs = np.array(self.n_objs)
@@ -120,7 +119,6 @@ class GFASet:
         self.fwhms = self.fwhms[sorter]
         self.n_objs = self.n_objs[sorter]
 
-    
     def print(self):
         if self.verbose:
             print("Measurements in arcseconds with a place scale of 0.216")
@@ -137,16 +135,21 @@ class GFASet:
     
     @staticmethod
     def quadratic(x, a, b, c): 
-        return x * a**2 + x * b + c
+        return a * x**2 + x * b + c
 
     def plot(self, plot_file):
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
-        a, b, c = np.polyfit(self.focuses, self.fwhms, deg=2)
-        focs = np.linspace(self.focuses.min(), self.focuses.max(), 100)
-        ax.plot(focs, quadratic(focs, a, b, c), label="Quad Fit", alpha=0.8)
+        flat_foc = self.focuses.flatten()
+        flat_fwhms = self.fwhms.flatten()
+        nan_filt = ~np.isnan(flat_fwhms)
+        a, b, c = np.polyfit(flat_foc[nan_filt], flat_fwhms[nan_filt], deg=2)
+        focs = np.linspace(flat_foc[nan_filt].min(), flat_foc[nan_filt].max(), 100)
+        print(f"Optimal Focus is at {-b / 2 /a:.0f}")
+        ax.plot(focs, self.quadratic(focs, a, b, c), label=f"Quad Fit, best={-b / 2 / a:.0f}", alpha=0.8)
+        ax.axvline(-b / 2 / a, c="r", linestyle="--", alpha=0.6)
         for i in range(6):
-            ax.plot(self.focuses[:, i], self.fwhms[:, i], linewidth=1, alpha=0.8)
-            ax.scatter(self.im_nums, self.fwhms[:, i], linewidth=1, alpha=0.8,
+            # ax.plot(self.focuses[:, i], self.fwhms[:, i], linewidth=1, alpha=0.8)
+            ax.scatter(self.focuses[:, i], self.fwhms[:, i], s=6, alpha=0.8,
                 label=f"GFA {i+1}")
         ax.legend()
         ax.set_xlabel("Focus ($\mu m$)")
