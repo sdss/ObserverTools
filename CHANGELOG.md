@@ -472,3 +472,6 @@
 - Added gfa_fwhm.py that computes the fwhm of gfa exposures
 - Added kronos and roboscheduler to versions.py
 - Almost have a working version of influx_fetch.py
+
+## [3.7.7b] - 2021-12-14
+- Supports gfa_fwh.py for gzipped images.
