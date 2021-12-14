@@ -79,7 +79,7 @@ class GFASet:
             if p.exists():
                 filter.append(True)
                 fwhm, n, objs = self.get_fwhm(p, verbose=self.verbose)
-                hdr = fitsio.read_header(p, 0)
+                hdr = fitsio.read_header(p, 1)
                 focus.append(hdr["FOCUS"])
                 fwhms.append(fwhm)
                 n_objs.append(n)
@@ -97,7 +97,7 @@ class GFASet:
 
     @staticmethod
     def get_fwhm(path: Path, verbose: bool=False):
-        data = fitsio.read(path, 0)
+        data = fitsio.read(path, 1)
         bkg = sep.Background(data.astype(float))
         objs = sep.extract(data - bkg, 1.5, bkg.globalrms)
         filt = build_filt(objs)
@@ -142,7 +142,6 @@ class GFASet:
         return a * x**2 + x * b + c
 
     def plot(self, plot_file):
-        fig, ax = plt.subplots(1, 1, figsize=(6, 4))
         if not self.exp_num_plot:
             flat_foc = self.focuses.flatten()
             flat_fwhms = self.fwhms.flatten()
@@ -150,6 +149,8 @@ class GFASet:
             a, b, c = np.polyfit(flat_foc[nan_filt], flat_fwhms[nan_filt], deg=2)
             focs = np.linspace(flat_foc[nan_filt].min(), flat_foc[nan_filt].max(), 100)
             print(f"Optimal Focus is at {-b / 2 /a:.0f}")
+        fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+        if not self.exp_num_plot:
             ax.plot(focs, self.quadratic(focs, a, b, c), label=f"Quad Fit, best={-b / 2 / a:.0f}", alpha=0.8)
             ax.axvline(-b / 2 / a, c="r", linestyle="--", alpha=0.6)
         for i in range(6):
@@ -227,7 +228,7 @@ def main(args=None):
                 print(f"{file.name:<20} {fwhm:>6.2f} {filt.sum():>5.0f}"
                     f"/{len(objs):<5.0f}  {np.mean(ecc):>6.2f}")
                 if args.plot_image:
-                    data = fitsio.read(file, 0)
+                    data = fitsio.read(file, 1)
                     bkg = sep.Background(data.astype(float))
                     show_img(objs, filt, data - bkg)
             else:
