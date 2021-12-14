@@ -79,7 +79,7 @@ class GFASet:
             if p.exists():
                 filter.append(True)
                 fwhm, n, objs = self.get_fwhm(p, verbose=self.verbose)
-                hdr = fitsio.read_header(p, 1)
+                hdr = fitsio.read_header(p, 0)
                 focus.append(hdr["FOCUS"])
                 fwhms.append(fwhm)
                 n_objs.append(n)
@@ -97,7 +97,7 @@ class GFASet:
 
     @staticmethod
     def get_fwhm(path: Path, verbose: bool=False):
-        data = fitsio.read(path, 1)
+        data = fitsio.read(path, 0)
         bkg = sep.Background(data.astype(float))
         objs = sep.extract(data - bkg, 1.5, bkg.globalrms)
         filt = build_filt(objs)
@@ -227,7 +227,7 @@ def main(args=None):
                 print(f"{file.name:<20} {fwhm:>6.2f} {filt.sum():>5.0f}"
                     f"/{len(objs):<5.0f}  {np.mean(ecc):>6.2f}")
                 if args.plot_image:
-                    data = fitsio.read(file, 1)
+                    data = fitsio.read(file, 0)
                     bkg = sep.Background(data.astype(float))
                     show_img(objs, filt, data - bkg)
             else:
@@ -238,8 +238,8 @@ def main(args=None):
         path_stem = sdss_paths.gcam / f"{args.mjd}"
         low = 1000
         high = 0
-        for file in path_stem.glob("gimg-gfa5n-*.fits"):
-            ind = int(file.name.split("-")[-1].rstrip(".fits"))
+        for file in path_stem.glob("gimg-gfa5n-*.fits*"):
+            ind = int(file.name.split("-")[-1].rstrip(".fits").rstrip(".fits.gz"))
             if ind < low:
                 low = ind
             if ind > high:
@@ -260,7 +260,9 @@ def main(args=None):
         for im_num in tqdm.tqdm(range(low, high + 1)):
             im_ps = []
             for n in range(1, 7):
-                p = sdss_paths.gcam / f"{args.mjd}/gimg-gfa{n:.0f}n-{im_num:0>4.0f}.fits"
+                p = sdss_paths.gcam / f"{args.mjd}/gimg-gfa{n:.0f}n-{im_num:0>4.0f}.fits.gz"
+                if not p.exists():
+                    p = sdss_paths.gcam / f"{args.mjd}/gimg-gfa{n:.0f}n-{im_num:0>4.0f}.fits"
                 im_ps.append(p)
 
             gfas.add_index(im_ps, im_num)
