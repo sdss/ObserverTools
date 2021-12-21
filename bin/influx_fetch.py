@@ -10,7 +10,8 @@ import argparse
 import subprocess as sub
 
 from pathlib import Path
-from influxdb_client import InfluxDBClient
+from influxdb_client import InfluxDBClient, InvocableScriptsService, ScriptCreateRequest, ScriptInvocationParams, \
+    ScriptLanguage
 from astropy.time import Time
 
 from bin import sjd
@@ -34,6 +35,11 @@ def ping(host):
     return sub.run(command, stdout=sub.PIPE) == 0
 
 def get_key():
+    """Finds a file called .influx.key that has 3 lines, a user id, an org id,
+    and a token, each on its own line. The file can be in the current directory
+    or the home directory
+    TODO: Put an influx.key somewhere that all observers can use it.
+    """
     key_path = Path.home() / ".influx.key"
     if not key_path.exists():
         key_path = Path(".") / ".influx.key"
@@ -81,6 +87,7 @@ def main(args=None):
         args = parse_args()
     user_id, org_id, token = get_key()
     client = get_client(org_id, token)
+    scripts_service = InvocableScriptsService(api_client=client.api_client)
     if args.verbose:
         print(f"Querying from {args.start_time.isot} to {args.end_time.isot}")
     if args.file:
@@ -89,13 +96,16 @@ def main(args=None):
             if f_path.exists():
                 print(f_path.absolute())
                 query = f_path.open('r').read()
-        print(query)
         query_api = client.query_api()
         query = query.replace("v.timeRangeStart", args.start_time.isot)
         query = query.replace("v.timeRangeStop", args.end_time.isot)
-        result = query_api.query(query)
-        print(result)
-            
+        myscript = ScriptCreateRequest(name=f_path.as_posix(),
+                                       description="None",
+                                       language=ScriptLanguage.FLUX,
+                                       org_id=org_id,
+                                       script=query)
+        created_script = scripts_service.post_scripts(script_create_request=myscript)
+        
     return 0
 
 
