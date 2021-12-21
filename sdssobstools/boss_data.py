@@ -24,6 +24,10 @@ class BOSSRaw:
             self.dither = "-"  # header['POINTING'][0]
         self.exp_time = int(header['EXPTIME'])
         self.isot = Time(header['DATE-OBS'])  # UTC
+        if "DESIGNID" in header.keys():
+            self.design_id = header["DESIGNID"]
+        if "CONFID" in header.keys():
+            self.config_id = header["CONFID"]
         if "PLATEID" in header.keys():
             self.plate_id = header['PLATEID']
         elif "FIELDID" in header.keys():

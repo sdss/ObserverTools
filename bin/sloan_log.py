@@ -124,7 +124,8 @@ class Logging:
         self.ap_data = {'cCart': [], 'cTime': [],
                         'iTime': [], 'iID': [],
                         'iSeeing': [], 'iDetector': [], 'iDither': [],
-                        'iNRead': [], 'iEType': [], 'iCart': [], 'iPlate': [],
+                        'iNRead': [], 'iEType': [], 'iCart': [], 
+                        "iDesign": [], "iConfig": [],
                         'dCart': [], 'dTime': [], 'dMissing': [], 'dFaint': [],
                         'dNMissing': [], 'dNFaint': [], 'dAvg': [], 'aTime': [],
                         'aOffset': [], 'aID': [], 'aLamp': [], 'oTime': [],
@@ -133,7 +134,7 @@ class Logging:
                        'iTime': [], 'iID': [],
                        'iDetector': [], 'iDither': [],
                        'iEType': [], 'idt': [], 'iCart': [], 'iHart': [],
-                       'iPlate': [], 'hHart': [], 'hTime': []}
+                       'iDesign': [], "iConfig": [], 'hHart': [], 'hTime': []}
         # These values are not known from the header and must be created
         # after self.sort. N for number, AP or B for APOGEE or BOSS, and NSE
         # for BOSS dithers, and AB for APOGEE dithers, dt for boss exposure
@@ -351,7 +352,8 @@ class Logging:
                 self.ap_data['iNRead'].append(img.n_read)
                 self.ap_data['iEType'].append(img.exp_type)
                 self.ap_data['iCart'].append(img.cart_id)
-                self.ap_data['iPlate'].append(img.plate_id)
+                self.ap_data['iDesign'].append(img.design_id)
+                self.ap_data['iConfig'].append(img.config_id)
         if self.args.boss:
             print('Reading BOSS Data ({})'.format(len(self.b_images)))
             for image in tqdm(self.b_images):
@@ -385,7 +387,8 @@ class Logging:
                 self.b_data['idt'].append(img.exp_time)
                 self.b_data['iCart'].append(img.cart_id)
                 self.b_data['iHart'].append(img.hartmann)
-                self.b_data['iPlate'].append(img.plate_id)
+                self.b_data['iDesign'].append(img.design_id)
+                self.b_data['iConfig'].append(img.config_id)
 
                 # if img.hartmann == 'Left' and self.telemetry:
                 #     # Note that times are sent in UTC and received in local, yet
@@ -776,25 +779,26 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('BOSS Data Summary'))
         print('=' * 80 + '\n')
-        print('{:<5} {:<8} {:<11} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
-              ''.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type', 'Dith',
+        print('{:<5} {:<8} {:<13} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
+              ''.format('MJD', 'UTC', 'Design-Config', 'Exposure', 'Type', 'Dith',
                         'SOS', 'ETime', 'Hart'))
         print('-' * 80)
-        for (mjd, iso, cart, plate, exp_id, exp_type, dith, detectors, etime,
+        for (mjd, iso, cart, design, config, exp_id, exp_type, dith, detectors, etime,
              hart) in zip(self.b_data['iTime'].mjd + 0.3,
                           self.b_data['iTime'].iso,
                           self.b_data['iCart'],
-                          self.b_data['iPlate'],
+                          self.b_data["iDesign"],
+                          self.b_data['iConfig'],
                           self.b_data['iID'],
                           self.b_data['iEType'],
                           self.b_data['iDither'],
                           self.b_data['iDetector'],
                           self.b_data['idt'],
                           self.b_data['iHart']):
-            print('{:<5.0f} {:>8} {:>5}-{:<5.0f} {:0>8.0f} {:<7} {:<4}'
+            print('{:<5.0f} {:>8} {:>6}-{:<6.0f} {:0>8.0f} {:<7} {:<4}'
                   ' {:<11}'
                   ' {:>5.0f} {:<5}'
-                  ''.format(int(mjd), iso[11:19], cart, plate, exp_id,
+                  ''.format(int(mjd), iso[11:19], design, config, exp_id,
                             exp_type.strip(),
                             dith.strip(), detectors, etime, hart))
         print()
@@ -803,18 +807,18 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('APOGEE Data Summary'))
         print('=' * 80 + '\n')
-        print('{:<5} {:<8} {:<8} {:<8} {:<12} {:<4} {:<5} {:<5}'
-              ' {:<6}'.format('MJD', 'UTC', 'Cart', 'Exposure', 'Type',
+        print('{:<5} {:<8} {:<13} {:<8} {:<12} {:<4} {:<5} {:<5}'
+              ' {:<6}'.format('MJD', 'UTC', 'Design-Config', 'Exposure', 'Type',
                               'Dith', 'Reads', 'Arch',
                               'Seeing'))
         print('-' * 80)
         if self.args.morning:
-            for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
+            for (mjd, iso, design, config, exp_id, exp_type, dith, nread,
                  detectors, see) in zip(
                 self.ap_data['iTime'].mjd[self.morning_filter] + 0.3,
                 self.ap_data['iTime'].iso[self.morning_filter],
-                self.ap_data['iCart'][self.morning_filter],
-                self.ap_data['iPlate'][self.morning_filter],
+                self.ap_data["iDesign"][self.morning_filter],
+                self.ap_data["iConfig"][self.morning_filter],
                 self.ap_data['iID'][self.morning_filter],
                 self.ap_data['iEType'][self.morning_filter],
                 self.ap_data['iDither'][self.morning_filter],
@@ -822,20 +826,20 @@ class Logging:
                 self.ap_data['iDetector'][self.morning_filter],
                 self.ap_data['iSeeing'][self.morning_filter]
             ):
-                print('{:<5.0f} {:>8} {:>5} {:<8.0f} {:<12} {:<4}'
+                print('{:<5.0f} {:>8} {:>6}-{:>6} {:<8.0f} {:<12} {:<4}'
                       ' {:>5}'
                       ' {:<5}'
-                      ' {:>6.1f}'.format(int(mjd), iso[11:19], cart,
+                      ' {:>6.1f}'.format(int(mjd), iso[11:19], design, config,
                                          exp_id, exp_type,
                                          dith, nread, detectors, see))
 
         else:
-            for (mjd, iso, cart, plate, exp_id, exp_type, dith, nread,
+            for (mjd, iso, design, config, exp_id, exp_type, dith, nread,
                  detectors, see) in zip(
                 self.ap_data['iTime'].mjd,
                 self.ap_data['iTime'].iso,
-                self.ap_data['iCart'],
-                self.ap_data['iPlate'],
+                self.ap_data["iDesign"],
+                self.ap_data["iConfig"],
                 self.ap_data['iID'], self.ap_data['iEType'],
                 self.ap_data['iDither'], self.ap_data['iNRead'],
                 self.ap_data['iDetector'],
@@ -847,10 +851,10 @@ class Logging:
                 #       ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
                 #                          exp_id, exp_type,
                 #                          dith, nread, detectors, see))
-                print('{:<5.0f} {:>8} {:>5} {:<8.0f} {:<12} {:<4}'
+                print('{:<5.0f} {:>8} {:>6.0f}-{:>6.0f} {:<8.0f} {:<12} {:<4}'
                       ' {:>6}'
                       ' {:<8}'
-                      ' {:>6.1f}'.format(int(mjd), iso[11:19], cart,
+                      ' {:>6.1f}'.format(int(mjd), iso[11:19], design, config,
                                          exp_id, exp_type,
                                          dith, nread, detectors, see))
 

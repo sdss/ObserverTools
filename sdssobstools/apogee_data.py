@@ -53,6 +53,14 @@ class APOGEERaw:
         self.exp_time = header['EXPTIME']
         self.isot = Time(header['DATE-OBS'])  # Local
         self.plate_id = header['PLATEID']
+        if "CONFIGID" in header.keys():
+            if isinstance(header["CONFIGID"], int):
+                self.design_id = header["DESIGNID"]
+                self.config_id = header["CONFIGID"]
+            else:
+                self.design_id = 0
+                self.config_id = 0 
+
         if "CARTID" in header.keys():
             if isinstance(header["CARTID"], int):
                 self.cart_id = f"{header['CARTID']:.0f}"
