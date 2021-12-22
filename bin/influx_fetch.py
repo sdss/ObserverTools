@@ -98,19 +98,17 @@ def main(args=None):
         for f_path in args.file:
             f_path = Path(f_path)
             if f_path.exists():
-                print(f_path.absolute())
                 query = f_path.open('r').read()
         query_api = client.query_api()
         query = query.replace("v.timeRangeStart", args.start_time.isot)
         query = query.replace("v.timeRangeStop", args.end_time.isot)
         query = query.replace("v.windowPeriod", args.interval)
-        print(f_path.name, f_path.as_posix())
         myscript = ScriptCreateRequest(name=f_path.name,
                                        description="None",
                                        language=ScriptLanguage.FLUX,
                                        org_id=org_id,
                                        script=query)
-        created_script = scripts_service.post_scripts(name=f_path.name, script_create_request=myscript)
+        reply = query_api.query(myscript)
         
     return 0
 
