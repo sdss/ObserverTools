@@ -31,8 +31,8 @@ def ping(host):
 
     # Building the command. Ex: "ping -c 1 google.com"
     command = ['ping', param, '1', "-i", "0.5", host]
-
-    return sub.run(command, stdout=sub.PIPE) == 0
+    x = sub.run(command, stdout=sub.PIPE)
+    return x.returncode == 0
 
 def get_key():
     """Finds a file called .influx.key that has 3 lines, a user id, an org id,
@@ -52,9 +52,12 @@ def get_key():
 
 def get_client(org_id, token):
     if ping("10.25.1.221"):
-        client = InfluxDBClient(url="http://10.25.1.221:8086", token=token, org=org_id)
+        client = InfluxDBClient(url="http://10.25.1.221:8086", token=token,
+                                org=org_id, timeout=20000)
     else:
-        client = InfluxDBClient(url="http://localhost:8086", token=token, org=org_id)
+        print("Did not reach 10.25.1.221")
+        client = InfluxDBClient(url="http://localhost:8086", token=token,
+                                org=org_id, timeout=20000)
     return client
 
 
@@ -68,6 +71,7 @@ def parse_args():
         " for astropy.time to parse, preferable isot")
     parser.add_argument("-f", "--file", nargs='+', help="A file path of a .flux"
         " influxdb query file")
+    parser.add_argument("-i", "--interval", default="1m", help="Time interval")
     parser.add_argument("-v", "--verbose", action="store_true",
         help="Verbose debugging")
 
@@ -99,12 +103,14 @@ def main(args=None):
         query_api = client.query_api()
         query = query.replace("v.timeRangeStart", args.start_time.isot)
         query = query.replace("v.timeRangeStop", args.end_time.isot)
-        myscript = ScriptCreateRequest(name=f_path.as_posix(),
+        query = query.replace("v.windowPeriod", args.interval)
+        print(f_path.name, f_path.as_posix())
+        myscript = ScriptCreateRequest(name=f_path.name,
                                        description="None",
                                        language=ScriptLanguage.FLUX,
                                        org_id=org_id,
                                        script=query)
-        created_script = scripts_service.post_scripts(script_create_request=myscript)
+        created_script = scripts_service.post_scripts(name=f_path.name, script_create_request=myscript)
         
     return 0
 

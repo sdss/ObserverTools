@@ -66,6 +66,8 @@ except ImportError as e:
     except ImportError as e:
         raise ImportError('Please add ObserverTools/sdssobstools to your PYTHONPATH:'
                           '\n    {}'.format(e))
+    
+from bin import sjd
 
 if sys.version_info.major < 3:
     raise Exception('Interpretter must be python 3.5 or newer')
@@ -323,23 +325,23 @@ class Logging:
                 #     self.args.sjd))
                 # This used to see if quickred processed, but others preferred
                 # to see if the archive image was written
-                red_name = 'apq-{}.fits'.format(img.exp_id)
-                if (arch_dir / red_name).exists():
+                arch_name = 'apR-a-{}.apz'.format(img.exp_id)
+                if (arch_dir / arch_name).exists():
                     detectors.append('a')
-                # elif (red_dir / red_name.replace('1D', '2D')).exists():
+                # elif (red_dir / arch_name.replace('1D', '2D')).exists():
                 # detectors.append('2')
                 else:
                     detectors.append('x')
-                if (arch_dir / red_name.replace('-a-', '-b-')).exists():
+                if (arch_dir / arch_name.replace('-a-', '-b-')).exists():
                     detectors.append('b')
-                # elif (red_dir / red_name.replace('-a-', '-b-').replace(
+                # elif (red_dir / arch_name.replace('-a-', '-b-').replace(
                 # '1D', '2D')).exists():
                 # detectors.append('2')
                 else:
                     detectors.append('x')
-                if (arch_dir / red_name.replace('-a-', '-c-')).exists():
+                if (arch_dir / arch_name.replace('-a-', '-c-')).exists():
                     detectors.append('c')
-                # elif (red_dir / red_name.replace('-a-', '-c-').replace(
+                # elif (red_dir / arch_name.replace('-a-', '-c-').replace(
                 # '1D', '2D')).exists():
                 # detectors.append('2')
                 else:
@@ -826,7 +828,7 @@ class Logging:
                 self.ap_data['iDetector'][self.morning_filter],
                 self.ap_data['iSeeing'][self.morning_filter]
             ):
-                print('{:<5.0f} {:>8} {:>6}-{:>6} {:<8.0f} {:<12} {:<4}'
+                print('{:<5.0f} {:>8} {:>6.0f}-{:<6.0f} {:<8.0f} {:<12} {:<4}'
                       ' {:>5}'
                       ' {:<5}'
                       ' {:>6.1f}'.format(int(mjd), iso[11:19], design, config,
@@ -851,9 +853,9 @@ class Logging:
                 #       ' {:>6.1f}'.format(int(mjd), iso[11:19], cart, plate,
                 #                          exp_id, exp_type,
                 #                          dith, nread, detectors, see))
-                print('{:<5.0f} {:>8} {:>6.0f}-{:>6.0f} {:<8.0f} {:<12} {:<4}'
-                      ' {:>6}'
-                      ' {:<8}'
+                print('{:<5.0f} {:>8} {:>6.0f}-{:<6.0f} {:<8.0f} {:<12} {:<4}'
+                      ' {:>5}'
+                      ' {:<5}'
                       ' {:>6.1f}'.format(int(mjd), iso[11:19], design, config,
                                          exp_id, exp_type,
                                          dith, nread, detectors, see))
@@ -979,8 +981,7 @@ def main():
     if args.mjd:
         args.sjd = args.mjd
     elif args.today:
-        now = Time.now() + 0.3
-        args.sjd = int(now.mjd)
+        args.sjd = sjd.sjd()
     else:
         raise argparse.ArgumentError(args.sjd,
                                      'Must provide -t or -m in arguments')
@@ -991,8 +992,12 @@ def main():
     b_images = Path(b_data_dir).glob('sdR-r1*fit.gz')
 
     if not args.noprogress:
-        ap_images = list(ap_images)
-        b_images = list(b_images)
+        try:
+            ap_images = list(ap_images)
+            b_images = list(b_images)
+        except OSError:  # Stale NFS handle
+            ap_images = list(ap_images)
+            b_images = list(b_images)
     p_boss = args.boss
     p_apogee = args.apogee
 

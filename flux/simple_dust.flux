@@ -5,5 +5,5 @@ from(bucket: "apo-medium-retention")
     |> filter(fn: (r) => r["_measurement"] == "dustb")
     |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
     |> set(key: "_field", value: (">1µm Dust"))
-    |> yield(name: "last")
+    |> yield()
     
