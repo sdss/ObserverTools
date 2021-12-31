@@ -10,8 +10,7 @@ import argparse
 import subprocess as sub
 
 from pathlib import Path
-from influxdb_client import InfluxDBClient, InvocableScriptsService, ScriptCreateRequest, ScriptInvocationParams, \
-    ScriptLanguage
+from influxdb_client import InfluxDBClient
 from astropy.time import Time
 
 from bin import sjd
@@ -51,13 +50,13 @@ def get_key():
 
 
 def get_client(org_id, token):
-    if ping("10.25.1.221"):
-        client = InfluxDBClient(url="http://10.25.1.221:8086", token=token,
-                                org=org_id, timeout=20000)
-    else:
+    client = InfluxDBClient(url="http://10.25.1.221:8086", token=token,
+                            org=org_id)
+    
+    if not client.ready():
         print("Did not reach 10.25.1.221")
-        client = InfluxDBClient(url="http://localhost:8086", token=token,
-                                org=org_id, timeout=20000)
+        client = InfluxDBClient(host="localhost", port=8086, username=None,
+                                password=None, headers={"Authorization": token})
     return client
 
 
@@ -79,9 +78,9 @@ def parse_args():
 
     if (not args.mjd ) and (not args.start_time and not args.end_time):
         args.start_time = Time(sjd.sjd(), format="mjd")
-        args.end_time = Time(sjd.sjd() - 1, format="mjd")
+        args.end_time = Time.now()
     elif args.mjd:
-        args.start_time = Time(args.mjd, format="mjd")
+        args.start_time = Time(args.mjd - 1, format="mjd")
         args.end_time = Time(args.mjd, format="mjd")
     return args
 
@@ -91,7 +90,7 @@ def main(args=None):
         args = parse_args()
     user_id, org_id, token = get_key()
     client = get_client(org_id, token)
-    scripts_service = InvocableScriptsService(api_client=client.api_client)
+    query_api = client.query_api()
     if args.verbose:
         print(f"Querying from {args.start_time.isot} to {args.end_time.isot}")
     if args.file:
@@ -100,15 +99,13 @@ def main(args=None):
             if f_path.exists():
                 query = f_path.open('r').read()
         query_api = client.query_api()
-        query = query.replace("v.timeRangeStart", args.start_time.isot)
-        query = query.replace("v.timeRangeStop", args.end_time.isot)
+        query = query.replace("v.timeRangeStart", f"{args.start_time.isot}Z")
+        query = query.replace("v.timeRangeStop", f"{args.end_time.isot}Z")
         query = query.replace("v.windowPeriod", args.interval)
-        myscript = ScriptCreateRequest(name=f_path.name,
-                                       description="None",
-                                       language=ScriptLanguage.FLUX,
-                                       org_id=org_id,
-                                       script=query)
-        reply = query_api.query(myscript)
+        if args.verbose:
+            print(query)
+        query_result = query_api.query(org=org_id, query=query)[0]
+        print(query_result.records[-1]["_value"])
         
     return 0
 

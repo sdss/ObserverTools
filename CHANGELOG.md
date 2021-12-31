@@ -474,4 +474,7 @@
 - Almost have a working version of influx_fetch.py
 
 ## [3.7.7b] - 2021-12-14
-- Supports gfa_fwh.py for gzipped images.
+- Supports gfa_fwhm.py for gzipped images.
+
+## [3.7.7] - 2021-12-31
+- Major changes to influx_fetch.py
