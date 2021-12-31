@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Written by Elena, rewritten by Dylan. This script gets the dust counts in a
+Written by Dylan. This script gets the dust counts in a
  night and prints it
 
 Changelog:
@@ -10,24 +10,10 @@ import argparse
 import datetime
 from astropy.time import Time
 import numpy as np
-from bin import sjd
+from pathlib import Path
+from bin import sjd, influx_fetch
 
-__version__ = '3.2.2'
-
-raise NotImplementedError("get_dust.py is waiting for InfluxDB support")
-
-# TAI_UTC =34;
-TAI_UTC = 0
-aSjd = 40587.3
-bSjd = 86400.0
-
-
-def get_time_stamps(mjd):
-    startStamp = sjd.sjd_to_time(int(mjd))
-    endStamp = sjd.sjd_to_time(int(mjd + 1))
-    start = datetime.datetime.fromtimestamp(startStamp)
-    end = datetime.datetime.fromtimestamp(endStamp)
-    return start, end
+__version__ = '3.3.0'
 
 
 def parse_args():
@@ -40,46 +26,25 @@ def parse_args():
     parser.add_argument('-v', '--verbose', action="store_true",
                         help='print incremental dust data')
     args = parser.parse_args()
+    
+    if (not args.mjd ) and (not args.start_time and not args.end_time):
+        args.start_time = Time(sjd.sjd(), format="mjd")
+        args.end_time = Time.now()
+    elif args.mjd:
+        args.start_time = Time(args.mjd - 1, format="mjd")
+        args.end_time = Time(args.mjd, format="mjd")
     return args
 
 
-def get_dust(mjd, args):
-    if not epics_fetch:
-        return np.nan
-    start, end = get_time_stamps(mjd)
-    if args.verbose:
-        print("mjd= {}".format(mjd))
-        print("MJD start/end times")
-        print(start)
-        print(end)
-    dust_data = telemetry.get('25m:apo:dustb', start, end, interpolation='raw',
-                              scan_archives=False)
-    enclosure_data = telemetry.get('25m:apo:encl25m', start, end,
-                                   interpolation='raw', scan_archives=False)
-    if args.verbose:
-        print("         Enlosure open/close times")
-        print(enclosure_data)
-        print("")
-    dust_data.times = Time(dust_data.times)
-    dust_data.values = np.array(dust_data.values)
-    enclosure_data.times = Time(enclosure_data.times)
-    enclosure_data.values = np.array(enclosure_data.values)
-    dust_sum = 0
-    if args.verbose:
-        print("date   time    dust    encl    sum")
-    for t, d in zip(dust_data.times, dust_data.values):
-        enclosure_state = enclosure_data.values[enclosure_data.times < t][-1]
-        if enclosure_state > 0:
-            dust_sum = dust_sum + d * 5 / 60.0
-        if args.verbose:
-            print("{} {:7.0f}    {:.0f}    {:10.0f}"
-                  "".format(t, d, enclosure_state, dust_sum))
-    return dust_sum
-
-
-def main():
-    args = parse_args()
-    dust_sum = get_dust(args.mjd, args)
+def main(args=None):
+    if args is None:
+        args = parse_args()
+    q_path = Path(__file__).parent.parent / "flux/dust.flux"
+    if not q_path.exists():
+        raise FileNotFoundError(f"Couldn't find Flux query {q_path.absolute()}")
+    query = q_path.open('r').read()
+    result = influx_fetch.query(query, args.start_time, args.end_time)
+    dust_sum = result[0].records[-1]["_value"]
     print("Integrated Dust Counts: ~{:<5.0f}dust-hrs".format(
           dust_sum - dust_sum % 100))
 
