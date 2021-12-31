@@ -217,18 +217,17 @@
 - Added vertical layout option to ds9_live tests  
 
 - Integrated telescope_status into sloan_log
-
-
+  
 ## [3.5.1] - 2020-11-5
 
 - Removed pyfits from requirements.txt. The newest verion of pyfits breaks on
  the Macs
- 
+
 ## [3.5.2] - 2020-11-5
 
 - Removed fitsio version from requirements.txt The newest version of fitsio
  breaks on the Macs
- 
+
 ## [3.5.3] - 2020-11-5
 
 - With more Mac issues, I removed any fits package requirements and numpy's
@@ -243,12 +242,10 @@
 
 - By installing packages one by one, it looks like pytest-astropy uses psutil
  which is not python-3-only pip ready. Removing from requirements.txt
- 
-## [3.5.5] - 2020-11-5
 
 - In sloan_log.py, it would break without tpmdgram via telescope_status.py,
- fixed 
- 
+ fixed
+
 ## [3.5.6] - 2020-11-5
 
 - Minor fix pushes
@@ -362,7 +359,7 @@
 
 - Added legacy aptest support to ap_test.py
 
-- Refactored python/* to python/sdssobstools/*
+- Refactored python /*to python/sdssobstools/*
 
 ## [3.6.6] - 2021-05-11
 
@@ -427,6 +424,7 @@
  in main to None, important for unittests
 
 - Changed many unittests to use new dates (SJD 59392)
+
 ## [3.7.3] - 2021-10-13
 
 - With the (alleged) death of sdss-telemetry, epics_fetch now always fails, it
@@ -474,7 +472,10 @@
 - Almost have a working version of influx_fetch.py
 
 ## [3.7.7b] - 2021-12-14
+
 - Supports gfa_fwhm.py for gzipped images.
 
 ## [3.7.7] - 2021-12-31
+
 - Major changes to influx_fetch.py
+- get_dust.py now uses influx
