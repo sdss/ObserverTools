@@ -16,6 +16,11 @@ __version__ = '3.1.0'
 
 
 def main():
+    
+    disk_usage = sub.run('df -h | grep -e " /home\|data"', shell=True,
+                         stdout=sub.PIPE).stdout.decode("utf-8")
+    print(disk_usage)
+    
     softwares, versions = [], []
 
     sdss_obstools = sub.run('pip list | grep sdss-obstools', shell=True,
