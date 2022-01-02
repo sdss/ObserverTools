@@ -44,7 +44,10 @@ def main(args=None):
         raise FileNotFoundError(f"Couldn't find Flux query {q_path.absolute()}")
     query = q_path.open('r').read()
     result = influx_fetch.query(query, args.start_time, args.end_time)
-    dust_sum = result[0].records[-1]["_value"]
+    if len(result) == 0:
+        dust_sum = 0
+    else:
+        dust_sum = result[0].records[-1]["_value"]
     print("Integrated Dust Counts: ~{:<5.0f}dust-hrs".format(
           dust_sum - dust_sum % 100))
 

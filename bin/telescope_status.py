@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
-from astropy.time import Time
 import sys
+
+from pathlib import Path
+from astropy.time import Time
+
+from bin import sjd, influx_fetch
 
 try:
     import tpmdata
@@ -14,13 +18,31 @@ __version__ = "3.0.0"
 
 
 def query():
+    
+    t_start = Time(sjd.sjd() - 0.3, format="mjd")
+    t_end = Time.now()
+    enclosure_path = Path(__file__).parent.parent / "flux/enclosure.flux"
+    state = influx_fetch.query(enclosure_path.open('r').read(), t_start, t_end)[0]
+    enclosure_hist = ""
+    last_state = 0
+    for row in state.records:
+        if row.get_value() > last_state:
+            last_state = row.get_value()
+            t = Time(row.get_time())
+            enclosure_hist += f"Opened at {t.isot[11:19]}\n"
+        elif row.get_value() < last_state:
+            t = Time(row.get_time())
+            enclosure_hist += f"Closed at {t.isot[11:19]}\n"
+            
+        
     if tpmdata is None:
         raise ConnectionError("Cannot query the tpm without tpmdata installed")
-
+    
     data = tpmdata.packet(1, 1)
 
     t = Time(data["ctime"], format="unix")
-    output = f"Status at:  {t.isot[12:19]}Z\n"
+    output = enclosure_hist + '\n'
+    output += f"Status at:  {t.isot[12:19]}Z\n"
     output += (f"Telescope stowed at:  "
                f"{data['az_actual_pos']*data['az_spt']/3600:>5.1f},"
                f" {data['alt_actual_pos']*data['alt_spt']/3600:>5.1f},"

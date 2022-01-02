@@ -895,22 +895,15 @@ class Logging:
         print('\n')
 
     def log_support(self):
-        if not log_support.has_epics:
-            return
-        start = Time(self.args.sjd, format='mjd')
-        end = Time(self.args.sjd + 1, format='mjd')
+        start = Time(self.args.sjd, format='mjd') - 0.3
+        end = Time(self.args.sjd + 1, format='mjd') - 0.3
         tel = log_support.LogSupport(start, end, self.args)
         tel.set_callbacks()
         tel.get_offsets()
-        tel.get_focus()
-        tel.get_weather()
+        # tel.get_focus()
+        # tel.get_weather()
         tel.get_hartmann()
         print(tel.offsets)
-        print()
-        print(tel.focus)
-        print()
-        print(tel.weather)
-        print()
         print(tel.hartmann)
 
     @staticmethod

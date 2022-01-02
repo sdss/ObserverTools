@@ -47,12 +47,13 @@ def get_client(org_id=None, token=None):
     return client.query_api()
 
 
-def query(flux_script, start, end):
+def query(flux_script, start, end, interval="1s"):
     user, org, token = get_key()
     client = get_client(org_id=org, token=token)
     query = flux_script
     query = query.replace("v.timeRangeStart", f"{start.isot}Z")
     query = query.replace("v.timeRangeStop", f"{end.isot}Z")
+    query = query.replace("v.windowPeriod", interval)
     result = client.query(query=query, org=org)
     return result
     
@@ -93,15 +94,18 @@ def main(args=None):
             f_path = Path(f_path)
             if f_path.exists():
                 query = f_path.open('r').read()
-        client = client.client()
         query = query.replace("v.timeRangeStart", f"{args.start_time.isot}Z")
         query = query.replace("v.timeRangeStop", f"{args.end_time.isot}Z")
         query = query.replace("v.windowPeriod", args.interval)
         if args.verbose:
             print(query)
-        query_result = client.query(org=org_id, query=query)[0]
-        print(query_result.records[-1]["_value"])
-        
+        query_result = client.query(org=org_id, query=query)
+        print(query_result)
+        print(f"{'Time':23} {'Measurement':15} {'Field':15} {'Value':}")
+        print("=" * 80)
+        for res in query_result:
+            for val in res:
+                print(f"{Time(val.get_time()).isot:23} {val.get_measurement():15} {val.get_field():15} {val.get_value()}")
     return 0
 
 

@@ -1,0 +1,5 @@
+from(bucket: "apo-medium-retention")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r.actor == "boss")
+    |> filter(fn: (r) => (r._measurement == "sp1Temp" and r._field == "median"))
+    |> yield()
