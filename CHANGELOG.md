@@ -478,4 +478,9 @@
 ## [3.7.7] - 2021-12-31
 
 - Major changes to influx_fetch.py
+- Various flux queries added under /flux
 - get_dust.py now uses influx
+- log_support.py now uses influx
+- versions.py checks disk usage
+- telescope_status.py checks enclosure history
+  
