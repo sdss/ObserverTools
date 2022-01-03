@@ -18,17 +18,6 @@ In order to run it locally, you will need to either have access to /data, or
  ssh -L 5080:telemetry.apo.nmsu.edu:80 observer@sdss-gateway.apo.nmsu.edu
  Currently, you'll need access to hub to run aptest, but I'm working on removing
  that dependency since aptest can be done using /data/apogee/archive
-
-2019-11-01      dgatlin     init, in response to some issues with gcam
-    tracking and identifying slew errors
-2019-12-13      dgatlin     This has received a lot of work and can now
-    build a data log and some summary
-2020-06-01      dgatlin     Changed some methods to @staticmethods, moved to
-    bin, refactored some names to more appropriately fit the role of logging.
-2020-06-17      dgatlin     Moved telemetry to epics_fetch
-2020-06-30      dgatlin     Added morning option for morning cals
-2020-08-12      dgatlin     Added apogee object offsets and a quickred aptest
-2020-10-18      dgatlin     Made some minor changes to support SDSS-V
 """
 import argparse
 import sys
@@ -47,25 +36,12 @@ except ImportError as e:
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
                           '\n    {}'.format(e))
-try:
-    import fitsio
-except ImportError:
-    raise Exception('fitsio not found by interpreter\n'
-                    '{}'.format(sys.executable))
+
 from pathlib import Path
 from tqdm import tqdm
 from astropy.time import Time
 
-try:
-    from sdssobstools import apogee_data, log_support, boss_data, sdss_paths
-except ImportError as e:
-    try:
-        import apogee_data
-        import boss_data
-        import log_support
-    except ImportError as e:
-        raise ImportError('Please add ObserverTools/sdssobstools to your PYTHONPATH:'
-                          '\n    {}'.format(e))
+from sdssobstools import apogee_data, log_support, boss_data, sdss_paths
     
 from bin import sjd
 
@@ -895,15 +871,18 @@ class Logging:
         print('\n')
 
     def log_support(self):
-        start = Time(self.args.sjd, format='mjd') - 0.3
+        start = Time(self.args.sjd - 0.3, format='mjd')
         end = Time(self.args.sjd + 1, format='mjd') - 0.3
+        end = Time.now() if Time.now() < end else end
         tel = log_support.LogSupport(start, end, self.args)
         tel.set_callbacks()
         tel.get_offsets()
-        # tel.get_focus()
-        # tel.get_weather()
+        tel.get_focus()
+        tel.get_weather()
         tel.get_hartmann()
         print(tel.offsets)
+        print(tel.focus)
+        print(tel.weather)
         print(tel.hartmann)
 
     @staticmethod
@@ -978,7 +957,8 @@ def main():
     else:
         raise argparse.ArgumentError(args.sjd,
                                      'Must provide -t or -m in arguments')
-
+    if args.verbose:
+        print(args.sjd)
     ap_data_dir = ap_dir / '{}'.format(args.sjd)
     b_data_dir = b_dir / '{}'.format(args.sjd)
     ap_images = Path(ap_data_dir).glob('apR-a*.apz')

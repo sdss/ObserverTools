@@ -18,6 +18,7 @@ from bin import influx_fetch, sjd
 
 __version__ = '3.3.0'
 
+
 class LogSupport:
     def __init__(self, tstart, tend, args):
         self.tstart = Time(tstart)
@@ -57,12 +58,12 @@ class LogSupport:
                 offsets_tab[key] = np.array(offsets_tab[key])
         for t in self.call_times:
             line = [t.isot[11:19]] 
-            skip_line = False
             for key in ["az", "alt", "rot"]:
                 before = offsets_tab['t' + key] < t
                 if before.sum() == 0:
-                    continue
-                line.append(offsets_tab[key][before][-1])
+                    line.append(np.nan)
+                else:
+                    line.append(offsets_tab[key][before][-1])
             self.offsets += "{:<8} {:>6.1f} {:>4.1f} {:>6.1f}\n".format(*line)
                 
             
@@ -74,132 +75,135 @@ class LogSupport:
         #                 '25m:tcc:objArcOff:alt', '25m:tcc:guideOff:rot',
         #                 '25m:tcc:calibOff:az', '25m:tcc:calibOff:alt',
         #                 '25m:tcc:calibOff:rot', '25m:guider:guideRMS:RMSerror']
-        # # self.offsets_tab += '=' * 80 + '\n'
-        # self.offsets_tab += '{:^80}\n'.format(
-        #     'Telescope Offsets and Scale (arcsec)')
-        # self.offsets_tab += '=' * 80 + '\n\n'
-        # self.offsets_tab += ('{:<5} {:<9} {:<6} {:<4} {:<6} {:<13} {:<8} {:<10}'
-        #                  ' {:<8}\n'.format('Time', 'Cart', 'Az', 'Alt', 'Rot',
-        #                                    '(\u03B4RA, \u03B4Dec)', 'guideRot',
-        #                                    'calibOff', 'guideRMS'))
-        # self.offsets_tab += '-' * 80 + '\n'
-        # for i, time in enumerate(self.call_times):
-        #     if off_data[offsets_tab_keys[2]][i] == '':
-        #         continue
-        #     self.offsets_tab += ('{:>5} {:>2}-{:0>5} {:>1} {:>6.1f} {:>4.1f}'
-        #                      ' {:>6.1f} ({:>5.1f},{:>5.1f}) {:>8.1f}'
-        #                      ' ({:2.0f},{:2.0f},{:2.0f}) {:>8.3f}'
-        #                      '\n'.format(time.isot[11:16],
-        #                                  off_data[offsets_tab_keys[0]][i],
-        #                                  off_data[offsets_tab_keys[1]][i],
-        #                                  off_data[offsets_tab_keys[2]][i][0],
-        #                                  off_data[offsets_tab_keys[3]][i],
-        #                                  off_data[offsets_tab_keys[4]][i],
-        #                                  off_data[offsets_tab_keys[5]][i],
-        #                                  off_data[offsets_tab_keys[6]][i][0] * 3600,
-        #                                  off_data[offsets_tab_keys[7]][i][0] * 3600,
-        #                                  off_data[offsets_tab_keys[8]][i][0] * 3600,
-        #                                  off_data[offsets_tab_keys[9]][i][0] * 3600,
-        #                                  off_data[offsets_tab_keys[10]][
-        #                                      i][0] * 3600,
-        #                                  off_data[offsets_tab_keys[11]][
-        #                                      i][0] * 3600,
-        #                                  off_data[offsets_keys[12]][i])
-        #                      )
 
     def get_focus(self):
-        focus_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
-                      '25m:guider:cartridgeLoaded:plateID',
-                      '25m:guider:survey:plateType',
-                      '25m:tcc:scaleFac', '25m:tcc:primOrient:pos',
-                      '25m:tcc:secOrient:piston', '25m:tcc:secFocus',
-                      '25m:tcc:axePos:az', '25m:tcc:axePos:alt',
-                      '25m:apo:airTempPT', '25m:apo:winds',
-                      '25m:apo:windd', '25m:guider:seeing']
-        foc_data = {}
-        for key in focus_keys:
-            foc_data[key] = []
-        for time in self.call_times:
-            self.query(focus_keys, time.datetime, time.datetime,
-                       foc_data)
-
+        self.focus = (f"{'Time':<8} {'M1':<4} {'M2':<4} {'Focus':<5}"
+                      f" {'Az':<6} {'Alt':<5} {'Temp':<5} {'Wind':<4}"
+                      f" {'Dir':<3}\n")
         self.focus += '=' * 80 + '\n'
-        self.focus += '{:^80}\n'.format('Telescope Focus')
-        self.focus += '=' * 80 + '\n\n'
-        self.focus += ('{:<5} {:<9} {:<6} {:<5} {:<5} {:<5} {:<6} {:<5}'
-                       ' {:<5} {:<4} {:<3}'
-                       ' {:<4}\n'.format('Time', 'Cart', 'Scale', 'M1', 'M2',
-                                         'Focus', 'Az', 'Alt', 'Temp',
-                                         'Wind', 'Dir', 'FWHM'))
-        self.focus += '-' * 80 + '\n'
-        for i, time in enumerate(self.call_times):
-            if foc_data[focus_keys[2]][i] == '':
-                continue
-            self.focus += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>5.0f}'
-                           ' {:>5.0f}'
-                           ' {:>5.0f} {:>6.1f} {:>5.1f} {:>5.1f} {:>4.0f}'
-                           ' {:>3.0f}'
-                           ' {:>4.1f}\n'.format(time.isot[11:16],
-                                                foc_data[focus_keys[0]][i],
-                                                foc_data[focus_keys[1]][i],
-                                                foc_data[focus_keys[2]][i][0],
-                                                (foc_data[focus_keys[3]][i]
-                                                 - 1) * 1e6,
-                                                foc_data[focus_keys[4]][i],
-                                                foc_data[focus_keys[5]][i],
-                                                foc_data[focus_keys[6]][i],
-                                                foc_data[focus_keys[7]][i],
-                                                foc_data[focus_keys[8]][i],
-                                                foc_data[focus_keys[9]][i],
-                                                foc_data[focus_keys[10]][i],
-                                                foc_data[focus_keys[11]][i],
-                                                foc_data[focus_keys[12]][i]))
+        focus_tab = {}
+        focus_tab_path = Path(__file__).parent.parent / "flux/focus.flux"
+        off_tables = influx_fetch.query(focus_tab_path.open('r').read(),
+            self.tstart, self.tend)
+        for table in off_tables:
+            for row in table.records:
+                measurement = row.get_measurement()
+                measurement = measurement if measurement != "axePos" else row.get_field()
+                if measurement in focus_tab.keys():
+                    focus_tab[f"t{measurement}"].append(row.get_time())
+                    focus_tab[measurement].append(row.get_value())
+                else:
+                    focus_tab[f"t{measurement}"] = [row.get_time()]
+                    focus_tab[measurement] = [row.get_value()]
+        for key in focus_tab.keys():
+            if key[0] == 't':
+                focus_tab[key] = Time(focus_tab[key])
+            else:
+                focus_tab[key] = np.array(focus_tab[key])
+        for t in self.call_times:
+            line = [t.isot[11:19]] 
+            for key in ["primOrient", "secOrient", "secFocus", "az", "alt",
+                        "airTempPT", "winds", "windd"]:
+                if 't' + key in focus_tab.keys():
+                    before = focus_tab['t' + key] < t
+                    if before.sum() == 0:
+                        continue
+                    line.append(focus_tab[key][before][-1])
+                else:
+                    line.append(np.nan)
+            self.focus += ("{:<8} {:>4.0f} {:>4.0f} {:>5.0f} {:>6.1f} {:>5.1f}"
+                           " {:>5.1f} {:>4.0f} {:>3.0f}\n".format(
+                                 *line))
+                
+        # focus_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
+        #               '25m:guider:cartridgeLoaded:plateID',
+        #               '25m:guider:survey:plateType',
+        #               '25m:tcc:scaleFac', '25m:tcc:primOrient:pos',
+        #               '25m:tcc:secOrient:piston', '25m:tcc:secFocus',
+        #               '25m:tcc:axePos:az', '25m:tcc:axePos:alt',
+        #               '25m:apo:airTempPT', '25m:apo:winds',
+        #               '25m:apo:windd', '25m:guider:seeing']
+        # foc_data = {}
+        # for key in focus_keys:
+        #     foc_data[key] = []
+        # for time in self.call_times:
+        #     self.query(focus_keys, time.datetime, time.datetime,
+        #                foc_data)
+
+        # self.focus += '=' * 80 + '\n'
+        # self.focus += '{:^80}\n'.format('Telescope Focus')
+        # self.focus += '=' * 80 + '\n\n'
+        # self.focus += ('{:<5} {:<9} {:<6} {:<5} {:<5} {:<5} {:<6} {:<5}'
+        #                ' {:<5} {:<4} {:<3}'
+        #                ' {:<4}\n'.format('Time', 'Cart', 'Scale', 'M1', 'M2',
+        #                                  'Focus', 'Az', 'Alt', 'Temp',
+        #                                  'Wind', 'Dir', 'FWHM'))
+        # self.focus += '-' * 80 + '\n'
+        # for i, time in enumerate(self.call_times):
+        #     if foc_data[focus_keys[2]][i] == '':
+        #         continue
+        #     self.focus += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>5.0f}'
+        #                    ' {:>5.0f}'
+        #                    ' {:>5.0f} {:>6.1f} {:>5.1f} {:>5.1f} {:>4.0f}'
+        #                    ' {:>3.0f}'
+        #                    ' {:>4.1f}\n'.format(time.isot[11:16],
+        #                                         foc_data[focus_keys[0]][i],
+        #                                         foc_data[focus_keys[1]][i],
+        #                                         foc_data[focus_keys[2]][i][0],
+        #                                         (foc_data[focus_keys[3]][i]
+        #                                          - 1) * 1e6,
+        #                                         foc_data[focus_keys[4]][i],
+        #                                         foc_data[focus_keys[5]][i],
+        #                                         foc_data[focus_keys[6]][i],
+        #                                         foc_data[focus_keys[7]][i],
+        #                                         foc_data[focus_keys[8]][i],
+        #                                         foc_data[focus_keys[9]][i],
+        #                                         foc_data[focus_keys[10]][i],
+        #                                         foc_data[focus_keys[11]][i],
+        #                                         foc_data[focus_keys[12]][i]))
 
     def get_weather(self):
-        weather_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
-                        '25m:guider:cartridgeLoaded:plateID',
-                        '25m:guider:survey:plateType',
-                        '25m:apo:airTempPT', '25m:apo:dpTempPT',
-                        '25m:apo:humidPT', '25m:apo:winds',
-                        '25m:apo:windd', '25m:apo:dustb',
-                        '25m:apo:irscsd', '25m:apo:irscmean']
-        weather_data = {}
-        for key in weather_keys:
-            weather_data[key] = []
-        for time in self.call_times:
-            self.query(weather_keys, time.datetime, time.datetime,
-                       weather_data)
-
-        self.weather = '=' * 80 + '\n'
-        self.weather += '{:^80}\n'.format('Weather Log')
-        self.weather += '=' * 80 + '\n\n'
-        self.weather += ('{:<5} {:<9} {:<5} {:<5} {:<4} {:<5} {:<4} {:<3}'
-                         ' {:<6} {:<7} {:<5}'
-                         '\n'.format('Time', 'Cart', 'Temp', 'DP', 'Diff',
-                                     'Humid', 'Wind', 'Dir', '1\u03BCmDst',
-                                     'IRSC\u03C3', 'IRSC\u03BC'))
-        self.weather += '-' * 80 + '\n'
-        for i, time in enumerate(self.call_times):
-            if weather_data[weather_keys[2]][i] == '':
-                continue
-            self.weather += ('{:>5} {:>2}-{:0>5}{:>1} {:>5.1f} {:>5.1f}'
-                             ' {:>4.1f} {:>5}'
-                             ' {:>4.0f} {:>3.0f} {:>6.0f} {:>7.1f} {:>5.1f}'
-                             '\n'.format(time.isot[11:16],
-                                         weather_data[weather_keys[0]][i],
-                                         weather_data[weather_keys[1]][i],
-                                         weather_data[weather_keys[2]][i][0],
-                                         weather_data[weather_keys[3]][i],
-                                         weather_data[weather_keys[4]][i],
-                                         weather_data[weather_keys[3]][i]
-                                         - weather_data[weather_keys[4]][i],
-                                         '{:>.0f}%'.format(
-                                             weather_data[weather_keys[5]][i]),
-                                         weather_data[weather_keys[6]][i],
-                                         weather_data[weather_keys[7]][i],
-                                         weather_data[weather_keys[8]][i],
-                                         weather_data[weather_keys[9]][i],
-                                         weather_data[weather_keys[10]][i]))
+        dust = "1\u03BCm Dust"
+        irscs = "IRSC \u03C3"
+        irscm = "IRSC \u03BC"
+        self.weather = (f"{'Time':<8} {'Temp':<5} {'DP':<5} {'Diff':<5}"
+            f" {'Humid':<5} {'Wind':<4} {'Dir':<3} {dust:<8}"
+            f" {irscs:<6} {irscm:<6}\n")
+        self.weather += '=' * 80 + '\n'
+        weather_tab = {}
+        weather_tab_path = Path(__file__).parent.parent / "flux/weather.flux"
+        off_tables = influx_fetch.query(weather_tab_path.open('r').read(),
+            self.tstart, self.tend)
+        for table in off_tables:
+            for row in table.records:
+                measurement = row.get_measurement()
+                if measurement in weather_tab.keys():
+                    weather_tab[f"t{measurement}"].append(row.get_time())
+                    weather_tab[measurement].append(row.get_value())
+                else:
+                    weather_tab[f"t{measurement}"] = [row.get_time()]
+                    weather_tab[measurement] = [row.get_value()]
+        for key in weather_tab.keys():
+            if key[0] == 't':
+                weather_tab[key] = Time(weather_tab[key])
+            else:
+                weather_tab[key] = np.array(weather_tab[key])
+        for t in self.call_times:
+            line = [t.isot[11:19]] 
+            skip_line = False
+            for key in ["airTempPT", "airTempPT", "dpTempPT", "humidPT", "winds", "windd",
+                        "dustb", "irscd", "irscmean"]:
+                if 't' + key in weather_tab.keys():
+                    
+                    before = weather_tab['t' + key] < t
+                    if before.sum() == 0:
+                        continue
+                    line.append(weather_tab[key][before][-1])
+                else:
+                    line.append(np.nan)
+            self.weather += ("{:<8} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f} {:>4.0f}"
+                             " {:>3.0f} {:>8.0f} {:>6.1f} {:>6.0f}\n".format(
+                                 *line))
 
     def get_hartmann(self):
         self.hartmann = f"{'Time':8} {'TSP1':<6} {'R off':<6} {'B off':<6}"
@@ -214,6 +218,8 @@ class LogSupport:
             self.tstart, self.tend)
         boss_tables = influx_fetch.query(boss_temps_path.open('r').read(),
             self.tstart, self.tend)
+        if len(boss_tables) == 0 or len(hart_tables) == 0:
+            return
         for table in boss_tables:
             for row in table.records:
                 boss_times.append(row.get_time()) 
@@ -292,17 +298,7 @@ def main():
         print('End: {}'.format(end))
 
     if args.key:
-        tel = LogSupport(start, end, args)
-        tel.set_callbacks()
-        dummy_dic = {args.key: []}
-        data = []
-        print('Key: {}'.format(args.key))
-        print('Time: Value')
-        for time in tel.call_times:
-            data = tel.query(args.key, time.datetime, time.datetime, dummy_dic)
-            print('{}: {}'.format(data.times[0], data.values[0]))
-
-        print('Units: {}'.format(data.units))
+        raise NotImplementedError("This feature stopped working when EPICS died")
 
     tel = LogSupport(start, end, args)
     tel.set_callbacks()
