@@ -2,38 +2,28 @@
 
 ## [3.1.0] - 2020-07-01
 
-### Changed
-
 - Added changelog and changed version numbers to 3-part strings in compliance
  with SDSS coding standards
- 
-## [3.2.0] - 2020-07-02
 
-### Changed
+## [3.2.0] - 2020-07-02
 
 - Added help.py and test_help.py
 
 ## [3.2.1] - 2020-07-05
 
-### Changed
-
 - Improved authorship credit in bin, included authors from old_bin into README
 
 ## [3.2.2] - 2020-07-09
-
-### Changed
 
 - ds9_live.py now reads the previous image if it's APOGEE and not on the APOGEE
  virtual machine. This eliminates all known crashes.
 
 - Added several symlinks to scripts to preserve old naming support, this won't
  work for all scripts though
- 
+
 - Added BSD 3 Clause License
 
 ## [3.2.3] - 2020-07-29
-
-### Changed
 
 - sloan_log.py now returns a clear warning when you try to get morning cals that
  don't exist yet
@@ -45,20 +35,16 @@
 
 ## [3.3.0] - 2020-08-12
 
-### Changed
-
 - sloan_log.py uses the ap_test in apogee_data instead of ap_test. It will be
  more like the actual APOGEE reduction since it uses the quickred files.
- 
+
 - Removed several TODOs related to ap_test, now passes unittests
 
 - Changed the apogee quickred flat file to one of the oldest available at APO,
  this is not a permanent solution, the original file's quickred version should
  be used once found.
- 
-## [3.3.1] - 2020-08-17
 
-### Changed
+## [3.3.1] - 2020-08-17
 
 - help.py now includes WAVEMID and XMID
 
@@ -66,14 +52,12 @@
 
 - WAVEMID and XMID are now symlinked to x_mid.py and wave_mid.py for import
  (this usually won't work, but it gives some flexibility)
- 
+
 - ds9_live.py should support 2-camera modes and should only open 2 ds9 tiles
 
 - help text has been updated in several argparses
 
 ## [3.4.0] - 2020-10-10
-
-### Changed
 
 - Added setup.py, requirements, and a modulefile, both of which could be used to
  setup an environment, although if you need to setup an Anaconda environment,
@@ -95,26 +79,18 @@
 
 ## [3.4.1] - 2020-10-11
 
-### Changed
-
 - Removed `python=3.7.8` from requirements.txt because that breaks the pip
  install
 
 ## [3.4.2] - 2020-10-11
 
-### Changed
-
 - Added MANIFEST.in to include CHNAGELOG and LICENSE for installation
 
 ## [3.4.3] - 2020-10-11
 
-### Changed
-
 - Added requirements.txt to MANIFEST.in
 
 ## [3.4.4] - 2020-10-12
-
-### Changed
 
 - Offset outputs now print using textwrap more efficiently
 
@@ -128,15 +104,13 @@
 
 ## [3.4.5] - 2020-10-17
 
-### Changed
-
 - log_support has a new keyword based on the changes made to actorkeys today
  (note: the new keyword will not work until there has been a sequence using that
  keyword.)
 
 - Changed a raise Warning in apogee_data.py to a print so it doesn't cause
  the program to exit, encountered in img 35780004
- 
+
 ## [3.4.6] - 2020-10-18
 
 - ds9_live.py has args.info incorporated throughout (also in the tests)
@@ -232,12 +206,12 @@
 
 - With more Mac issues, I removed any fits package requirements and numpy's
  version
- 
+
 ## [3.5.4] - 2020-11-5
 
 - Screw it, removed all versions from requirements.txt because of this new pip
  change
- 
+
 ## [3.5.5] - 2020-11-5
 
 - By installing packages one by one, it looks like pytest-astropy uses psutil
@@ -288,24 +262,24 @@
 
 - Added dat and tests to packages in an attempt to get them included in the dist
  which is more important now that we have a new master flat.
- 
+
 - Converted pathlib.Path to str in sloan_log.py
 
 - Added dat folder contents to setup.py as package_data, works on my machine,
  ready for testing at hub
- 
+
 ## [3.5.11] - 2020-11-30
 
 - hub installs a script differently than I do locally, so the previous method
  didn't work. pkg_resources also didn't work, so I settled on using a path
  relative to apogee_data, which installs in a location more similar to the
  master flat than scripts like sloan_log.py
- 
+
 ## [3.5.12] - 2020-12-05
 
 - Made some changes to tpm_fetch.py to have some features Dan0 included in a
  similar script.
- 
+
 - Added an mjd window test for test_tpm_fetch.py
 
 ## [3.6.0] - 2021-01-20
@@ -322,7 +296,7 @@
 
 - log_support uses apogee:exposureWroteSummary for callbacks
 
-- log_support checks to see if the mission is defined in each callback 
+- log_support checks to see if the mission is defined in each callback
   (not during cals)
 
 - Fixed a bug with sossy on plates with only 1 table row
@@ -331,7 +305,7 @@
 
 - Changed a variety of tests to support Macs that can't make /data and must
   instead use ~/data
- 
+
 ## [3.6.1] - 2021-03-09
 
 - Fixed a bug in time_track.py where images taken with NoBOSS bypass would
@@ -402,7 +376,6 @@
 
 - Major changes to epics_fetch.py to parse multiple keys into one table
 
-
 ## [3.6.15] - 2021-09-06
 
 - Added eval_pointing.py to study ecam images with plots, tables, and more
@@ -410,7 +383,6 @@
 - Added pydl to requirements
 
 - Added FPI support to sloan_log.py
-
 
 ## [3.7.0] - 2021-09-28
 
