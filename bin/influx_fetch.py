@@ -4,9 +4,8 @@ This is a prototype script that can't really be tested until we have an
 InfluxDB key, but it's a work in progress.
 Author: Dylan Gatlin
 """
-import platform    # For getting the operating system name
+import os
 import argparse
-import subprocess as sub
 
 from pathlib import Path
 from influxdb_client import InfluxDBClient
@@ -24,9 +23,17 @@ def get_key():
     or the home directory
     TODO: Put an influx.key somewhere that all observers can use it.
     """
+    if os.environ["INFLUXDB_V2_TOKEN"]:
+        user_id = os.environ["INFLUXDB_V2_USER"]
+        org_id = os.environ["INFLUXDB_V2_ORG"]
+        token = os.environ["INFLUXDB_V2_TOKEN"]
+        return user_id, org_id, token
+        
     key_path = Path.home() / ".influx.key"
     if not key_path.exists():
         key_path = Path(".") / ".influx.key"
+    elif not key_path.exists():
+        raise KeyError("Influx Key not found, cannot send a query without one")
     with key_path.open('r') as fil:
         user_id = fil.readline().rstrip('\n')
         org_id = fil.readline().rstrip('\n')
