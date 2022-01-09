@@ -31,8 +31,8 @@ def parse_args():
         args.start_time = Time(sjd.sjd(), format="mjd")
         args.end_time = Time.now()
     elif args.mjd:
-        args.start_time = Time(args.mjd - 1, format="mjd")
-        args.end_time = Time(args.mjd, format="mjd")
+        args.start_time = Time(args.mjd, format="mjd")
+        args.end_time = Time(args.mjd + 1, format="mjd")
     return args
 
 
@@ -43,13 +43,28 @@ def main(args=None):
     if not q_path.exists():
         raise FileNotFoundError(f"Couldn't find Flux query {q_path.absolute()}")
     query = q_path.open('r').read()
+    if args.verbose:
+        print(f"Start: {args.start_time.isot}, End: {args.end_time.isot}")
     result = influx_fetch.query(query, args.start_time, args.end_time)
     if len(result) == 0:
         dust_sum = 0
     else:
-        dust_sum = result[0].records[-1]["_value"]
-    print("Integrated Dust Counts: ~{:<5.0f}dust-hrs".format(
+        # If I ever stop trusting cumulateiveSum() to do the summation for me,
+        # this routine is a decent substitute.
+        # times = []
+        # vals = []
+        # for row in result[0].records:
+            # times.append(row.get_time())
+            # vals.append(row.get_value())
+        # times = Time(times).mjd
+        # vals = np.array(vals)
+        # dust_sum = np.sum(np.gradient(times) * 24 * vals )
+        dust_sum = result[0].records[-1].get_value()
+    print("Integrated Dust Counts: ~{:<.0f} dust-hrs".format(
           dust_sum - dust_sum % 100))
+    if args.verbose:
+        for row in result[0].records:
+            print(row.get_time(), row.get_value())
 
 
 if __name__ == '__main__':

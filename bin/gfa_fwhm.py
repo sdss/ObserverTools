@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-
-__author__ = "Dylan Gatlin"
-
-
+"""A script to process gfa images with the SDSS-V FPS"""
 import tqdm
 import fitsio
 import sep
@@ -19,6 +16,9 @@ from sdssobstools import sdss_paths
 
 sns.set(style="darkgrid")
 
+__author__ = "Dylan Gatlin"
+
+
 def build_filt(obj_arr: np.ndarray):
     ecc = np.sqrt(obj_arr['a']**2 - obj_arr['b']**2) / obj_arr['a']
     # print(np.percentile(ecc, 75))
@@ -31,7 +31,8 @@ def build_filt(obj_arr: np.ndarray):
         # & (obj_arr["npix"] > 5)
         & (ecc < 0.7)
         )
-    # print(obj_arr["a"] * 0.216, obj_arr["b"] * 0.216, np.mean([obj_arr["a"], obj_arr["b"]]))
+    # print(obj_arr["a"] * 0.216, obj_arr["b"] * 0.216,
+    # np.mean([obj_arr["a"], obj_arr["b"]]))
     return filt
 
 def show_img(obj_arr: np.ndarray, obj_filt, data_sub: np.ndarray, plot_file=""):
@@ -103,9 +104,12 @@ class GFASet:
         filt = build_filt(objs)
         if verbose:
             print(f"Using {filt.sum()}/{filt.shape[0]} points")
-        fwhm = 0.216 * np.mean(2.0*np.sqrt(
-            2.0*np.log(2)*(objs['a'][filt]**2 + objs['b'][filt]**2))
-        )
+        # fwhm = 0.216 * np.mean(2.0*np.sqrt(
+            # 2.0*np.log(2)*(objs['a'][filt]**2 + objs['b'][filt]**2))
+        # )
+        fwhm = 0.216 * np.mean(
+             np.sqrt(2 *  np.log(2) * objs['a'][filt]**2 + objs['b'][filt]**2)
+            )
         return fwhm, filt.sum(), objs
 
     def sort(self):
@@ -146,12 +150,15 @@ class GFASet:
             flat_foc = self.focuses.flatten()
             flat_fwhms = self.fwhms.flatten()
             nan_filt = ~np.isnan(flat_fwhms)
-            a, b, c = np.polyfit(flat_foc[nan_filt], flat_fwhms[nan_filt], deg=2)
-            focs = np.linspace(flat_foc[nan_filt].min(), flat_foc[nan_filt].max(), 100)
+            a, b, c = np.polyfit(flat_foc[nan_filt],
+                                 flat_fwhms[nan_filt], deg=2)
+            focs = np.linspace(flat_foc[nan_filt].min(),
+                               flat_foc[nan_filt].max(), 100)
             print(f"Optimal Focus is at {-b / 2 /a:.0f}")
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
         if not self.exp_num_plot:
-            ax.plot(focs, self.quadratic(focs, a, b, c), label=f"Quad Fit, best={-b / 2 / a:.0f}", alpha=0.8)
+            ax.plot(focs, self.quadratic(focs, a, b, c),
+                    label=f"Quad Fit, best={-b / 2 / a:.0f}", alpha=0.8)
             ax.axvline(-b / 2 / a, c="r", linestyle="--", alpha=0.6)
         for i in range(6):
             if self.exp_num_plot:
@@ -240,7 +247,8 @@ def main(args=None):
         low = 1000
         high = 0
         for file in path_stem.glob("gimg-gfa5n-*.fits*"):
-            ind = int(file.name.split("-")[-1].rstrip(".fits").rstrip(".fits.gz"))
+            ind = int(file.name.split("-")[-1].rstrip(
+                ".fits").rstrip(".fits.gz"))
             if ind < low:
                 low = ind
             if ind > high:
@@ -254,16 +262,24 @@ def main(args=None):
             low = int(low)
             high = int(high)
         except ValueError:
-            raise ValueError(f"Window range must be filled with ints"
-                             f" {args.window}")
+            raise ValueError(f"Window range must be two ints with a - between"
+                             f" them {args.window}")
         if args.verbose:
             print(f"Reading Images from {low} to {high} in MJD {args.mjd}")
         for im_num in tqdm.tqdm(range(low, high + 1)):
             im_ps = []
             for n in range(1, 7):
-                p = sdss_paths.gcam / f"{args.mjd}/gimg-gfa{n:.0f}n-{im_num:0>4.0f}.fits.gz"
+                p = (sdss_paths.gcam / f"{args.mjd}/proc-gimg-gfa{n:.0f}n-"
+                     f"{im_num:0>4.0f}.fits")
                 if not p.exists():
-                    p = sdss_paths.gcam / f"{args.mjd}/gimg-gfa{n:.0f}n-{im_num:0>4.0f}.fits"
+                    p = (sdss_paths.gcam / f"{args.mjd}/proc-gimg-gfa{n:.0f}n-"
+                         f"{im_num:0>4.0f}.fits.gz")
+                if not p.exists():
+                    p = (sdss_paths.gcam / f"{args.mjd}/gimg-gfa{n:.0f}n-"
+                         f"{im_num:0>4.0f}.fits")
+                if not p.exists():
+                    p = (sdss_paths.gcam / f"{args.mjd}/gimg-gfa{n:.0f}n-"
+                         f"{im_num:0>4.0f}.fits.gz")
                 im_ps.append(p)
 
             gfas.add_index(im_ps, im_num)

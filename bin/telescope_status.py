@@ -31,8 +31,11 @@ def query():
             t = Time(row.get_time())
             enclosure_hist += f"Opened at {t.isot[11:19]}\n"
         elif row.get_value() < last_state:
+            last_state = row.get_value()
             t = Time(row.get_time())
             enclosure_hist += f"Closed at {t.isot[11:19]}\n"
+    if enclosure_hist == "":
+        enclosure_hist = "Closed all night\n"
             
         
     if tpmdata is None:

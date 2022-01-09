@@ -396,28 +396,8 @@ class Logging:
                 sos_files = []
                 # img_mjd = int(Time(img.isot).mjd)
                 # All boss exposures write as splog, but manga writes different
-                if ('BOSS' in img.lead) or ('BHM' in img.lead):
-                    red_dir = sdss_paths.sos / f"{self.args.sjd}"
-                    red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
-                        img.exp_id)
-                else:  # MaNGA
-                    red_dir = sdss_paths.dos / f"{self.args.sjd}"
-                    red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
-                        img.exp_id)
-                    if img.flavor == 'Science':
-                        red_fil = red_dir / 'mgscisky-{}-r1-{:0>8}.fits'.format(
-                            img.plate_id, img.exp_id)
-                    elif img.flavor == 'Flat':
-                        red_fil = red_dir / 'mgtset-{}-{}-{:0>8}-r1.fits' \
-                                            ''.format(self.args.sjd,
-                                                      img.plate_id, img.exp_id)
-                    elif img.flavor == 'Arc':
-                        red_fil = red_dir / 'mgwset-{}-{}-{:0>8}-r1.fits' \
-                                            ''.format(self.args.sjd,
-                                                      img.plate_id, img.exp_id)
-                    else:  # Harts and Bias, no file written there
-                        red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(
-                            img.exp_id)
+                red_dir = sdss_paths.sos / f"{self.args.sjd}"
+                red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(img.exp_id)
                 if red_fil.exists():
                     sos_files.append('r1')
                 else:

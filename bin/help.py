@@ -9,38 +9,51 @@ This is a file to pull the help for all programs in bin. Each script must be
 2020-06-08  DG  Init, based on spHelp
 2020-08-17  DG  Added XMID and WAVEMID
 2020-10-18  DG  Added m4l
+2022-01-09  DG Simplified the whole thing to text
 """
-import subprocess as sub
-from pathlib import Path
-from bin import sjd, sp_version, m4l
 
-__version__ = '3.1.0'
+__version__ = '3.2.0'
 
-argparsed = ['ap_test.py', 'boss_sha1sum.py', 'ds9_live.py', #  'epics_fetch.py',
-             'get_dust.py', 'sloan_log.py', 'tpm_fetch.py', 'tpm_feed.py']
-non_argparsed = ['sjd.py', 'sp_version.py', 'wave_mid.py', 'x_mid']
-bin_dir = Path(__file__).parent
 
-for arg in argparsed:
-    print('{:=^80}'.format(arg))
-    sub.call([bin_dir / arg, '-h'])
-    print()
+doc="""
+ObserverTools
 
-# These scripts don't use argparse, but they do have a docstring and a main
-# function, so they can be safely imported and we'll just print __doc__
-print('{:=^80}'.format('sjd.py'))
-print(sjd.__doc__)
-print('{:=^80}'.format('sp_version.py'))
-print(sp_version.__doc__)
-print('{:=^80}'.format('m4l.py'))
-print(m4l.__doc__)
+Most of these tools have their own --help explanations that are more verbose
 
-# Because these files don't have a main syntax, we can't import them and print
-# __doc__, so we have to read them manually
-wavemid = open(bin_dir / 'wave_mid.py', 'r').read()
-print('{:=^80}'.format('wave_mid.py'))
-print(wavemid.split('"""')[1])
-
-xmid = open(bin_dir / 'x_mid.py', 'r').read()
-print('{:=^80}'.format('x_mid.py'))
-print(xmid.split('"""')[1])
+Scripts:
+ads9.py: Shortcut for ds9_live.py -a
+ap_test.py: Tests apogee dome flats (in progress)
+aptest: Alias for ap_test.py
+az_fiducial_error.sh: Checks mcp logs for fiducial crossings
+boss_shap1sum.py: Hashes boss directories
+ds9_live.py: Runs a ds9 window for any standard image directory
+eval_pointint.py: Analyzes ecam pointing datasets
+fsc_coord_conver.py: Converts tables of fsc coordinates to sky offsets
+get_dust.py: Gets today's dust counts
+getDust.py: Alias for get_dust.py
+help.py: This script
+influx_fetch.py: Queries InfluxDB, requires an influxdb key
+list_ap: Prints apogee images, I recommend sloan_log.py -a instead
+m4l: Alias for m4l.py
+m4l.py: Gets Mirror numbers
+mjd: Alias for sjd.py
+plot_mcp_fiducials.py: Plots mcp fiducial crossings
+sjd.py: Gets current sjd
+sloan_log.py: A large and flexible logging tool including apogee, boss,
+ log support, and much more.
+sossy.py: Parse SOS outputs
+spds9.py: Shortcut for ds9_live.py -b
+spHelp: Alias for help.py
+spVersion: Alias for versions.py
+telescope_status.py: Creates telescope status section for night log
+telStatus: Alias for telescope_status.py
+time_track.py: A time tracking tool to anlayze monthly time usage
+tpm_feed.py: Creates a feed/plot of TPM output
+tpm_fetch.py: Queries TPM archive files without InfluxDB
+versions.py: Prints various software versions and disk usage
+wave_mid.py: Computes WAVEMID offsets
+WAVEMID: Alias for wave_mid.py
+x_mid.py: Computes XMID offsets
+XMID: Alias for x_mid.py
+"""
+print(doc)

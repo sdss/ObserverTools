@@ -107,7 +107,7 @@ class LogSupport:
                 if 't' + key in focus_tab.keys():
                     before = focus_tab['t' + key] < t
                     if before.sum() == 0:
-                        continue
+                        line.append(np.nan)
                     line.append(focus_tab[key][before][-1])
                 else:
                     line.append(np.nan)
@@ -167,7 +167,7 @@ class LogSupport:
         irscs = "IRSC \u03C3"
         irscm = "IRSC \u03BC"
         self.weather = (f"{'Time':<8} {'Temp':<5} {'DP':<5} {'Diff':<5}"
-            f" {'Humid':<5} {'Wind':<4} {'Dir':<3} {dust:<8}"
+            f" {'Humid':<5} {'Wind':<5} {'Dir':<3} {dust:<8}"
             f" {irscs:<6} {irscm:<6}\n")
         self.weather += '=' * 80 + '\n'
         weather_tab = {}
@@ -192,16 +192,21 @@ class LogSupport:
             line = [t.isot[11:19]] 
             skip_line = False
             for key in ["airTempPT", "airTempPT", "dpTempPT", "humidPT", "winds", "windd",
-                        "dustb", "irscd", "irscmean"]:
+                        "dustb", "irscsd", "irscmean"]:
                 if 't' + key in weather_tab.keys():
-                    
                     before = weather_tab['t' + key] < t
                     if before.sum() == 0:
-                        continue
-                    line.append(weather_tab[key][before][-1])
+                        line.append(np.nan)
+                    filtered = weather_tab[key][before]
+                    if len(filtered) > 0:
+                        line.append(filtered[-1])
+                    else:
+                        line.append(np.nan)
                 else:
                     line.append(np.nan)
-            self.weather += ("{:<8} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f} {:>4.0f}"
+            print(len(line))
+            print(line)
+            self.weather += ("{:<8} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f}"
                              " {:>3.0f} {:>8.0f} {:>6.1f} {:>6.0f}\n".format(
                                  *line))
 

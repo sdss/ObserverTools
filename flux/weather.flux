@@ -6,7 +6,7 @@ from(bucket: "apo-medium-retention")
         or r._measurement == "winds"
         or r._measurement == "windd"
         or r._measurement == "dustb"
-        or r._measurement == "irscd"
+        or r._measurement == "irscsd"
         or r._measurement == "irscmean"
         )
     )

@@ -456,4 +456,3 @@
 - versions.py checks disk usage
 - telescope_status.py checks enclosure history
 - influx_fetch.py can read an environment variable or influx.key file
-   

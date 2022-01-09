@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-This is a prototype script that can't really be tested until we have an
-InfluxDB key, but it's a work in progress.
+This is a flexible tool used to query the SDSS-V InfluxDB. It is usually very
+fast, especially compared to the old EPICS, and it is meant to be a tool
+that can be imported as well as run through a CLI
+
 Author: Dylan Gatlin
 """
 import os
@@ -13,8 +15,8 @@ from astropy.time import Time
 
 from bin import sjd
 
-
 __version__ = "3.0.0"
+__author__ = "Dylan Gatlin"
 
 
 def get_key():
@@ -23,7 +25,7 @@ def get_key():
     or the home directory
     TODO: Put an influx.key somewhere that all observers can use it.
     """
-    if os.environ["INFLUXDB_V2_TOKEN"]:
+    if "INFLUXDB_V2_TOKEN" in os.environ.keys():
         user_id = os.environ["INFLUXDB_V2_USER"]
         org_id = os.environ["INFLUXDB_V2_ORG"]
         token = os.environ["INFLUXDB_V2_TOKEN"]
@@ -112,7 +114,9 @@ def main(args=None):
         print("=" * 80)
         for res in query_result:
             for val in res:
-                print(f"{Time(val.get_time()).isot:23} {val.get_measurement():15} {val.get_field():15} {val.get_value()}")
+                print(f"{Time(val.get_time()).isot:23}"
+                      f" {val.get_measurement():15} {val.get_field():15}"
+                      f" {val.get_value()}")
     return 0
 
 
