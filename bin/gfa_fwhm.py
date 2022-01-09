@@ -154,7 +154,10 @@ class GFASet:
                                  flat_fwhms[nan_filt], deg=2)
             focs = np.linspace(flat_foc[nan_filt].min(),
                                flat_foc[nan_filt].max(), 100)
-            print(f"Optimal Focus is at {-b / 2 /a:.0f}")
+            fit = -b / 2 /a
+            fwhm = self.quadratic(fit, a, b, c)
+            mum = "\u03BCm"
+            print(f'Optimal Focus is at {fit:.0f}{mum} with Width {fwhm:.1f}"')
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
         if not self.exp_num_plot:
             ax.plot(focs, self.quadratic(focs, a, b, c),

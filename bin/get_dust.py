@@ -7,13 +7,11 @@ Changelog:
 2020-06-20  DG  Moving main contents into a function for import functionality
  """
 import argparse
-import datetime
 from astropy.time import Time
-import numpy as np
 from pathlib import Path
 from bin import sjd, influx_fetch
 
-__version__ = '3.3.0'
+__version__ = '3.3.1'
 
 
 def parse_args():

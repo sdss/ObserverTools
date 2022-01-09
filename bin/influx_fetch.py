@@ -83,11 +83,14 @@ def parse_args():
     args = parser.parse_args()
 
     if (not args.mjd ) and (not args.start_time and not args.end_time):
-        args.start_time = Time(sjd.sjd(), format="mjd")
+        args.start_time = Time(sjd.sjd(), format="mjd") - 0.3
         args.end_time = Time.now()
     elif args.mjd:
         args.start_time = Time(args.mjd - 1, format="mjd")
         args.end_time = Time(args.mjd, format="mjd")
+    elif args.start_time:
+        args.start_time = Time(args.start_time)
+        args.end_time = Time(args.end_time)
     return args
 
 
@@ -109,14 +112,19 @@ def main(args=None):
         if args.verbose:
             print(query)
         query_result = client.query(org=org_id, query=query)
-        print(query_result)
         print(f"{'Time':23} {'Measurement':15} {'Field':15} {'Value':}")
         print("=" * 80)
         for res in query_result:
             for val in res:
-                print(f"{Time(val.get_time()).isot:23}"
-                      f" {val.get_measurement():15} {val.get_field():15}"
-                      f" {val.get_value()}")
+                if "_measurement" in val.values.keys():
+                    print(f"{Time(val.get_time()).isot:23}"
+                          f" {val.get_measurement():15}"
+                          f" {val.get_field():15}"
+                          f" {val.get_value()}")
+                else:
+                    print(f"{Time(val.get_time()).isot:23}",
+                          val
+                          )
     return 0
 
 

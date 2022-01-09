@@ -204,8 +204,6 @@ class LogSupport:
                         line.append(np.nan)
                 else:
                     line.append(np.nan)
-            print(len(line))
-            print(line)
             self.weather += ("{:<8} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f}"
                              " {:>3.0f} {:>8.0f} {:>6.1f} {:>6.0f}\n".format(
                                  *line))

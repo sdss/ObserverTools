@@ -447,7 +447,7 @@
 
 - Supports gfa_fwhm.py for gzipped images.
 
-## [3.7.7] - 2021-12-31
+## [3.7.7c] - 2021-12-31
 
 - Major changes to influx_fetch.py
 - Various flux queries added under /flux
@@ -456,3 +456,5 @@
 - versions.py checks disk usage
 - telescope_status.py checks enclosure history
 - influx_fetch.py can read an environment variable or influx.key file
+- help.py simplified a ton
+- epics_fetch.py removed
