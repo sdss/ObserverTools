@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """
-sp_version.py
+versions.py
 
 Outputs a list of software versions used that night. Rewritten by Dylan Gatlin
  based on spVersion by Elena Malanushenko
-
-Changelog:
-2020-06-08  DG  Ported to ObserverTools in Python 3, replaced os with sub
 """
 
 import subprocess as sub
@@ -16,6 +13,7 @@ __version__ = '3.1.0'
 
 
 def main():
+    
     softwares, versions = [], []
 
     sdss_obstools = sub.run('pip list | grep sdss-obstools', shell=True,
@@ -61,7 +59,11 @@ def main():
     print('{:-^42}'.format('Other Versions'))
     for s, v in zip(softwares, versions):
         print('{:<20}: {:<20}'.format(s, v))
+    print()
 
+    disk_usage = sub.run('df -h | grep -e " /home\|data"', shell=True,
+                         stdout=sub.PIPE).stdout.decode("utf-8")
+    print(disk_usage)
 
 if __name__ == '__main__':
     main()

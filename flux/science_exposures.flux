@@ -1,0 +1,6 @@
+from(bucket: "apo-medium-retention")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => ((r.actor == "boss") and (r._measurement == "exposureState") and (r._field == "state" and (r._value)))
+    |> filter(fn: (r) => r._measurement == "exposureState")
+    |> filter(fn: (r) => r._field == "state")
+    |> yield()
