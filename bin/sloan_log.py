@@ -3,7 +3,7 @@
 
 A script to automate the bulk of logging and to replace various tools
  like log function, log support, list_ap, list_m, and more. This code is
- entirely dependent on raw images, their headers, and EPICS, unlike Log Function
+ entirely dependent on raw images, and their headers, unlike Log Function
  which is dependent on callbacks it catches while open only and is subject to
  crashes. It's inspired by some outputs from time tracking, but it avoids the
  sdss python module and platedb
@@ -13,27 +13,13 @@ Sloan V
 
 In order to run it locally, you will need to either have access to /data, or
  fake it with a single night. You'll need a date from /data/spectro and
- /data/apogoee/archive. You'll also need to tunnel into port 80 of
- sdss-telemetry using
- ssh -L 5080:telemetry.apo.nmsu.edu:80 observer@sdss-gateway.apo.nmsu.edu
- Currently, you'll need access to hub to run aptest, but I'm working on removing
- that dependency since aptest can be done using /data/apogee/archive
-
-2019-11-01      dgatlin     init, in response to some issues with gcam
-    tracking and identifying slew errors
-2019-12-13      dgatlin     This has received a lot of work and can now
-    build a data log and some summary
-2020-06-01      dgatlin     Changed some methods to @staticmethods, moved to
-    bin, refactored some names to more appropriately fit the role of logging.
-2020-06-17      dgatlin     Moved telemetry to epics_fetch
-2020-06-30      dgatlin     Added morning option for morning cals
-2020-08-12      dgatlin     Added apogee object offsets and a quickred aptest
-2020-10-18      dgatlin     Made some minor changes to support SDSS-V
+ /data/apogee/archive. You'll also need setup local forwarding for InfluxDB
 """
 import argparse
 import sys
 import textwrap
 import warnings
+import fitsio
 
 import numpy as np
 # import ap_test
@@ -47,11 +33,6 @@ except ImportError as e:
     except ImportError as e:
         raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
                           '\n    {}'.format(e))
-try:
-    import fitsio
-except ImportError:
-    raise Exception('fitsio not found by interpreter\n'
-                    '{}'.format(sys.executable))
 from pathlib import Path
 from tqdm import tqdm
 from astropy.time import Time
@@ -153,47 +134,13 @@ class Logging:
         imax2 = 100  # vm cutoff=120
         self.n_fibers = 300
         self.dome_flat_shape = np.zeros((imax1, imax2), dtype=np.int64)
-        if self.args.legacy_aptest:
-            master_path = (Path(apogee_data.__file__).absolute().parent.parent
-                           / 'dat/utr_master_flat_21180043.npy')
-            if not master_path.exists():
-                master_path = (Path(apogee_data.__file__).absolute(
-                ).parent.parent.parent / 'dat/utr_master_flat_21180043.npy')
-            self.ap_master_all = np.load(master_path.as_posix())
-            # Cut and paste from aptest, don't ask how it works
-            cutoff = 200.
-            self.n_fibers = 0  # fiber number
-            k = 0  # pix number in fiber
-            qj = False
-            for i in range(2048):
-                if (self.n_fibers >= imax1) or (k >= imax2):
-                    print("break", self.n_fibers, k)
-                    break
-                if self.ap_master_all[i] >= cutoff:
-                    self.dome_flat_shape[self.n_fibers, k] = i
-                    qj = True
-                    k = k + 1
-                else:
-                    if qj:
-                        qj = False
-                        self.n_fibers += 1
-                        k = 0
-            self.ap_master = np.zeros(300)
-            for j in range(self.n_fibers):
-                self.ap_master[j] = 0
-                for k in range(10):
-                    if self.dome_flat_shape[j, k] != 0:
-                        self.ap_master[j] += self.ap_master_all[
-                            self.dome_flat_shape[j, k]]
-
-        else:
-            master_path = (Path(apogee_data.__file__).absolute().parent.parent
-                           / 'dat/master_dome_flat_1.npy')
-            if not master_path.exists():
-                master_path = (Path(apogee_data.__file__).absolute(
-                ).parent.parent.parent / 'dat/master_dome_flat_1.npy')
-            master_data = np.load(master_path.as_posix())
-            self.ap_master = np.average(master_data[:, 900:910], axis=1)
+        master_path = (Path(apogee_data.__file__).absolute().parent.parent
+                           / "dat/master_dome_flat.fits.gz")
+        if not master_path.exists():
+            master_path = (Path(apogee_data.__file__).absolute(
+                ).parent.parent.parent / "dat/master_dome_flat.fits.gz")
+        master_data = fitsio.read(master_path.as_posix())
+        self.ap_master = np.median(master_data[:, 500:910], axis=1)
 
         self.morning_filter = None
 
@@ -203,26 +150,7 @@ class Logging:
         """
         # This is from ap_test
         self.args.plot = False
-        if self.args.legacy_aptest:
-            missing, faint, avg = img.ap_test((2952, 2953), self.ap_master,
-                                              legacy=self.args.legacy_aptest,
-                                              dome_flat_shape=self.dome_flat_shape,
-                                              n_fibers=self.n_fibers)
-        else:
-            missing, faint, avg = img.ap_test((900, 910), self.ap_master,
-                                              legacy=self.args.legacy_aptest,
-                                              dome_flat_shape=self.dome_flat_shape,
-                                              n_fibers=self.n_fibers)
-        # test = sub.Popen((Path(__file__).absolute().parent.parent
-        #                   / 'old_bin/aptest').__str__() + ' {} {}'
-        #                  ''.format(self.args.sjd, img.exp_id), shell=True,
-        #                  stdout=sub.PIPE, stderr=sub.PIPE)
-        # lines = test.stdout.read().decode('utf-8').splitlines()[3:]
-        # err = test.stderr.read().decode('utf-8')
-        # if err:
-        #     raise Exception(err)
-        # missing = eval(lines[0].split('Missing fibers: ')[-1])
-        # faint = eval(lines[1].split('Faint fibers:   ')[-1])
+        missing, faint, avg = img.ap_test((500, 910), self.ap_master)
         if self.args.verbose:
             print('Exposure {}'.format(img.exp_id))
             print(missing, faint)
