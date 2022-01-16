@@ -155,48 +155,24 @@ class APOGEERaw:
                   ''.format(self.exp_id, diff, w0))
         return diff
 
-    def ap_test(self, ws=(900, 910), master_col=None, plot=False, legacy=False,
-                dome_flat_shape=None, n_fibers=300, print_it=False):
+    def ap_test(self, ws=(550, 910), master_col=None, plot=False,
+                print_it=False):
         if master_col is None:
             raise ValueError("APTest didn't receive a valid master_col: {}"
                              "".format(master_col))
-        if legacy:
-            self.utr_file = sdss_paths.ap_utr / f"{self.mjd}/apRaw-{self.exp_id}.fits"
-            if not self.utr_file.exists():
-                raise FileNotFoundError(f"Couldn't fine the file: {self.utr_file.as_posix()}")
-            try:
-                self.utr_data = fitsio.read(self.utr_file, 0)
-            except OSError as e:
-                if self.args.verbose:
-                    print('APTest for {} produced this error\n{}'.format(
-                        self.file, e))
-            slc0 = np.average(self.utr_data[::-1, ws[0]:ws[1]], axis=1)
-            # print(slc0.mean(), slc0.shape, slc0[0])
-            slc = np.zeros(n_fibers)
-            for j in range(n_fibers):
-                for k in range(10):
-                    if dome_flat_shape[j, k] != 0:
-                        slc[j] += slc0[dome_flat_shape[j, k]]
-            # print(slc.mean(), slc.shape, slc[100])
-
-        else:
-            if self.quickred_data.size == 0:
-                if self.quickred_file.exists():
-                    self.quickred_data = fitsio.read(self.quickred_file, 3)[0][0]
-                else:
-                    self.quickred_file = (sdss_paths.ap_qr
-                                          / 'quickred/{}/ap1D-a-{}.fits.fz'
-                                            ''.format(self.mjd, self.exp_id))
-                    if not self.quickred_file.exists():
-                        print(f"Offsets for {self.file} could not be read")
-                        return [], [], np.nan
-                    self.quickred_data = fitsio.read(self.quickred_file, 1)
-            slc = np.average(self.quickred_data[:, ws[0]:ws[1]], axis=1)
-        # print(master_col.mean(), master_col.shape, master_col[100])
+        if self.quickred_data.size == 0:
+            if self.quickred_file.exists():
+                self.quickred_data = fitsio.read(self.quickred_file, 3)[0][0]
+            else:
+                self.quickred_file = (sdss_paths.ap_qr
+                                      / 'quickred/{}/ap1D-a-{}.fits.fz'
+                                        ''.format(self.mjd, self.exp_id))
+                if not self.quickred_file.exists():
+                    print(f"Offsets for {self.file} could not be read")
+                    return [], [], np.nan
+                self.quickred_data = fitsio.read(self.quickred_file, 1)
+        slc = np.median(self.quickred_data[:, ws[0]:ws[1]], axis=1)
         flux_ratio = slc / master_col
-        # flux_ratio = flux_ratio / flux_ratio.sum() / flux_ratio.shape[0]
-        flux_ratio = flux_ratio / flux_ratio.sum() * flux_ratio.shape[0]
-        # print(flux_ratio.mean(), flux_ratio.shape, flux_ratio[100])
         bad_data = ((flux_ratio == np.inf)
                     | (flux_ratio == -np.inf)
                     | np.isnan(flux_ratio))
@@ -211,7 +187,6 @@ class APOGEERaw:
         missing_bundles = self.create_bundles(i_missing)
         faint_bundles = self.create_bundles(i_faint)
         if print_it:
-
             print(textwrap.fill('Missing Fibers: {}'.format(missing_bundles),
                                 80))
             print(textwrap.fill('Faint Fibers: {}'.format(faint_bundles), 80))
@@ -236,7 +211,7 @@ class APOGEERaw:
                 self.exp_id), size=15)
             fig.show()
 
-        return missing_bundles, faint_bundles, avg
+        return missing_bundles, faint_bundles, flux_ratio
 
     @staticmethod
     def create_bundles(subset):

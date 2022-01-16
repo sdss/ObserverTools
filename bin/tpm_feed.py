@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import tpmdata
+import multiprocessing
 import pprint
 import numpy as np
 import matplotlib as mpl
@@ -17,6 +18,12 @@ __version__ = '3.0.1'
 tpmdata.tinit()
 
 
+def get_tpm_packet(out_dict):
+    data = tpmdata.packet(1, 1)
+    for key, val in data.items():
+        out_dict[key] = val
+    return 0
+
 class StripChart:
     def __init__(self, key, fig, ax):
         self.key = key
@@ -25,7 +32,15 @@ class StripChart:
         self.fig = fig
         self.ax = ax
         self.formatter = dates.DateFormatter('%H:%M')
-        data = tpmdata.packet(1, 1)
+        
+        data = multiprocessing.Manager().dict()
+        tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
+        tpm_thread.start()
+        tpm_thread.join(1)
+    
+        if tpm_thread.is_alive():
+            tpm_thread.kill()
+            raise ConnectionError("Could not reach TPM")
 
         self.t0 = Time.now()
         self.times = Time([data['ctime']], format='unix')
@@ -37,8 +52,14 @@ class StripChart:
         # plt.draw()
 
     def update(self, i):
-
-        data = tpmdata.packet(1, 1)
+        data = multiprocessing.Manager().dict()
+        tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
+        tpm_thread.start()
+        tpm_thread.join(1)
+    
+        if tpm_thread.is_alive():
+            tpm_thread.kill()
+            raise ConnectionError("Could not reach TPM")
         self.times = Time(np.append(self.times, Time(data['ctime'],
                                                      format='unix')))
 
@@ -94,7 +115,14 @@ def main(args=None):
         print(__version__)
 
     if args.list_channels:
-        data = tpmdata.packet(1, 1)
+        data = multiprocessing.Manager().dict()
+        tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
+        tpm_thread.start()
+        tpm_thread.join(1)
+    
+        if tpm_thread.is_alive():
+            tpm_thread.kill()
+            raise ConnectionError("Could not reach TPM")
         pprint.pprint(data.keys())
 
     if args.plot:
@@ -115,12 +143,27 @@ def main(args=None):
         print(f"{'Time':10}" + ''.join([' {:<12}'.format(channel)
                                         for channel in args.channels]))
         while True:
-            data = tpmdata.packet(1, 1)
+            data = multiprocessing.Manager().dict()
+            tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
+            tpm_thread.start()
+            tpm_thread.join(1)
+    
+            if tpm_thread.is_alive():
+                tpm_thread.kill()
+                raise ConnectionError("Could not reach TPM")
             old_t = Time(data['ctime'], format='unix')
             new_t = old_t
             loop_cond = True
             while loop_cond:
-                data = tpmdata.packet(1, 1)
+                data = multiprocessing.Manager().dict()
+                tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
+                tpm_thread.start()
+                tpm_thread.join(1)
+    
+                if tpm_thread.is_alive():
+                    tpm_thread.kill()
+                    raise ConnectionError("Could not reach TPM")
+
                 new_t = Time(data['ctime'], format='unix')
                 # print((new_t - old_t).to(u.s))
                 loop_cond = (new_t - old_t) < (args.dt * u.s)

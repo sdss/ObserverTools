@@ -34,16 +34,14 @@ def parse_args():
     return args
 
 
-def main(args=None):
-    if args is None:
-        args = parse_args()
+def get_dust(start_time, end_time, verbose):
     q_path = Path(__file__).parent.parent / "flux/dust.flux"
     if not q_path.exists():
         raise FileNotFoundError(f"Couldn't find Flux query {q_path.absolute()}")
     query = q_path.open('r').read()
-    if args.verbose:
-        print(f"Start: {args.start_time.isot}, End: {args.end_time.isot}")
-    result = influx_fetch.query(query, args.start_time, args.end_time)
+    if verbose:
+        print(f"Start: {start_time.isot}, End: {end_time.isot}")
+    result = influx_fetch.query(query, start_time, end_time)
     if len(result) == 0:
         dust_sum = 0
     else:
@@ -58,11 +56,19 @@ def main(args=None):
         # vals = np.array(vals)
         # dust_sum = np.sum(np.gradient(times) * 24 * vals )
         dust_sum = result[0].records[-1].get_value()
-    print("Integrated Dust Counts: ~{:<.0f} dust-hrs".format(
-          dust_sum - dust_sum % 100))
-    if args.verbose:
+        
+    if verbose:
         for row in result[0].records:
             print(row.get_time(), row.get_value())
+    return dust_sum
+
+def main(args=None):
+    if args is None:
+        args = parse_args()
+    dust_sum = get_dust(args.start_time, args.end_time, args.verbose) 
+    print("Integrated Dust Counts: ~{:<.0f} dust-hrs".format(
+          dust_sum - dust_sum % 100))
+
 
 
 if __name__ == '__main__':

@@ -64,6 +64,8 @@ class LogSupport:
                     line.append(np.nan)
                 else:
                     line.append(offsets_tab[key][before][-1])
+            if np.all(np.isnan(np.array(line[1:]))):
+                continue
             self.offsets += "{:<8} {:>6.1f} {:>4.1f} {:>6.1f}\n".format(*line)
                 
             
@@ -108,9 +110,12 @@ class LogSupport:
                     before = focus_tab['t' + key] < t
                     if before.sum() == 0:
                         line.append(np.nan)
-                    line.append(focus_tab[key][before][-1])
+                    else:
+                        line.append(focus_tab[key][before][-1])
                 else:
                     line.append(np.nan)
+            if np.all(np.isnan(np.array(line[1:]))):
+                continue
             self.focus += ("{:<8} {:>4.0f} {:>4.0f} {:>5.0f} {:>6.1f} {:>5.1f}"
                            " {:>5.1f} {:>4.0f} {:>3.0f}\n".format(
                                  *line))
@@ -204,6 +209,9 @@ class LogSupport:
                         line.append(np.nan)
                 else:
                     line.append(np.nan)
+                
+            if np.all(np.isnan(np.array(line[1:]))):
+                continue
             self.weather += ("{:<8} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f}"
                              " {:>3.0f} {:>8.0f} {:>6.1f} {:>6.0f}\n".format(
                                  *line))

@@ -22,17 +22,11 @@ import warnings
 import fitsio
 
 import numpy as np
-# import ap_test
 try:
-    # import get_dust
-    import m4l
-    import telescope_status
+    from bin import m4l, telescope_status, get_dust
 except ImportError as e:
-    try:
-        from bin import m4l, telescope_status # , get_dust.py
-    except ImportError as e:
-        raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
-                          '\n    {}'.format(e))
+    raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
+        '\n    {}'.format(e))
 from pathlib import Path
 from tqdm import tqdm
 from astropy.time import Time
@@ -101,7 +95,7 @@ class Logging:
                         'iNRead': [], 'iEType': [], 'iDesign': [], 
                         "iDesign": [], "iConfig": [],
                         'fDesign': [], 'fTime': [], 'fMissing': [], 'fFaint': [],
-                        'fNMissing': [], 'fNFaint': [], 'fAvg': [], 'aTime': [],
+                        'fNMissing': [], 'fNFaint': [], 'fRatio': [], 'aTime': [],
                         'aOffset': [], 'aID': [], 'aLamp': [], 'oTime': [],
                         'oOffset': [], 'oDither': []}
         self.b_data = {'dDesign': [], 'dTime': [],
@@ -133,9 +127,9 @@ class Logging:
             master_path = (Path(apogee_data.__file__).absolute(
                 ).parent.parent.parent / "dat/master_dome_flat.fits.gz")
         master_data = fitsio.read(master_path.as_posix())
-        self.ap_master = np.median(master_data[:, 500:910], axis=1)
-
+        self.ap_master = np.median(master_data[:, 550:910], axis=1)
         self.morning_filter = None
+        self.ap_image = None
 
     def ap_test(self, img):
         """Calls aptest on hub, this could certainly be replaced in the near
@@ -143,7 +137,7 @@ class Logging:
         """
         # This is from ap_test
         self.args.plot = False
-        missing, faint, avg = img.ap_test((500, 910), self.ap_master)
+        missing, faint, flux_ratio = img.ap_test((550, 910), self.ap_master)
         if self.args.verbose:
             print('Exposure {}'.format(img.exp_id))
             print(missing, faint)
@@ -171,7 +165,7 @@ class Logging:
         self.ap_data['fNFaint'].append(n_faint)
         self.ap_data['fMissing'].append(missing)
         self.ap_data['fFaint'].append(faint)
-        self.ap_data['fAvg'].append(avg)
+        self.ap_data['fRatio'].append(flux_ratio)
         self.ap_data['fDesign'].append(img.design_id)
         self.ap_data['fTime'].append(img.isot)
 
@@ -274,6 +268,7 @@ class Logging:
                 self.ap_data['iEType'].append(img.exp_type)
                 self.ap_data['iDesign'].append(img.design_id)
                 self.ap_data['iConfig'].append(img.config_id)
+            self.ap_image = img
         if self.args.boss:
             print('Reading BOSS Data ({})'.format(len(self.b_images)))
             for image in tqdm(self.b_images):
@@ -489,7 +484,7 @@ class Logging:
                     self.design_data['cAPSummary'].append(
                         '{}xAB'.format(self.design_data['cNAPA'][i]))
                 else:
-                    self.design_data['cAPSummary'].append('No APOGEE')
+                    self.design_data['cAPSummary'].append('No APOGEE Science')
             else:
                 self.design_data['cAPSummary'].append(
                     '{}xA {}xB'.format(self.design_data['cNAPA'][i],
@@ -512,7 +507,7 @@ class Logging:
                     '{}x{}s'.format(self.design_data['cNB'][i],
                                     self.design_data['cBdt'][i]))
             else:
-                self.design_data['cBSummary'].append('No BOSS')
+                self.design_data['cBSummary'].append('No BOSS Science')
 
     @staticmethod
     def hartmann_parse(hart):
@@ -541,30 +536,39 @@ class Logging:
         print('=' * 80)
         for i, design  in enumerate(self.data['dDesign']):
             print('')
-            print('Design {}, plate {}, {}'
-                  ', {},'.format(design, self.data['dConfig'][i],
+            print("Design {}, {}, {}".format(design, self.data['dConfig'][i],
                                  self.design_data['cAPSummary'][i],
                                  self.design_data['cBSummary'][i]))
-            try:
-                j = np.where(self.ap_data['dDesign'] == design )[0][0]
-                print('Missing Fibers: {:2}, Faint fibers: {:2},'
-                      ' Average Throughput: {:.1f}%'.format(
-                          self.ap_data['dNMissing'][j],
-                          self.ap_data['dNFaint'][j],
-                          self.ap_data['dAvg'][j] * 100))
-            except IndexError:
-                pass
         print()
-        print('### Notes:\n')
-        # dust_sum = get_dust.get_dust(self.args.sjd, self.args)
-        # print('- Integrated Dust Counts: ~{:5.0f} dust-hrs'.format(
-            # dust_sum - dust_sum % 100))
-        # print('\n')
+        if len(self.ap_data["fRatio"]) > 0:
+            flux_ratio = np.nanmean(np.array(self.ap_data["fRatio"]), axis=0)
+            avg = np.nanmean(flux_ratio)
+            missing = flux_ratio < 0.2
+            faint = (flux_ratio < 0.7) & (0.2 <= flux_ratio)
+            bright = ~missing & ~faint
+            i_missing = np.where(missing)[0].astype(int) + 1
+            i_faint = np.where(faint)[0].astype(int) + 1
+            i_bright = np.where(bright)[0]
+            missing_bundles = self.ap_image.create_bundles(i_missing)
+            faint_bundles = self.ap_image.create_bundles(i_faint)
+            print("APOGEE Dome Flats\n"
+                f"Missing Fibers: {missing_bundles}\n"
+                f" Faint fibers: {faint_bundles}\n"
+                f" Average Throughput: {avg:.3f}")
+            print()
 
-        print('=' * 80)
-        print('{:^80}'.format('Comments Timeline'))
-        print('=' * 80)
-        print()
+        print('### Notes:\n')
+        start_time = Time(self.args.sjd, format="mjd")
+        end_time = Time(self.args.sjd + 1, format="mjd")
+        dust_sum = get_dust.get_dust(start_time, end_time, self.args.verbose)
+        print('- Integrated Dust Counts: ~{:5.0f} dust-hrs'.format(
+            dust_sum - dust_sum % 100))
+        print('\n')
+
+        # print('=' * 80)
+        # print('{:^80}'.format('Comments Timeline'))
+        # print('=' * 80)
+        # print()
 
     @staticmethod
     def get_window(data, i):
@@ -617,13 +621,13 @@ class Logging:
                                              dith, nread, detectors, see))
                 print()
                 if design in self.ap_data['dDesign']:
-                    for j, dome in enumerate(self.ap_data['dDesign']):
+                    for j, dome in enumerate(self.ap_data['fDesign']):
                         if dome == design:
-                            print(self.ap_data['dTime'][j].iso)
+                            print(self.ap_data['fTime'][j].iso)
                             print(textwrap.fill('Missing fibers: {}'.format(
-                                self.ap_data['dMissing'][j]), 80))
+                                self.ap_data['fMissing'][j]), 80))
                             print(textwrap.fill('Faint fibers: {}'.format(
-                                self.ap_data['dFaint'][j]), 80))
+                                self.ap_data['fFaint'][j]), 80))
                             print()
 
             if design in self.b_data['dDesign']:

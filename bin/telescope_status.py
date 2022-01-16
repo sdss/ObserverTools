@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
 
-import sys
-
 from pathlib import Path
 from astropy.time import Time
+import multiprocessing
 
 from bin import sjd, influx_fetch
 
 try:
     import tpmdata
-    tpmdata.tinit()
 except ImportError:
-    print("tpmdata unavailable")
     tpmdata = None
 
 __version__ = "3.0.0"
 
+
+def get_tpm_packet(out_dict):
+    tpmdata.tinit()
+    data = tpmdata.packet(1, 1)
+    for key, val in data.items():
+        out_dict[key] = val
+    return 0
 
 def query():
     
@@ -41,7 +45,13 @@ def query():
     if tpmdata is None:
         raise ConnectionError("Cannot query the tpm without tpmdata installed")
     
-    data = tpmdata.packet(1, 1)
+    data = multiprocessing.Manager().dict()
+    tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
+    tpm_thread.start()
+    tpm_thread.join(2)
+    if tpm_thread.is_alive():
+        tpm_thread.kill()
+        raise ConnectionError("Could not reach TPM")
 
     t = Time(data["ctime"], format="unix")
     output = enclosure_hist + '\n'
@@ -53,14 +63,17 @@ def query():
     # epics_data = epics_fetch.get_data(["25m:mcp:instrumentNum"],
                                     #   start_time=Time.now().to_datetime(),
                                     #   end_time=Time.now().to_datetime())
-    cart = "ECam" if data["inst_id_0"] == 0 else f"{data['inst_id_0']:.0f}"
+    cart = "FPS" if data["inst_id_0"] == 0 else f"{data['inst_id_0']:.0f}"
     output += f"Instrument mounted:  {cart}\n"
     output += (f"Counterweights at:  {data['plc_cw_0']:.1f},"
                f" {data['plc_cw_1']:.1f},"
                f" {data['plc_cw_2']:.1f},"
                f" {data['plc_cw_3']:.1f}\n")
     # TODO Check if this is supposed to do something
-    output += f"LN2 autofill systems:  Connected and turned on\n"
+    if data["dewar_sp1_psi"] > 10:
+        output += f"LN2 autofill systems:  Connected and turned on\n"
+    else:
+        output += f"LN2 autofill systems: Disconnected\n"
     output += (f"180L LN2 dewar scale:  SP1 {data['dewar_sp1_lb']:6.1f} lbs,"
                f" {data['dewar_sp1_psi']:6.1f} psi")
 

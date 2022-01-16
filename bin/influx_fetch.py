@@ -7,7 +7,10 @@ that can be imported as well as run through a CLI
 Author: Dylan Gatlin
 """
 import os
+import platform
 import argparse
+
+import subprocess as sub
 
 from pathlib import Path
 from influxdb_client import InfluxDBClient
@@ -17,6 +20,22 @@ from bin import sjd
 
 __version__ = "3.0.0"
 __author__ = "Dylan Gatlin"
+
+
+def ping(host):
+    """
+    Returns True if host (str) responds to a ping request.
+     Remember that a host may not respond to a ping (ICMP) request even if the
+     host name is valid.
+    """
+
+    # Option for the number of packets as a function of
+    param = '-n' if platform.system().lower() == 'windows' else '-c'
+
+    # Building the command. Ex: "ping -c 1 google.com"
+    command = ['ping', param, '1', "-i", "0.2", host]
+    x = sub.run(command, stdout=sub.PIPE)
+    return x.returncode == 0
 
 
 def get_key():
@@ -43,17 +62,17 @@ def get_key():
     return user_id, org_id, token
 
 
-def get_client(org_id=None, token=None):
-    if (org_id is None) or (token is None):
-        user_id, org_id, token = get_key()
-    client = InfluxDBClient(url="http://10.25.1.221:8086", token=token,
-                            org=org_id)
-    
-    if not client.ready():
-        print("Did not reach 10.25.1.221")
-        client = InfluxDBClient(host="localhost", port=8086, username=None,
-                                password=None, headers={"Authorization": token})
+def get_client(org_id, token):
+    if ping("10.25.1.221"):
+        client = InfluxDBClient(url="http://10.25.1.221:8086", token=token,
+                                org=org_id, timeout=20000)
+    else:
+        # print("Did not reach 10.25.1.221")
+        client = InfluxDBClient(url="http://localhost:8086", token=token,
+                                org=org_id, timeout=20000)
     return client.query_api()
+
+
 
 
 def query(flux_script, start, end, interval="1s"):
