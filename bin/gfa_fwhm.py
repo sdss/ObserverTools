@@ -157,9 +157,14 @@ class GFASet:
             fit = -b / 2 /a
             fwhm = self.quadratic(fit, a, b, c)
             mum = "\u03BCm"
-            print(f'Optimal Focus is at {fit:.0f}{mum} with Width {fwhm:.1f}"')
+            if a > 0:
+                fit_found = False
+                print("Optimal focus not found")
+            else:
+                fit_found = True
+                print(f'Optimal Focus is at {fit:.0f}{mum} with Width {fwhm:.1f}"')
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
-        if not self.exp_num_plot:
+        if (not self.exp_num_plot) and fit_found:
             ax.plot(focs, self.quadratic(focs, a, b, c),
                     label=f"Quad Fit, best={-b / 2 / a:.0f}", alpha=0.8)
             ax.axvline(-b / 2 / a, c="r", linestyle="--", alpha=0.6)
