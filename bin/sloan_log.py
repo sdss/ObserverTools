@@ -113,14 +113,6 @@ class Logging:
                           'cAPSummary': [],
                           'cBSummary': []}
         self.test_procs = []
-        # Commented out to test the apogee_data.APOGEERaw.ap_test method
-        # self.ap_tester = ap_test.ApogeeFlat(
-        #     Path(__file__).absolute().parent.parent
-        #     / 'dat/ap_master_flat_col_array.dat', self.args)
-        imax1 = 500
-        imax2 = 100  # vm cutoff=120
-        self.n_fibers = 300
-        self.dome_flat_shape = np.zeros((imax1, imax2), dtype=np.int64)
         master_path = (Path(apogee_data.__file__).absolute().parent.parent
                            / "dat/master_dome_flat.fits.gz")
         if not master_path.exists():

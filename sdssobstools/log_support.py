@@ -217,7 +217,7 @@ class LogSupport:
                                  *line))
 
     def get_hartmann(self):
-        self.hartmann = f"{'Time':8} {'TSP1':<6} {'R off':<6} {'B off':<6}"
+        self.hartmann = f"{'Time':8} {'Temp':<6} {'R off':<6} {'B off':<6}"
         self.hartmann += f" {'Move':<6} {'Resid':<6}\n"
         self.hartmann += '=' * 80 + '\n'
         harts = {}

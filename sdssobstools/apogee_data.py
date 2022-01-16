@@ -177,7 +177,6 @@ class APOGEERaw:
                     | (flux_ratio == -np.inf)
                     | np.isnan(flux_ratio))
         flux_ratio[bad_data] = np.nan
-        avg = np.nanmean(flux_ratio)
         missing = flux_ratio < 0.2
         faint = (flux_ratio < 0.7) & (0.2 <= flux_ratio)
         bright = ~missing & ~faint
