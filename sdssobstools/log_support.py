@@ -56,6 +56,8 @@ class LogSupport:
                 offsets_tab[key] = Time(offsets_tab[key])
             else:
                 offsets_tab[key] = np.array(offsets_tab[key])
+        if len(offsets_tab) == 0:
+            return
         for t in self.call_times:
             line = [t.isot[11:19]] 
             for key in ["az", "alt", "rot"]:

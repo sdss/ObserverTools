@@ -458,3 +458,11 @@
 - influx_fetch.py can read an environment variable or influx.key file
 - help.py simplified a ton
 - epics_fetch.py removed
+
+## [3.7.7d] - 2022-01-16
+
+- tpm queries use multiprocess to handle failure
+- test updates to keep up with influx changes
+- Added new master dome flat using apq quickred files
+- Removed old_bin, almost nothing there works anymore.
+- 

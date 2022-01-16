@@ -134,14 +134,10 @@ def main(args=None):
                     continue
         # Checks each 1D-a- image for plate info, and add it to the count if
         # it's a science image
-        if len(list(qr_path.glob("ap1D-a-*.fits.fz"))) == 0:
-            ap_re = "ap2D-a-*.fits.fz"
-        else:
-            ap_re = "ap1D-a-*.fits.fz"
-        for fits in qr_path.glob(ap_re):
-            header = fitsio.read_header(fits.as_posix())
+        for fits in qr_path.glob("apq-*.fits"):
+            header = fitsio.read_header(fits.as_posix(), 0)
             if header['EXPTYPE'] == 'OBJECT':
-                if header['PLATEID'] in plates.keys():
+                if header['DESIGNID'] in plates.keys():
                     # If a BHM plate is observed with a MWM bypass, then it will
                     # be saved with SRVYMODE="MWM lead". To fix this, I need
                     # to see if they match, and if they don't check to see if
@@ -149,23 +145,23 @@ def main(args=None):
                     # This won't be an issue if glob finds a non-bypassed plate
                     # first, which is kinda random, so it doesn't show up all
                     # the time.
-                    if plates[header['PLATEID']] != header['SRVYMODE']:
+                    if plates[header['DESIGNID']] != header['SRVYMODE']:
                         if ((header['SRVYMODE'] == 'BHM lead')
-                                or (plates[header["PLATEID"]] == "BHM lead")):
-                            plates[header["PLATEID"]].lead_survey = "BHM lead"
+                                or (plates[header["DESIGNID"]] == "BHM lead")):
+                            plates[header["DESIGNID"]].lead_survey = "BHM lead"
 
-                    plates[header["PLATEID"]].a_count += 1
+                    plates[header["DESIGNID"]].a_count += 1
                 else:
                     if header['SRVYMODE'] != 'None':
-                        plates[header['PLATEID']] = Plate(header['PLATEID'],
+                        plates[header['DESIGNID']] = Plate(header['DESIGNID'],
                                                           header['SRVYMODE'],
                                                           header['CARTID'])
-                        plates[header['PLATEID']].a_count += 1
+                        plates[header['DESIGNID']].a_count += 1
                     else:  # APOGEE-2
-                        plates[header['PLATEID']] = Plate(header['PLATEID'],
+                        plates[header['DESIGNID']] = Plate(header['DESIGNID'],
                                                           header['PLATETYP'],
                                                           header['CARTID'])
-                        plates[header['PLATEID']].a_count += 1
+                        plates[header['DESIGNID']].a_count += 1
 
         # SOS Check
         sos_path = sdss_paths.sos / f"{mjd}/logfile-{mjd}.html"

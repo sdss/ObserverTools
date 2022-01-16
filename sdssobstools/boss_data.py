@@ -26,12 +26,18 @@ class BOSSRaw:
         self.isot = Time(header['DATE-OBS'])  # UTC
         if "DESIGNID" in header.keys():
             self.design_id = header["DESIGNID"]
+        else:
+            self.design_id = 0
         if "CONFID" in header.keys():
             self.config_id = header["CONFID"]
+        else:
+            self.config_id = 0
         if "PLATEID" in header.keys():
             self.plate_id = header['PLATEID']
         elif "FIELDID" in header.keys():
             self.plate_id = header["FIELDID"]
+        else:
+            self.plate_id = 0
         if "CARTID" in header.keys():
             if isinstance(header["CARTID"], int):
                 self.cart_id = f"{header['CARTID']:.0f}"

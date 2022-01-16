@@ -57,6 +57,8 @@ def get_dust(start_time, end_time, verbose):
         # dust_sum = np.sum(np.gradient(times) * 24 * vals )
         dust_sum = result[0].records[-1].get_value()
         
+    if len(result) == 0:
+        return dust_sum
     if verbose:
         for row in result[0].records:
             print(row.get_time(), row.get_value())

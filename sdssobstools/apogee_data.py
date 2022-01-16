@@ -60,6 +60,9 @@ class APOGEERaw:
             else:
                 self.design_id = 0
                 self.config_id = 0 
+        else:
+            self.design_id = 0
+            self.config_id = 0 
 
         if "CARTID" in header.keys():
             if isinstance(header["CARTID"], int):

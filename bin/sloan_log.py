@@ -166,6 +166,7 @@ class Logging:
         dictionaries."""
         if self.args.apogee:
             print('Reading APOGEE Data ({})'.format(len(self.ap_images)))
+            img = None
             for image in tqdm(self.ap_images):
                 if self.args.verbose:
                     print(image.name)
@@ -260,7 +261,8 @@ class Logging:
                 self.ap_data['iEType'].append(img.exp_type)
                 self.ap_data['iDesign'].append(img.design_id)
                 self.ap_data['iConfig'].append(img.config_id)
-            self.ap_image = img
+            if img is not None:
+                self.ap_image = img
         if self.args.boss:
             print('Reading BOSS Data ({})'.format(len(self.b_images)))
             for image in tqdm(self.b_images):
@@ -541,13 +543,14 @@ class Logging:
             i_missing = np.where(missing)[0].astype(int) + 1
             i_faint = np.where(faint)[0].astype(int) + 1
             i_bright = np.where(bright)[0]
-            missing_bundles = self.ap_image.create_bundles(i_missing)
-            faint_bundles = self.ap_image.create_bundles(i_faint)
-            print("APOGEE Dome Flats\n"
-                f"Missing Fibers: {missing_bundles}\n"
-                f" Faint fibers: {faint_bundles}\n"
-                f" Average Throughput: {avg:.3f}")
-            print()
+            if self.ap_image is not None:
+                missing_bundles = self.ap_image.create_bundles(i_missing)
+                faint_bundles = self.ap_image.create_bundles(i_faint)
+                print("APOGEE Dome Flats\n"
+                    f"Missing Fibers: {missing_bundles}\n"
+                    f" Faint fibers: {faint_bundles}\n"
+                    f" Average Throughput: {avg:.3f}")
+                print()
 
         print('### Notes:\n')
         start_time = Time(self.args.sjd, format="mjd")
@@ -933,7 +936,8 @@ def main():
         log.log_support()
 
     if args.mirrors:
-        log.mirror_numbers()
+        pass
+        # log.mirror_numbers()
 
     if args.telstatus:
         log.tel_status()

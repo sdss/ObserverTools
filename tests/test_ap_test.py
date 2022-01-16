@@ -14,13 +14,10 @@ class TestAPTest(unittest.TestCase):
             pass
 
         self.args = Dummy()
-        self.args.sjds = [59392]
-        self.args.exps = [[38300015, 38300028, 38300041, 38300052]]
+        self.args.sjds = [59593]
+        self.args.exps = [[40310015, 40310016, 40310017, 40310018, 40310019]]
         self.args.plot = False
-        self.args.legacy = False
         self.args.verbose = True
-        master_path = self.project / 'dat/master_dome_flat_1.npy'
-        self.master_data = np.load(master_path)
 
     def test_known_date(self):
 
@@ -35,13 +32,6 @@ class TestAPTest(unittest.TestCase):
     def test_plotting(self):
         """Tests the plotting routine"""
         self.args.plot = True
-        self.atest = ap_test.ApogeeFlat(self.args)
-        self.atest.run_inputs()
-
-    def test_legacy(self):
-        """Test the legacy version of ap_test"""
-        self.args.legacy = True
-        self.master_data = np.load(self.project / 'dat/utr_master_flat_21180043.npy')
         self.atest = ap_test.ApogeeFlat(self.args)
         self.atest.run_inputs()
 

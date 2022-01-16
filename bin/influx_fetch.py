@@ -124,7 +124,8 @@ def main(args=None):
         for f_path in args.file:
             f_path = Path(f_path)
             if f_path.exists():
-                query = f_path.open('r').read()
+                with f_path.open('r') as fil:
+                    query = fil.read()
         query = query.replace("v.timeRangeStart", f"{args.start_time.isot}Z")
         query = query.replace("v.timeRangeStop", f"{args.end_time.isot}Z")
         query = query.replace("v.windowPeriod", args.interval)

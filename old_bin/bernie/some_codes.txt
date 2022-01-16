@@ -1,1 +1,0 @@
-( for camera in b1 b2; do list_m | sed 's/HART/    /' | grep -e $camera | awk 'BEGIN { a=0 ; b=0 ; c=0 } ; { d=$(NF-2) ; e=$(NF-1) ; f=$NF ; printf("%s\tMotion recorded:%8d%8d%8d\n", $0, d-a, e-b, f-c) ; a=d ; b=e ; c=f }' | grep -v '[ ][ ]*0[ ][ ]*0[ ][ ]*0[ ]*$' ; echo ""; done ) | sed -n 's/^[ 0-9][ 0-9][ 0-9][ 0-9]/    /p'
