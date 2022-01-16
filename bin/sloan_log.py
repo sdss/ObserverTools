@@ -585,7 +585,7 @@ class Logging:
         print('{:^80}'.format('Data Log'))
         print('=' * 80 + '\n')
         for i, design in enumerate(self.data['dDesign']):
-            print('### Design {}, {}\n'.format(design, self.data['cLead'][i]))
+            print('### Design {}\n'.format(design))
             if design  in self.ap_data['dDesign']:
                 ap_design = np.where(design == self.ap_data['dDesign'])[0][0]
 
@@ -701,13 +701,12 @@ class Logging:
         print('{:^80}'.format('APOGEE Data Summary'))
         print('=' * 80 + '\n')
         print('{:<5} {:<8} {:<13} {:<8} {:<12} {:<4} {:<5} {:<5}'
-              ' {:<6}'.format('MJD', 'UTC', 'Design-Config', 'Exposure', 'Type',
-                              'Dith', 'Reads', 'Arch',
-                              'Seeing'))
+              ''.format('MJD', 'UTC', 'Design-Config', 'Exposure', 'Type',
+                              'Dith', 'Reads', 'Arch'))
         print('-' * 80)
         if self.args.morning:
             for (mjd, iso, design, config, exp_id, exp_type, dith, nread,
-                 detectors, see) in zip(
+                 detectors) in zip(
                 self.ap_data['iTime'].mjd[self.morning_filter] + 0.3,
                 self.ap_data['iTime'].iso[self.morning_filter],
                 self.ap_data["iDesign"][self.morning_filter],
@@ -717,18 +716,17 @@ class Logging:
                 self.ap_data['iDither'][self.morning_filter],
                 self.ap_data['iNRead'][self.morning_filter],
                 self.ap_data['iDetector'][self.morning_filter],
-                self.ap_data['iSeeing'][self.morning_filter]
             ):
                 print('{:<5.0f} {:>8} {:>6.0f}-{:<6.0f} {:<8.0f} {:<12} {:<4}'
                       ' {:>5}'
                       ' {:<5}'
-                      ' {:>6.1f}'.format(int(mjd), iso[11:19], design, config,
+                      ''.format(int(mjd), iso[11:19], design, config,
                                          exp_id, exp_type,
-                                         dith, nread, detectors, see))
+                                         dith, nread, detectors))
 
         else:
             for (mjd, iso, design, config, exp_id, exp_type, dith, nread,
-                 detectors, see) in zip(
+                 detectors) in zip(
                 self.ap_data['iTime'].mjd,
                 self.ap_data['iTime'].iso,
                 self.ap_data["iDesign"],
@@ -736,7 +734,6 @@ class Logging:
                 self.ap_data['iID'], self.ap_data['iEType'],
                 self.ap_data['iDither'], self.ap_data['iNRead'],
                 self.ap_data['iDetector'],
-                self.ap_data['iSeeing']
             ):
                 # print('{:<5.0f} {:>8} {:>2.0f}-{:<5.0f} {:<8.0f} {:<12} {:<4}'
                 #       ' {:>6}'
@@ -747,9 +744,9 @@ class Logging:
                 print('{:<5.0f} {:>8} {:>6.0f}-{:<6.0f} {:<8.0f} {:<12} {:<4}'
                       ' {:>5}'
                       ' {:<5}'
-                      ' {:>6.1f}'.format(int(mjd), iso[11:19], design, config,
+                      ''.format(int(mjd), iso[11:19], design, config,
                                          exp_id, exp_type,
-                                         dith, nread, detectors, see))
+                                         dith, nread, detectors))
 
         # Usually, there are 4 ThAr and 4 UNe arcs in a night, and they're
         # assumed to be alternating ThAr UNe ThAr UNe. When you grab every

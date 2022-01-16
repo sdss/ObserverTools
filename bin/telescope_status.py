@@ -56,7 +56,7 @@ def query():
     t = Time(data["ctime"], format="unix")
     output = enclosure_hist + '\n'
     output += f"Status at:  {t.isot[12:19]}Z\n"
-    output += (f"Telescope stowed at:  "
+    output += (f"Telescope Position:  "
                f"{data['az_actual_pos']*data['az_spt']/3600:>5.1f},"
                f" {data['alt_actual_pos']*data['alt_spt']/3600:>5.1f},"
                f" {data['rot_actual_pos']*data['rot_spt']/3600:>5.1f} mount\n")
