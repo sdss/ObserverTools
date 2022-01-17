@@ -108,7 +108,7 @@ class GFASet:
             # 2.0*np.log(2)*(objs['a'][filt]**2 + objs['b'][filt]**2))
         # )
         fwhm = 0.216 * np.mean(
-             np.sqrt(2 *  np.log(2) * objs['a'][filt]**2 + objs['b'][filt]**2)
+             2 * np.sqrt(np.log(2) * (objs['a'][filt]**2 + objs['b'][filt]**2))
             )
         return fwhm, filt.sum(), objs
 
@@ -157,7 +157,7 @@ class GFASet:
             fit = -b / 2 /a
             fwhm = self.quadratic(fit, a, b, c)
             mum = "\u03BCm"
-            if a > 0:
+            if a * b > 0:
                 fit_found = False
                 print("Optimal focus not found")
             else:
