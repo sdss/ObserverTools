@@ -10,6 +10,7 @@ import argparse
 from astropy.time import Time
 from pathlib import Path
 from bin import sjd, influx_fetch
+from sdssobstools import sdss_paths
 
 __version__ = '3.3.1'
 
@@ -35,7 +36,7 @@ def parse_args():
 
 
 def get_dust(start_time, end_time, verbose):
-    q_path = Path(__file__).parent.parent / "flux/dust.flux"
+    q_path = Path(sdss_paths.__file__).parent.parent / "flux/dust.flux"
     if not q_path.exists():
         raise FileNotFoundError(f"Couldn't find Flux query {q_path.absolute()}")
     query = q_path.open('r').read()

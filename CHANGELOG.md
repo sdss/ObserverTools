@@ -470,3 +470,7 @@
 
 - README.md changes
 - setup.py added missing stuff like flux folder and master flat
+
+## [3.7.8b] - 2022-01-17
+
+- Remapped paths to .flux files
