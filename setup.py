@@ -19,10 +19,10 @@ setup(
     scripts=scripts,
     package_data={
         '': ['*.dat', '*.fits', '*.npy', '*.txt'],
-        'dat': ['*.npy', '*.dat'],
+        'dat': ['*.npy', '*.dat', "*.fits.gz"],
         'flux': ['*.flux']
     },
-    packages=['sdssobstools', 'bin', 'dat', 'tests'],
+    packages=['sdssobstools', 'bin', 'dat', 'tests', "flux"],
     install_requires=requirements,
     description='A library of tools for SDSS telescope operations.',
     long_description=(here / 'README.md').open('r', encoding='utf-8').read(),
