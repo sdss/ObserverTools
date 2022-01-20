@@ -530,7 +530,7 @@ class Logging:
         print('=' * 80)
         for i, design  in enumerate(self.data['dDesign']):
             print('')
-            print("Design {}, {}, {}".format(design, self.data['dConfig'][i],
+            print("Design {}, {}, {}, {}".format(design, self.data['dConfig'][i],
                                  self.design_data['cAPSummary'][i],
                                  self.design_data['cBSummary'][i]))
         print()
@@ -551,6 +551,8 @@ class Logging:
                     f" Faint fibers: {faint_bundles}\n"
                     f" Average Throughput: {avg:.3f}")
                 print()
+            else:
+                print("No APOGEE Dome Flats")
 
         print('### Notes:\n')
         start_time = Time(self.args.sjd, format="mjd")
