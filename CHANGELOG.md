@@ -474,3 +474,7 @@
 ## [3.7.8b] - 2022-01-17
 
 - Remapped paths to .flux files
+
+## [3.7.8] - 2022-01-20
+
+- Bump version for release
