@@ -771,8 +771,8 @@ class Logging:
             # Put it under an if in case we didn't open.
             rel_offsets = np.abs(np.diff(self.ap_data['oOffset']))
             obj_str = ('Object Offsets: Max: {:.2f}, Min: {:.2f}, Mean: {:.2f}'
-                       ''.format(rel_offsets.max(), rel_offsets.min(),
-                                 rel_offsets.mean()))
+                       ''.format(np.nanmax(rel_offsets), np.nanminrel_offsets),
+                                 np.nanmean(rel_offsets)))
             # ['{:>6.3f}'.format(f) for f in np.diff(
             #     self.ap_data['oOffset'])])
             print('\n'.join(wrapper.wrap(obj_str)))
