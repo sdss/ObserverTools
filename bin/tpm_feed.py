@@ -36,7 +36,7 @@ class StripChart:
         data = multiprocessing.Manager().dict()
         tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
         tpm_thread.start()
-        tpm_thread.join(1)
+        tpm_thread.join(2)
     
         if tpm_thread.is_alive():
             tpm_thread.kill()
@@ -55,7 +55,7 @@ class StripChart:
         data = multiprocessing.Manager().dict()
         tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
         tpm_thread.start()
-        tpm_thread.join(1)
+        tpm_thread.join(2)
     
         if tpm_thread.is_alive():
             tpm_thread.kill()
@@ -118,7 +118,7 @@ def main(args=None):
         data = multiprocessing.Manager().dict()
         tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
         tpm_thread.start()
-        tpm_thread.join(1)
+        tpm_thread.join(2)
     
         if tpm_thread.is_alive():
             tpm_thread.kill()
@@ -146,7 +146,7 @@ def main(args=None):
             data = multiprocessing.Manager().dict()
             tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
             tpm_thread.start()
-            tpm_thread.join(1)
+            tpm_thread.join(2)
     
             if tpm_thread.is_alive():
                 tpm_thread.kill()
@@ -158,7 +158,7 @@ def main(args=None):
                 data = multiprocessing.Manager().dict()
                 tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
                 tpm_thread.start()
-                tpm_thread.join(1)
+                tpm_thread.join(2)
     
                 if tpm_thread.is_alive():
                     tpm_thread.kill()
