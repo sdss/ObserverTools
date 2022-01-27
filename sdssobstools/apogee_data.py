@@ -128,7 +128,7 @@ class APOGEERaw:
                                       / 'quickred/{}/ap1D-a-{}.fits.fz'
                                         ''.format(self.mjd, self.exp_id))
                 if not self.quickred_file.exists():
-                    print(f"Offsets for {self.file} could not be read")
+                    print(f"Offsets for {self.file.name} could not be read")
                     return np.nan
                 self.quickred_data = fitsio.read(self.quickred_file, 1)
         lower = w0 - dw // 2
@@ -171,7 +171,7 @@ class APOGEERaw:
                                       / 'quickred/{}/ap1D-a-{}.fits.fz'
                                         ''.format(self.mjd, self.exp_id))
                 if not self.quickred_file.exists():
-                    print(f"Offsets for {self.file} could not be read")
+                    print(f"Offsets for {self.file.name} could not be read")
                     return [], [], np.nan
                 self.quickred_data = fitsio.read(self.quickred_file, 1)
         slc = np.median(self.quickred_data[:, ws[0]:ws[1]], axis=1)

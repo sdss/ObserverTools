@@ -10,6 +10,7 @@ import seaborn as sns
 
 from pathlib import Path
 from matplotlib.patches import Ellipse
+from astropy.time import Time
 
 from bin import sjd
 from sdssobstools import sdss_paths
@@ -82,19 +83,22 @@ class GFASet:
                 fwhm, n, objs = self.get_fwhm(p, verbose=self.verbose)
                 hdr = fitsio.read_header(p, 1)
                 focus.append(hdr["FOCUS"])
+                isots.append(hdr["DATE-OBS"])
                 fwhms.append(fwhm)
                 n_objs.append(n)
             else:
                 filter.append(False)
                 focus.append(np.nan)
                 fwhms.append(np.nan)
-                n_objs.append(0)
+                isots.append("2000-01-01")
+                n_objs.append(np.nan)
         self.im_nums.append(im_num)
         self.paths.append(paths)
         self.focuses.append(focus)
         self.filter.append(filter)
         self.fwhms.append(fwhms)
         self.n_objs.append(n_objs)
+        self.isots.append(isots)
 
     @staticmethod
     def get_fwhm(path: Path, verbose: bool=False):
@@ -110,6 +114,8 @@ class GFASet:
         fwhm = 0.216 * np.mean(
              2 * np.sqrt(np.log(2) * (objs['a'][filt]**2 + objs['b'][filt]**2))
             )
+        if fwhm > 5:
+            fwhm = np.nan
         return fwhm, filt.sum(), objs
 
     def sort(self):
@@ -119,6 +125,7 @@ class GFASet:
         self.filter = np.array(self.filter)
         self.fwhms = np.array(self.fwhms)
         self.n_objs = np.array(self.n_objs)
+        self.isots = Time(self.isots)
         sorter = self.im_nums.argsort()
         self.im_nums = self.im_nums[sorter]
         self.paths = self.paths[sorter]
@@ -130,15 +137,24 @@ class GFASet:
     def print(self):
         if self.verbose:
             print("Measurements in arcseconds with a place scale of 0.216")
-        print(f"{'Img #':<6} {'GFA1':<6} {'GFA2':<6} {'GFA3':<6} {'GFA4':<6}"
+        print(f"{'Img #':<6} {'Focus':<5} {'GFA1':<6} {'GFA2':<6} {'GFA3':<6}"
+              f" {'GFA4':<6}"
             f" {'GFA5':<6} {'GFA6':<6} {'N Objs':<6}")
         print('=' * 80)
-        for i, im, in enumerate(self.im_nums):
-            print(f"{im:>6} "
+        for i, (im, foc) in enumerate(zip(self.im_nums, self.focuses)):
+            if np.isnan(foc[1]):
+                foc = f"{'-':>5}"
+            else:
+                foc = f"{foc[1]:>5.0f}"
+            if np.all(np.isnan(self.n_objs[i])):
+                n_objs = f"{'-':>6}"
+            else:
+                n_objs = f"{np.nanmean(self.n_objs[i]):>6.0f}"
+            print(f"{im:>6} {foc:>5} "
                 + " ".join([f"{f:>6.2f}"
                     if not np.isnan(f) else f"{'-':>6}"
                     for (j, f) in enumerate(self.fwhms[i])]
-                ) + f" {np.mean(self.n_objs[i]):>6.0f}"
+                ) + f" {n_objs:6>}"
             )
     
     @staticmethod
@@ -149,32 +165,48 @@ class GFASet:
         if not self.exp_num_plot:
             flat_foc = self.focuses.flatten()
             flat_fwhms = self.fwhms.flatten()
+            flat_nstars = self.n_objs.flatten()
             nan_filt = ~np.isnan(flat_fwhms)
+            weight_nstars = flat_nstars[nan_filt] / np.nanmax(flat_nstars)
+            weight_times = (30 - (np.nanmax(self.isots)
+                                  - self.isots.flatten()[nan_filt]
+                                  ) * 24 * 60)
+            weight_times[weight_times < 0] = 0
+            weight_times = weight_times / 30
+            weight = weight_nstars * weight_times
+            weight = weight / np.nanmax(weight)
             a, b, c = np.polyfit(flat_foc[nan_filt],
-                                 flat_fwhms[nan_filt], deg=2)
+                                 flat_fwhms[nan_filt], deg=2,
+                                 w=weight)
             focs = np.linspace(flat_foc[nan_filt].min(),
                                flat_foc[nan_filt].max(), 100)
             fit = -b / 2 /a
             fwhm = self.quadratic(fit, a, b, c)
             mum = "\u03BCm"
-            if a * b > 0:
+            if a < 0:  # Not a parabola with a minimum
                 fit_found = False
                 print("Optimal focus not found")
             else:
                 fit_found = True
-                print(f'Optimal Focus is at {fit:.0f}{mum} with Width {fwhm:.1f}"')
+                print(f'Optimal Focus is at {fit:.0f}{mum} with FWHM {fwhm:.1f}"')
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
         if (not self.exp_num_plot) and fit_found:
             ax.plot(focs, self.quadratic(focs, a, b, c),
-                    label=f"Quad Fit, best={-b / 2 / a:.0f}", alpha=0.8)
+                    alpha=0.8,
+                    label="Best Fit")
+            ax.set_title(f"Best Focus is {-b / 2 / a:.0f}{mum} with FWHM"
+                         f' {fwhm:.1f}"')
             ax.axvline(-b / 2 / a, c="r", linestyle="--", alpha=0.6)
         for i in range(6):
             if self.exp_num_plot:
-                ax.plot(self.im_nums, self.fwhms[:, i], linewidth=1, alpha=0.8,
+                ax.plot(self.im_nums, self.fwhms[:, i], linewidth=1,
+                        alpha=0.8,
                 label=f"GFA {i+1}")
-                ax.scatter(self.im_nums, self.fwhms[:, i], s=6, alpha=0.8)
+                ax.scatter(self.im_nums, self.fwhms[:, i], s=6,
+                           alpha=0.8)
             else:
-                ax.scatter(self.focuses[:, i], self.fwhms[:, i], s=6, alpha=0.8,
+                ax.scatter(self.focuses[:, i], self.fwhms[:, i], s=6,
+                           alpha=0.8,
                 label=f"GFA {i+1}")
         ax.legend()
         if self.exp_num_plot:

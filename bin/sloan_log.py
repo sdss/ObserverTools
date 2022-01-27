@@ -89,7 +89,7 @@ class Logging:
         # added to self.sort. All of these dictionary items begin as lists,
         # and are converted to np.arrays or astropy.time.Times in self.sort.
         self.data = {'dDesign': [], 'dTime': [], 'dConfig': [], 'cLead': []}
-        self.ap_data = {'dDesign': [], 'dTime': [],
+        self.ap_data = {'dDesign': [], "dConfig": [], 'dTime': [],
                         'iTime': [], 'iID': [],
                         'iSeeing': [], 'iDetector': [], 'iDither': [],
                         'iNRead': [], 'iEType': [], 'iDesign': [], 
@@ -98,7 +98,7 @@ class Logging:
                         'fNMissing': [], 'fNFaint': [], 'fRatio': [], 'aTime': [],
                         'aOffset': [], 'aID': [], 'aLamp': [], 'oTime': [],
                         'oOffset': [], 'oDither': []}
-        self.b_data = {'dDesign': [], 'dTime': [],
+        self.b_data = {'dDesign': [], "dConfig": [], 'dTime': [],
                        'iTime': [], 'iID': [],
                        'iDetector': [], 'iDither': [],
                        'iEType': [], 'idt': [], 'iDesign': [], 'iHart': [],
@@ -205,8 +205,8 @@ class Logging:
                     self.ap_data['oDither'].append(img.dither)
 
                 if img.design_id not in self.data['dDesign']:
-                    self.data['dConfig'].append(img.plate_id)
                     self.data['dDesign'].append(img.design_id)
+                    self.data['dConfig'].append(img.config_id)
                     self.data['dTime'].append(img.isot)
                     try:
                         self.data['cLead'].append(img.lead)
@@ -214,14 +214,20 @@ class Logging:
                         self.data["cLead"].append("")
                 else:
                     i = self.data['dDesign'].index(img.design_id)
+                    # If a design has multiple configs, take the lowest (first)
+                    self.data["dConfig"][i] = min(self.data["dConfig"][i],
+                                                  img.config_id)
                     if img.isot < self.data['dTime'][i]:
                         self.data['dTime'].pop(i)
                         self.data['dTime'].insert(i, img.isot)
                 if img.design_id not in self.ap_data['dDesign']:
                     self.ap_data['dDesign'].append(img.design_id)
+                    self.ap_data['dConfig'].append(img.config_id)
                     self.ap_data['dTime'].append(img.isot)
                 else:
                     i = self.ap_data['dDesign'].index(img.design_id)
+                    self.ap_data["dConfig"][i] = min(self.ap_data["dConfig"][i],
+                                                  img.config_id)
                     if img.isot < self.ap_data['dTime'][i]:
                         self.ap_data['dTime'].pop(i)
                         self.ap_data['dTime'].insert(i, img.isot)
@@ -269,7 +275,7 @@ class Logging:
                 img = boss_data.BOSSRaw(image)
                 if img.design_id not in self.data['dDesign']:
                     self.data['dDesign'].append(img.design_id)
-                    self.data['dConfig'].append(img.plate_id)
+                    self.data['dConfig'].append(img.config_id)
                     try:
                         self.data['cLead'].append(img.lead)
                     except AttributeError:
@@ -277,14 +283,19 @@ class Logging:
                     self.data['dTime'].append(img.isot)
                 else:
                     i = self.data['dDesign'].index(img.design_id)
+                    self.data["dConfig"][i] = min(self.data["dConfig"][i],
+                                                  img.config_id)
                     if img.isot < self.data['dTime'][i]:
                         self.data['dTime'].pop(i)
                         self.data['dTime'].insert(i, img.isot)
                 if img.design_id not in self.b_data['dDesign']:
                     self.b_data['dDesign'].append(img.design_id)
+                    self.b_data["dConfig"].append(img.config_id)
                     self.b_data['dTime'].append(img.isot)
                 else:
                     i = self.b_data['dDesign'].index(img.design_id)
+                    self.b_data["dConfig"][i] = min(self.b_data["dConfig"][i],
+                                                  img.config_id)
                     if img.isot < self.b_data['dTime'][i]:
                         self.b_data['dTime'].pop(i)
                         self.b_data['dTime'].insert(i, img.isot)
@@ -478,7 +489,7 @@ class Logging:
                     self.design_data['cAPSummary'].append(
                         '{}xAB'.format(self.design_data['cNAPA'][i]))
                 else:
-                    self.design_data['cAPSummary'].append('No APOGEE Science')
+                    self.design_data['cAPSummary'].append('No APOGEE')
             else:
                 self.design_data['cAPSummary'].append(
                     '{}xA {}xB'.format(self.design_data['cNAPA'][i],
@@ -501,7 +512,7 @@ class Logging:
                     '{}x{}s'.format(self.design_data['cNB'][i],
                                     self.design_data['cBdt'][i]))
             else:
-                self.design_data['cBSummary'].append('No BOSS Science')
+                self.design_data['cBSummary'].append('No BOSS')
 
     @staticmethod
     def hartmann_parse(hart):
@@ -530,9 +541,9 @@ class Logging:
         print('=' * 80)
         for i, design  in enumerate(self.data['dDesign']):
             print('')
-            print("Design {}, {}, {}, {}".format(design, self.data['dConfig'][i],
-                                 self.design_data['cAPSummary'][i],
-                                 self.design_data['cBSummary'][i]))
+            print("Design {}, Config {}, {}, {}".format(design,
+                self.data['dConfig'][i], self.design_data['cAPSummary'][i],
+                self.design_data['cBSummary'][i]))
         print()
         if len(self.ap_data["fRatio"]) > 0:
             flux_ratio = np.nanmean(np.array(self.ap_data["fRatio"]), axis=0)
@@ -595,16 +606,17 @@ class Logging:
                 ap_design = np.where(design == self.ap_data['dDesign'])[0][0]
 
                 print('# APOGEE')
-                print('{:<5} {:<8} {:<8} {:<12} {:<4} {:<6} {:<5}'
-                      ' {:<4}'.format('MJD', 'UTC', 'Exposure', 'Type',
+                print('{:<5} {:<8} {:<6} {:<8} {:<12} {:<4} {:<6} {:<5}'
+                      ' {:<4}'.format('MJD', 'UTC', "Config", 'Exposure', 'Type',
                                       'Dith', 'Reads', 'Arch',
                                       'Seeing'))
                 print('-' * 80)
                 window = self.get_window(self.ap_data, ap_design)
-                for (mjd, iso, exp_id, exp_type, dith, nread,
+                for (mjd, iso, conf, exp_id, exp_type, dith, nread,
                      detectors, see) in zip(
                     self.ap_data['iTime'][window].mjd + 0.3,
                     self.ap_data['iTime'][window].iso,
+                    self.ap_data["iConfig"][window],
                     self.ap_data['iID'][window],
                     self.ap_data['iEType'][window],
                     self.ap_data['iDither'][window],
@@ -612,8 +624,9 @@ class Logging:
                     self.ap_data['iDetector'][window],
                     self.ap_data['iSeeing'][window]
                 ):
-                    print('{:<5.0f} {:0>8} {:<8.0f} {:<12} {:<4} {:>5} {:<5}'
-                          ' {:>4.1f}'.format(int(mjd), iso[11:19], exp_id,
+                    print('{:<5.0f} {:0>8} {:>6.0f} {:<8.0f} {:<12} {:<4} {:>5}'
+                          ' {:<5}'
+                          ' {:>4.1f}'.format(int(mjd), iso[11:19], conf, exp_id,
                                              exp_type,
                                              dith, nread, detectors, see))
                 print()
@@ -629,18 +642,19 @@ class Logging:
 
             if design in self.b_data['dDesign']:
                 print('# BOSS')
-                print('{:<5} {:<8} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
-                      ''.format('MJD', 'UTC', 'Exposure', 'Type',
+                print('{:<5} {:<8} {:<6} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
+                      ''.format('MJD', 'UTC', "Config", 'Exposure', 'Type',
                                 'Dith', 'SOS', 'ETime', 'Hart'))
                 print('-' * 80)
                 # i is an index for data, but it will disagree with b_data
                 # if there is an apogee-onlydesign 
                 b_design = np.where(design == self.b_data['dDesign'])[0][0]
                 window = self.get_window(self.b_data, b_design)
-                for (mjd, iso, exp_id, exp_type, dith,
+                for (mjd, iso, conf, exp_id, exp_type, dith,
                      detectors, etime, hart) in zip(
                     self.b_data['iTime'][window].mjd + 0.3,
                     self.b_data['iTime'][window].iso,
+                    self.b_data["iConfig"][window],
                     self.b_data['iID'][window],
                     self.b_data['iEType'][window],
                     self.b_data['iDither'][window],
@@ -648,9 +662,9 @@ class Logging:
                     self.b_data['idt'][window],
                     self.b_data['iHart'][window],
                 ):
-                    print('{:<5.0f} {:0>8} {:0>8.0f} {:<7} {:<4} {:<11}'
+                    print('{:<5.0f} {:0>8} {:>6.0f} {:0>8.0f} {:<7} {:<4} {:<11}'
                           ' {:>5.0f} {:<5}'
-                          ''.format(int(mjd), iso[11:19], exp_id,
+                          ''.format(int(mjd), iso[11:19], conf, exp_id,
                                     exp_type.strip(),
                                     dith.strip(), detectors, etime,
                                     hart))
@@ -660,7 +674,6 @@ class Logging:
                               & (self.b_data['hTime']
                                  < self.data['dTime'][i + 1])
                               )
-
                 except IndexError:
                     window = ((self.b_data['hTime']
                                >= self.data['dTime'][i])
@@ -771,7 +784,7 @@ class Logging:
             # Put it under an if in case we didn't open.
             rel_offsets = np.abs(np.diff(self.ap_data['oOffset']))
             obj_str = ('Object Offsets: Max: {:.2f}, Min: {:.2f}, Mean: {:.2f}'
-                       ''.format(np.nanmax(rel_offsets), np.nanminrel_offsets),
+                       ''.format(np.nanmax(rel_offsets), np.nanmin(rel_offsets),
                                  np.nanmean(rel_offsets)))
             # ['{:>6.3f}'.format(f) for f in np.diff(
             #     self.ap_data['oOffset'])])
