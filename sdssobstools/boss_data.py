@@ -17,7 +17,11 @@ class BOSSRaw:
 
     def __init__(self, fil):
         self.fil = fil
-        header = fitsio.read_header(fil)
+        try:
+            header = fitsio.read_header(fil)
+        except OSError:
+            header = fitsio.read_header(fil)
+            
         if "MGDPOS" in header.keys():  # SDSS-IV
             self.dither = header['MGDPOS']
         else:  # Usually works in SDSS-V

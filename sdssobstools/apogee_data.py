@@ -30,20 +30,10 @@ class APOGEERaw:
             raise FileNotFoundError(f"Could not find file {self.file.absolute()}")
         self.ext = ext
         self.args = args
-        header = fitsio.read_header(fil, ext=ext)
-        # if has_epics:
-        #     self.telemetry = epics_fetch.telemetry
-        #     dithers = self.telemetry.get('25m:apogee:ditherNamedPositions',
-        #                                  start=(Time.now() - 5 / 24 / 60).datetime,
-        #                                  end=Time.now().datetime,
-        #                                  scan_archives=False, interpolation='raw')
-        # else:
-        #     class Null:
-        #         pass
-        #     dithers = Null()
-        #     dithers.values = np.array([[0., 0.,], [0., 0.]])
-        # layer = self.image[layer_ind]
-        # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
+        try:
+            header = fitsio.read_header(fil, ext=ext)
+        except OSErrors:
+            header = fitsio.read_header(fil, ext=ext)
         if (header['DITHPIX'] - 12.994) < 0.05:
             self.dither = 'A'
         elif (header['DITHPIX'] - 13.494) < 0.05:

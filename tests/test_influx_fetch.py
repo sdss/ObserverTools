@@ -17,7 +17,6 @@ class TestInfluxFetch(unittest.TestCase):
         computer"""
         user_id, org_id, token = influx_fetch.get_key()
         client = influx_fetch.get_client(org_id, token)
-        print(client.ready())
 
     def test_help(self):
         """"Prints the help if -h is provided"""

@@ -488,3 +488,4 @@
 - aptest can now plot (previously, the plot would close instantly)
 - Cleaned up some .open('r').read() methods
 - Some test case updates, mostly moving to newer dates
+- Some NFS error hanlding in sloan_log.py

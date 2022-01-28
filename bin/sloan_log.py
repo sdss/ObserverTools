@@ -340,7 +340,7 @@ class Logging:
                 red_dir = sdss_paths.sos / f"{self.args.sjd}"
                 red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(img.exp_id)
                 try:
-                    ref_fil.exists():
+                    red_fil.exists()
                 except OSError:
                     pass
                 if red_fil.exists():

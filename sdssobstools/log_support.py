@@ -3,9 +3,7 @@
 """A logging tool that is meant to perform the function of LogSupport scripts in
 STUI, but by bypassing STUI and directly accessing telemetry
 
-2020-01-28  dgatlin     Init, after just learning about telemetry queries
-2020-06-20  dgatlin     Changed some times around, it's very easy to mix up mjd
-    and mjd in channelarchiver
+TODO: Thread these queries
 """
 import argparse
 
