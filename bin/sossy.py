@@ -41,7 +41,8 @@ class Plate:
         log_html = sdss_paths.sos / f"{mjd}/logfile-{mjd}.html"
         if not log_html.exists():
             return
-        log_soup = BeautifulSoup(log_html.open('r').read(), 'html.parser')
+        with log_html.open('r') as fil:
+            log_soup = BeautifulSoup(fil.read(), 'html.parser')
         exp_ids = []
         exp_snrs = []
         for plate in log_soup.find_all('caption'):

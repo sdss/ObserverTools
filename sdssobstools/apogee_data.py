@@ -211,7 +211,7 @@ class APOGEERaw:
             ax.axhline(0.2, c=(0.933, 0.466, 0.2))
             ax.set_title('APOGEE Fiber Relative Intensity {}'.format(
                 self.exp_id), size=15)
-            fig.show()
+            plt.show()
 
         return missing_bundles, faint_bundles, flux_ratio
 

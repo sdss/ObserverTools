@@ -15,12 +15,13 @@ class TestInfluxFetch(unittest.TestCase):
     def test_archive(self):
         """Checks to see if the directory for new data is available to this
         computer"""
-        client = influx_fetch.get_client()
+        user_id, org_id, token = influx_fetch.get_key()
+        client = influx_fetch.get_client(org_id, token)
         print(client.ready())
 
     def test_help(self):
         """"Prints the help if -h is provided"""
-        sub.call('{} -h'.format(epics_fetch.__file__), shell=True)
+        sub.call('{} -h'.format(influx_fetch.__file__), shell=True)
 
 
 if __name__ == '__main__':

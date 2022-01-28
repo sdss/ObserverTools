@@ -339,6 +339,10 @@ class Logging:
                 # All boss exposures write as splog, but manga writes different
                 red_dir = sdss_paths.sos / f"{self.args.sjd}"
                 red_fil = red_dir / 'splog-r1-{:0>8}.log'.format(img.exp_id)
+                try:
+                    ref_fil.exists():
+                except OSError:
+                    pass
                 if red_fil.exists():
                     sos_files.append('r1')
                 else:

@@ -27,7 +27,8 @@ def query():
     t_start = Time(sjd.sjd() - 0.3, format="mjd")
     t_end = Time.now()
     enclosure_path = Path(sdss_paths.__file__).parent.parent / "flux/enclosure.flux"
-    state = influx_fetch.query(enclosure_path.open('r').read(), t_start, t_end)[0]
+    with enclosure_path.open('r') as fil:
+        state = influx_fetch.query(fil.read(), t_start, t_end)[0]
     enclosure_hist = ""
     last_state = 0
     for row in state.records:

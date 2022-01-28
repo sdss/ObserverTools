@@ -174,7 +174,8 @@ def main(args=None):
                                             f' list\n{sos_path.as_posix()}')
                 else:
                     continue
-        sos_soup = BeautifulSoup(sos_path.open('r').read(), 'html.parser')
+        with sos_path.open('r') as fil:
+            sos_soup = BeautifulSoup(fil.read(), 'html.parser')
         for plate in sos_soup.find_all('caption'):
             plate_id = int(plate.find('b').decode().split()[2])
             try:

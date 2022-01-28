@@ -3,8 +3,6 @@ import tpmdata
 import multiprocessing
 import pprint
 import numpy as np
-import matplotlib as mpl
-mpl.use("GTK3Agg")
 import matplotlib.pyplot as plt
 from matplotlib import dates
 from astropy.time import Time
@@ -132,6 +130,7 @@ def main(args=None):
             fig = plt.figure(figsize=(6, 4))
             ax = fig.add_subplot(1, 1, 1)
             chart = StripChart(channel, fig, ax)
+            print(args.dt * 1000)
             anis.append(animation.FuncAnimation(fig, chart.update,
                                                 interval=args.dt * 1000))
             charts.append(chart)

@@ -40,8 +40,9 @@ class LogSupport:
         self.offsets += '=' * 80 + '\n'
         offsets_tab = {}
         offsets_tab_path = Path(__file__).parent.parent / "flux/offsets.flux"
-        off_tables = influx_fetch.query(offsets_tab_path.open('r').read(),
-            self.tstart, self.tend)
+        with offsets_tab_path.open('r') as fil:
+            off_tables = influx_fetch.query(fil.read(),
+                self.tstart, self.tend)
         for table in off_tables:
             for row in table.records:
                 field = row.get_field()
@@ -87,8 +88,9 @@ class LogSupport:
         self.focus += '=' * 80 + '\n'
         focus_tab = {}
         focus_tab_path = Path(__file__).parent.parent / "flux/focus.flux"
-        off_tables = influx_fetch.query(focus_tab_path.open('r').read(),
-            self.tstart, self.tend)
+        with focus_tab_path.open('r') as fil:
+            off_tables = influx_fetch.query(fil.read(),
+                self.tstart, self.tend)
         for table in off_tables:
             for row in table.records:
                 measurement = row.get_measurement()
@@ -179,8 +181,9 @@ class LogSupport:
         self.weather += '=' * 80 + '\n'
         weather_tab = {}
         weather_tab_path = Path(__file__).parent.parent / "flux/weather.flux"
-        off_tables = influx_fetch.query(weather_tab_path.open('r').read(),
-            self.tstart, self.tend)
+        with weather_tab_path.open('r') as fil:
+            off_tables = influx_fetch.query(fil.read(),
+                self.tstart, self.tend)
         for table in off_tables:
             for row in table.records:
                 measurement = row.get_measurement()
@@ -227,10 +230,12 @@ class LogSupport:
         boss_times = []
         hartmanns_path = Path(__file__).parent.parent / "flux/hartmanns.flux"
         boss_temps_path = Path(__file__).parent.parent / "flux/boss_temps.flux"
-        hart_tables = influx_fetch.query(hartmanns_path.open('r').read(),
-            self.tstart, self.tend)
-        boss_tables = influx_fetch.query(boss_temps_path.open('r').read(),
-            self.tstart, self.tend)
+        with hartmanns_path.open('r') as fil:
+            hart_tables = influx_fetch.query(fil.read(),
+                self.tstart, self.tend)
+        with boss_temps_path.open('r') as fil:
+            boss_tables = influx_fetch.query(fil.read(),
+                self.tstart, self.tend)
         if len(boss_tables) == 0 or len(hart_tables) == 0:
             return
         for table in boss_tables:

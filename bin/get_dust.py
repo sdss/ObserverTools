@@ -39,7 +39,8 @@ def get_dust(start_time, end_time, verbose):
     q_path = Path(sdss_paths.__file__).parent.parent / "flux/dust.flux"
     if not q_path.exists():
         raise FileNotFoundError(f"Couldn't find Flux query {q_path.absolute()}")
-    query = q_path.open('r').read()
+    with q_path.open('r') as fil:
+        query = fil.read()
     if verbose:
         print(f"Start: {start_time.isot}, End: {end_time.isot}")
     result = influx_fetch.query(query, start_time, end_time)

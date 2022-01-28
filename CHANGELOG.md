@@ -478,3 +478,13 @@
 ## [3.7.8] - 2022-01-20
 
 - Bump version for release
+
+## [3.7.9] - 2022-01-28
+
+- gfa_fwhm.py accounts for optimal focus offsets of added filters, actual values
+  may need adjustment
+- tpm_feed.py was causing a seg fault for plotting, the GtkAgg setting was
+  removed to fix it
+- aptest can now plot (previously, the plot would close instantly)
+- Cleaned up some .open('r').read() methods
+- Some test case updates, mostly moving to newer dates

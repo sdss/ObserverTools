@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """A script to process gfa images with the SDSS-V FPS"""
+import time
 import tqdm
 import fitsio
 import sep
@@ -9,6 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from pathlib import Path
+from matplotlib import animation
 from matplotlib.patches import Ellipse
 from astropy.time import Time
 
@@ -18,6 +20,9 @@ from sdssobstools import sdss_paths
 sns.set(style="darkgrid")
 
 __author__ = "Dylan Gatlin"
+
+# The offsets given by the filters + observed errors
+camera_offsets = np.array([0., -85.3, -60.93, 0, 67.99, 11.85])
 
 
 def build_filt(obj_arr: np.ndarray):
@@ -58,7 +63,7 @@ def show_img(obj_arr: np.ndarray, obj_filt, data_sub: np.ndarray, plot_file=""):
 
 
 class GFASet:
-    def __init__(self, verbose=False, exp_num_plot=False):
+    def __init__(self, verbose=False):
         self.paths = []
         self.filter = []
         self.isots = []
@@ -67,7 +72,8 @@ class GFASet:
         self.n_objs = []
         self.im_nums = []
         self.verbose = verbose
-        self.exp_num_plot = exp_num_plot
+        self.ani_fig = None
+        self.ani_ax = None
 
     def add_index(self, paths_iter, im_num):
         paths = []
@@ -99,6 +105,15 @@ class GFASet:
         self.fwhms.append(fwhms)
         self.n_objs.append(n_objs)
         self.isots.append(isots)
+    
+    def remove_first_index(self):
+        self.paths.pop(0)
+        self.filter.pop(0)
+        self.isots.pop(0)
+        self.fwhms.pop(0)
+        self.focuses.pop(0)
+        self.n_objs.pop(0)
+        self.im_nums.pop(0)
 
     @staticmethod
     def get_fwhm(path: Path, verbose: bool=False):
@@ -119,20 +134,21 @@ class GFASet:
         return fwhm, filt.sum(), objs
 
     def sort(self):
-        self.im_nums = np.array(self.im_nums)
-        self.paths = np.array(self.paths)
-        self.focuses = np.array(self.focuses)
-        self.filter = np.array(self.filter)
-        self.fwhms = np.array(self.fwhms)
-        self.n_objs = np.array(self.n_objs)
-        self.isots = Time(self.isots)
-        sorter = self.im_nums.argsort()
-        self.im_nums = self.im_nums[sorter]
-        self.paths = self.paths[sorter]
-        self.focuses = self.focuses[sorter]
-        self.filter = self.filter[sorter]
-        self.fwhms = self.fwhms[sorter]
-        self.n_objs = self.n_objs[sorter]
+        self.aim_nums = np.array(self.im_nums)
+        self.apaths = np.array(self.paths)
+        self.afocuses = np.array(self.focuses)
+        self.afilter = np.array(self.filter)
+        self.afwhms = np.array(self.fwhms)
+        self.an_objs = np.array(self.n_objs)
+        self.aisots = Time(self.isots)
+        sorter = self.aim_nums.argsort()
+        self.aim_nums = self.aim_nums[sorter]
+        self.apaths = self.apaths[sorter]
+        self.afocuses = self.afocuses[sorter]
+        self.afilter = self.afilter[sorter]
+        self.afwhms = self.afwhms[sorter]
+        self.an_objs = self.an_objs[sorter]
+        self.aisots = self.aisots[sorter]
 
     def print(self):
         if self.verbose:
@@ -141,19 +157,19 @@ class GFASet:
               f" {'GFA4':<6}"
             f" {'GFA5':<6} {'GFA6':<6} {'N Objs':<6}")
         print('=' * 80)
-        for i, (im, foc) in enumerate(zip(self.im_nums, self.focuses)):
+        for i, (im, foc) in enumerate(zip(self.aim_nums, self.afocuses)):
             if np.isnan(foc[1]):
                 foc = f"{'-':>5}"
             else:
                 foc = f"{foc[1]:>5.0f}"
-            if np.all(np.isnan(self.n_objs[i])):
+            if np.all(np.isnan(self.an_objs[i])):
                 n_objs = f"{'-':>6}"
             else:
-                n_objs = f"{np.nanmean(self.n_objs[i]):>6.0f}"
+                n_objs = f"{np.nanmean(self.an_objs[i]):>6.0f}"
             print(f"{im:>6} {foc:>5} "
                 + " ".join([f"{f:>6.2f}"
                     if not np.isnan(f) else f"{'-':>6}"
-                    for (j, f) in enumerate(self.fwhms[i])]
+                    for (j, f) in enumerate(self.afwhms[i])]
                 ) + f" {n_objs:6>}"
             )
     
@@ -161,68 +177,145 @@ class GFASet:
     def quadratic(x, a, b, c): 
         return a * x**2 + x * b + c
 
-    def plot(self, plot_file):
-        if not self.exp_num_plot:
-            flat_foc = self.focuses.flatten()
-            flat_fwhms = self.fwhms.flatten()
-            flat_nstars = self.n_objs.flatten()
-            nan_filt = ~np.isnan(flat_fwhms)
-            weight_nstars = flat_nstars[nan_filt] / np.nanmax(flat_nstars)
-            weight_times = (30 - (np.nanmax(self.isots)
-                                  - self.isots.flatten()[nan_filt]
-                                  ) * 24 * 60)
-            weight_times[weight_times < 0] = 0
-            weight_times = weight_times / 30
-            weight = weight_nstars * weight_times
-            weight = weight / np.nanmax(weight)
-            a, b, c = np.polyfit(flat_foc[nan_filt],
-                                 flat_fwhms[nan_filt], deg=2,
-                                 w=weight)
-            focs = np.linspace(flat_foc[nan_filt].min(),
-                               flat_foc[nan_filt].max(), 100)
-            fit = -b / 2 /a
-            fwhm = self.quadratic(fit, a, b, c)
-            mum = "\u03BCm"
-            if a < 0:  # Not a parabola with a minimum
-                fit_found = False
-                print("Optimal focus not found")
-            else:
-                fit_found = True
-                print(f'Optimal Focus is at {fit:.0f}{mum} with FWHM {fwhm:.1f}"')
-        fig, ax = plt.subplots(1, 1, figsize=(6, 4))
-        if (not self.exp_num_plot) and fit_found:
+    def plot(self, plot_file, fig=None, ax=None):
+        flat_foc = (self.afocuses + camera_offsets).flatten()
+        flat_fwhms = self.afwhms.flatten()
+        flat_nstars = self.an_objs.flatten()
+        nan_filt = ~np.isnan(flat_fwhms)
+        weight_nstars = flat_nstars[nan_filt] / np.nanmax(flat_nstars)
+        weight_times = (10 - (np.nanmax(self.aisots)
+                              - self.aisots.flatten()[nan_filt]
+                              ) * 24 * 60)
+        weight_times[weight_times < 0] = 0
+        weight_times = weight_times / 30
+        weight = weight_nstars * weight_times
+        weight = weight / np.nanmax(weight)
+        a, b, c = np.polyfit(flat_foc[nan_filt],
+                             flat_fwhms[nan_filt], deg=2,
+                             w=weight)
+        focs = np.linspace(flat_foc[nan_filt].min(),
+                           flat_foc[nan_filt].max(), 100)
+        fit = -b / 2 /a
+        fwhm = self.quadratic(fit, a, b, c)
+        mum = "\u03BCm"
+        if a < 0:  # Not a parabola with a minimum
+            fit_found = False
+            print("Optimal focus not found")
+        else:
+            fit_found = True
+            print(f'Optimal focus is at {fit:>4.0f}{mum} with FWHM {fwhm:>4.1f}"')
+        if fig is None:
+            for_ani = False
+            fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+        else:
+            for_ani = True
+            
+        if fit_found:
             ax.plot(focs, self.quadratic(focs, a, b, c),
                     alpha=0.8,
                     label="Best Fit")
             ax.set_title(f"Best Focus is {-b / 2 / a:.0f}{mum} with FWHM"
                          f' {fwhm:.1f}"')
             ax.axvline(-b / 2 / a, c="r", linestyle="--", alpha=0.6)
+            
+        not_old = 10 - (np.nanmax(self.aisots) - self.aisots) > 0
         for i in range(6):
-            if self.exp_num_plot:
-                ax.plot(self.im_nums, self.fwhms[:, i], linewidth=1,
-                        alpha=0.8,
-                label=f"GFA {i+1}")
-                ax.scatter(self.im_nums, self.fwhms[:, i], s=6,
-                           alpha=0.8)
-            else:
-                ax.scatter(self.focuses[:, i], self.fwhms[:, i], s=6,
-                           alpha=0.8,
-                label=f"GFA {i+1}")
+            ax.scatter(self.afocuses[not_old[:, i], i] + camera_offsets[i],
+                       self.afwhms[not_old[:, i], i], s=6,
+                       alpha=0.8,
+            label=f"GFA {i+1}")
         ax.legend()
-        if self.exp_num_plot:
-            ax.set_xlabel("Exposure Number")
-        else:
-            ax.set_xlabel("Focus ($\mu m$)")
+        ax.set_xlabel("Focus ($\mu m$)")
+        ax.set_ylabel("FWHM (arcseconds)")
+        if not for_ani:
+            plt.show()
+            if plot_file:
+                fig.savefig(plot_file, dpi=100)
+        return fig
+            
+    def separate_plot(self, plot_file=None):
+        fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+        xs = np.linspace(np.nanmin(self.afocuses), np.nanmax(self.afocuses))
+        mum = "\u03BCm"
+        for i in range(6):
+            if np.all(np.isnan(self.afwhms[:, i])):
+                continue
+            a, b, c = np.polyfit(self.afocuses[:, i], self.afwhms[:, i], deg=2)
+            best = -b / 2 / a
+            print(f'GFA {i+1:<4.0f} {best:>6.2f}{mum}'
+                  f' {self.quadratic(best, a, b, c):>6.2f}"')
+            ax.scatter(self.afocuses[:, i], self.afwhms[:, i], alpha=0.6,
+                       label=f"GFA {i+1:.0f}")
+            ax.plot(xs, self.quadratic(xs, a, b, c), alpha=0.8)
+        ax.legend()
+        ax.set_xlabel("Focus ($\mu m$)")
         ax.set_ylabel("FWHM (arcseconds)")
         plt.show()
         if plot_file:
             fig.savefig(plot_file, dpi=100)
+        return fig
+    
+    def exp_num_plot(self, plot_file=None):
+        fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+        for i in range(6):
+            ax.plot(self.aim_nums, self.afwhms[:, i], linewidth=1,
+                            alpha=0.8,
+                    label=f"GFA {i+1}")
+            ax.scatter(self.aim_nums, self.afwhms[:, i], s=6,
+                alpha=0.8)
+        ax.legend()
+        ax.set_xlabel("Exposure Number")
+        ax.set_ylabel("FWHM (arcseconds)")
+        plt.show()
+        if plot_file:
+            fig.savefig(plot_file, dpi=100)
+        return fig
+    
+    def init_continuous_plot(self):
+        today = sjd.sjd()
+        img_dir = sdss_paths.gcam / f"{today:.0f}/"
+        latest = 0
+        for fil in img_dir.glob("proc-gimg-gfa4n-*.fits"):
+            current_num = int(fil.name.split("gfa4n-")[-1].split(".fits")[0])
+            latest = max(latest, current_num)
+        for im_num in tqdm.tqdm(range(latest - 20, latest + 1)):
+            im_ps = []
+            for n in range(1, 7):
+                p = img_dir / f"proc-gimg-gfa{n:.0f}n-{im_num:0>4.0f}.fits"
+                im_ps.append(p)
+            self.add_index(im_ps, im_num)
+        self.sort()
+        self.ani_fig, self.ani_ax = plt.subplots(1, 1, figsize=(6, 4))
+        return self.plot(None, self.ani_fig, self.ani_ax)
+        
+    def continuous_plot_update(self, i):
+        today = sjd.sjd()
+        img_dir = sdss_paths.gcam / f"{today:.0f}/"
+        im_num = self.aim_nums[-1] + 1
+        im_num_0 = im_num
+        p = img_dir / f"proc-gimg-gfa4n-{im_num:0>4.0f}.fits"
+        current_range = self.im_nums[-1] - self.im_nums[0]
+        while p.exists() and (im_num - im_num_0 < current_range):
+            im_ps = []
+            for n in range(1, 7):
+                p = img_dir / f"proc-gimg-gfa{n:.0f}n-{im_num:0>4.0f}.fits"
+                im_ps.append(p)
+            self.add_index(im_ps, im_num)
+            self.remove_first_index()
+            im_num += 1
+        self.sort()
+        self.ani_ax.clear()
+        print(f"Plotting from {self.im_nums[0]:>3.0f}-{self.im_nums[-1]:>3.0f}"
+              ", ", end="")
+        return self.plot(None, fig=self.ani_fig, ax=self.ani_ax)
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Prints a table of FWHMs from"
         " GFAs, useful for focus sweeps")
-    parser.add_argument("-b", "--bias", help="The index of a bias frame")
+    parser.add_argument("-c", "--continuous", action="store_true",
+                        help="Update plot/fit continuously, overrides all other"
+                        " plots")
     parser.add_argument("-m", "--mjd", default=sjd.sjd())
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="Verbose debugging output")
@@ -234,32 +327,33 @@ def parse_args():
                              " Always include a --master-field with your window."
                              " Ex: -w 15-50 -s 35")
     parser.add_argument("-e", "--exp-num", action="store_true",
-                        help="Don't fit the images to a curve,"
-                        " produce a time series across exposure numbers")
+                        help="Plot fwhm relative to exposure number")
     # parser.add_argument("-s", "--master-field", type=int,
     #                     help="The master field with all stars you want. Only"
     #                     " used in conjunction with --window. You need both"
     #                     " arguments.")
     parser.add_argument("-p", "--plot", action="store_true",
-                        help="Show plot to analyze fit quality")
+                        help="A plot to find best fit")
     parser.add_argument("-k", "--plot-file", help="Filename to save plot to."
                         " only works with --plot and --window together. If not"
                         " included, the plot will show up in a new window (or"
                         " maybe not depending on X11).")
+    parser.add_argument("-s", "--separate", action="store_true",
+                        help="Creates separate fits for each gfa in a plot")
     parser.add_argument("-d", "--plot-image", action="store_true",
         help="Plot an the sky image with ellipses traced, only works with -f"
     )
     args = parser.parse_args()
 
+    if args.continuous and args.window:
+        raise argparse.ArgumentError("Continuous does not require a window")
     return args
 
 
 def main(args=None):
     if args is None:
         args = parse_args()
-    gfas = GFASet(verbose=args.verbose, exp_num_plot=args.exp_num)
-    if args.bias:
-        raise NotImplementedError("This script doesn't support bias reduction")
+    gfas = GFASet(verbose=args.verbose)
     if args.file:
         print(f"{'File Name':<20} {'FWHM':<6} {'N Objects':<11} {'Mean Ecc':<6}")
         print('=' * 80)
@@ -282,7 +376,20 @@ def main(args=None):
                 file = Path(file)
                 for p in file.parent.glob(file.name):
                     pass
-    elif not args.window:
+                
+    if args.continuous:
+        anis = []
+        print("Plotting continuously")
+        gfas.init_continuous_plot()
+        # I cannot explain why I must create a list I will never use to get an
+        # animation to run. By rights, it should not be necessary. However,
+        # it is apparently essential to the existence of an animation loop
+        anis.append(animation.FuncAnimation(gfas.ani_fig,
+            gfas.continuous_plot_update,
+                                interval=1000))
+        plt.show()
+        
+    elif not args.window and not args.continuous:
         path_stem = sdss_paths.gcam / f"{args.mjd}"
         low = 1000
         high = 0
@@ -296,6 +403,7 @@ def main(args=None):
         if high > low:
             args.window = f"{low:.0f}-{high:.0f}"
 
+    
     if args.window:
         low, high = args.window.split("-")
         try:
@@ -311,6 +419,10 @@ def main(args=None):
             for n in range(1, 7):
                 p = (sdss_paths.gcam / f"{args.mjd}/proc-gimg-gfa{n:.0f}n-"
                      f"{im_num:0>4.0f}.fits")
+                try:
+                    p.exists()
+                except OSError:
+                    pass
                 if not p.exists():
                     p = (sdss_paths.gcam / f"{args.mjd}/proc-gimg-gfa{n:.0f}n-"
                          f"{im_num:0>4.0f}.fits.gz")
@@ -325,8 +437,14 @@ def main(args=None):
             gfas.add_index(im_ps, im_num)
         gfas.sort()
         gfas.print()
-        if args.plot:
+
+        if args.separate:
+            gfas.separate_plot(args.plot_file)
+        elif args.exp_num:
+            gfas.exp_num_plot(args.plot_file)
+        elif args.plot:
             gfas.plot(args.plot_file)
+            
     return 0
 
 
