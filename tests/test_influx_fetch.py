@@ -10,7 +10,8 @@ class TestInfluxFetch(unittest.TestCase):
         dust = Path(__file__).parent.parent / "flux/dust.flux"
         with dust.open('r') as fil:
             query = fil.read()
-        influx_fetch.query(query, Time.now(), Time.now() - 1, interval="1h")
+        influx_fetch.query(query, Time.now() - 1, Time.now(), interval="1h",
+                           verbose=True)
 
     def test_archive(self):
         """Checks to see if the directory for new data is available to this

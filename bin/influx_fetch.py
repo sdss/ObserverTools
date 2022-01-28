@@ -73,15 +73,15 @@ def get_client(org_id, token):
     return client.query_api()
 
 
-
-
-def query(flux_script, start, end, interval="1s"):
+def query(flux_script, start, end, interval="1s", verbose=False):
     user, org, token = get_key()
     client = get_client(org_id=org, token=token)
     query = flux_script
     query = query.replace("v.timeRangeStart", f"{start.isot}Z")
     query = query.replace("v.timeRangeStop", f"{end.isot}Z")
     query = query.replace("v.windowPeriod", interval)
+    if verbose:
+        print(query)
     result = client.query(query=query, org=org)
     return result
     

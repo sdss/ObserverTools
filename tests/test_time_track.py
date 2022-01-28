@@ -4,7 +4,7 @@ from pathlib import Path
 from bin import time_track
 
 
-class TestTPMFetch(unittest.TestCase):
+class TestTimeTrack(unittest.TestCase):
 
     def setUp(self):
         self.file = time_track.__file__
