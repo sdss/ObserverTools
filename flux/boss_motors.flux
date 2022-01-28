@@ -1,0 +1,23 @@
+motor_1 = from(bucket: "apo-medium-retention")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r.actor == "boss")
+    |> filter(fn: (r) => r._measurement == "motorPosition")
+    |> filter(fn: (r) => r._field == "sp1_A")
+    |> aggregateWindow(every: 10m, fn:last, createEmpty: false)
+
+motor_2 = from(bucket: "apo-medium-retention")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r.actor == "boss")
+    |> filter(fn: (r) => r._measurement == "motorPosition")
+    |> filter(fn: (r) => r._field == "sp1_B")
+    |> aggregateWindow(every: 10m, fn:last, createEmpty: false)
+
+motor_3 = from(bucket: "apo-medium-retention")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r.actor == "boss")
+    |> filter(fn: (r) => r._measurement == "motorPosition")
+    |> filter(fn: (r) => r._field == "sp1_3")
+    |> aggregateWindow(every: 10m, fn:last, createEmpty: false)
+
+join(tables: {motor_a: motor_1, motor_b: motor_2}, on:["_time"])
+    |> yield()

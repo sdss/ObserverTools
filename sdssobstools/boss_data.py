@@ -17,17 +17,41 @@ class BOSSRaw:
 
     def __init__(self, fil):
         self.fil = fil
-        header = fitsio.read_header(fil)
-
-        self.dither = header['MGDPOS']
-        if not self.dither:  # This key started working instead during SDSS-V
-            self.dither = header['POINTING'][0]
+        try:
+            header = fitsio.read_header(fil)
+        except OSError:
+            header = fitsio.read_header(fil)
+            
+        if "MGDPOS" in header.keys():  # SDSS-IV
+            self.dither = header['MGDPOS']
+        else:  # Usually works in SDSS-V
+            self.dither = "-"  # header['POINTING'][0]
         self.exp_time = int(header['EXPTIME'])
         self.isot = Time(header['DATE-OBS'])  # UTC
-        self.plate_id = header['PLATEID']
-        self.cart_id = header['CARTID']
+        if "DESIGNID" in header.keys():
+            self.design_id = header["DESIGNID"]
+        else:
+            self.design_id = 0
+        if "CONFID" in header.keys():
+            self.config_id = header["CONFID"]
+        else:
+            self.config_id = 0
+        if "PLATEID" in header.keys():
+            self.plate_id = header['PLATEID']
+        elif "FIELDID" in header.keys():
+            self.plate_id = header["FIELDID"]
+        else:
+            self.plate_id = 0
+        if "CARTID" in header.keys():
+            if isinstance(header["CARTID"], int):
+                self.cart_id = f"{header['CARTID']:.0f}"
+            else:
+                self.cart_id = header['CARTID']
         self.exp_id = int(str(fil).split('-')[-1].split('.')[0])
-        self.lead = header['PLATETYP']
+        if "PLATETP" in header.keys():
+            self.lead = header['PLATETYP']
+        else:
+            self.lead = ""
         if 'Closed' in header['HARTMANN']:
             self.hartmann = 'Closed'
             self.flavor = header['FLAVOR'].capitalize()

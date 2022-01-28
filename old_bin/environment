@@ -1,5 +1,0 @@
-setup idlspec2d
-setup -r /home/observer/plate_web_dir/platewebapp
-setup -r /home/observer/plate_web_dir/platedb
-setup -r /home/observer/plate_web_dir/hooloovookit
-echo cd /home/observer/plate_web_dir/platewebapp

@@ -16,7 +16,9 @@ import hashlib
 import pyds9
 import time
 import fitsio
-# from astropy.time import Time, TimeDelta
+import sys
+import io
+from astropy.time import Time, TimeDelta
 # import os
 import numpy as np
 # import tracemalloc
@@ -29,7 +31,7 @@ boss_cams = ['r1', 'b1', 'r2', 'b2']
 file_sizes = {'APOGEE': 67115520, 'BOSS': 9e6, 'Guider': 4e5,
               'Engineering': 9e5}
 
-__version__ = '3.1.1'
+__version__ = '3.1.2'
 
 
 class DS9Window:
@@ -93,7 +95,19 @@ class DS9Window:
                     self.name = input('>')
         if self.verbose:
             print(self.name)
+
+        # pyds9.DS9 prints a completely misleading block of text when it
+        # launches about connecting to XPA. Strangely, it doesn't appear in
+        # ipython. This stringio tool is a way of suppressing all stdout for
+        # a few lines. It may have unintended consequences, but it's rather
+        # essential because other observers won't know to not trust it
+        # TODO this doesn't work, possibly because the error message is
+        # generated elsewhere
+        text_black_hole = io.StringIO()
+        sys.stdout = text_black_hole
         self.ds9 = pyds9.DS9(self.name)
+        sys.stdout = sys.__stdout__
+
         if sdss_paths.boss.as_posix() in self.fits_dir.as_posix():
             self.ds9.set('tile yes')
 
@@ -125,21 +139,32 @@ class DS9Window:
         dirname = ''
 
         # Obtain the files in the directory and add the full path to them
+        dirs = sorted([i.name for i in list(self.fits_dir.glob("*"))])
+        newest_dir = dirs[-1]
+        try:
+            int(newest_dir)
+        except ValueError:
+            newest_dir = dirs[-2]
+        dirname = self.fits_dir / newest_dir
+       
+        # This old method failed with nfs file mounts because the latest mtime
+        # was a local variable that would update when the folder was rescanned 
+        # for fil in Path(self.fits_dir).glob('*'):
+        #     fil = fil.absolute()
 
-        for fil in Path(self.fits_dir).glob('*'):
-            fil = fil.absolute()
+        #     if fil.is_dir():
 
-            if fil.is_dir():
+        #         # Store the name and mtime of only the latest FITS file, reads
+        #         # through every file, checks its mtime, and keeps the most
+        #         # recent for the return
 
-                # Store the name and mtime of only the latest FITS file, reads
-                # through every file, checks its mtime, and keeps the most
-                # recent for the return
-
-                mtime = fil.stat().st_mtime
-                # print max_time, file, mtime
-                if max_time < mtime:
-                    dirname = fil
-                    max_time = mtime
+        #         mtime = fil.stat().st_mtime
+        #         # print max_time, file, mtime
+        #         if max_time < mtime:
+        #             dirname = fil
+        #             max_time = mtime
+        if self.verbose:
+            print(f"Latest fits dir: {dirname.as_posix()}")
 
         return dirname
 
@@ -153,7 +178,11 @@ class DS9Window:
         # print 'dir = ', dir
         img_times = []
         imgs = []
-        for fil in Path(fits_dir).glob(pattern):
+        try:  # To handle stale NFS file handler errors on the mac minis
+            globber = Path(fits_dir).glob(pattern)
+        except OSError:
+            globber = Path(fits_dir).glob(pattern)
+        for fil in globber:
             fil = fil.absolute()
 
             # See if the file name matches the pattern and the file is a FITS
@@ -172,6 +201,7 @@ class DS9Window:
         img_times = np.array(img_times)
         imgs = np.array(imgs)
         sorter = img_times.argsort()
+        img_times = img_times[sorter]
         imgs = imgs[sorter]
         # img_times = img_times[sorter]
         # An attempt at making sure that if APOGEE isn't on the summary
@@ -179,7 +209,10 @@ class DS9Window:
         # that is still writing
         try:
             if (('APOGEE' in self.name)
-                    and ('summary' not in self.fits_dir.as_posix())):
+                    and ('summary' not in self.fits_dir.as_posix())
+                    and ((Time.now() - Time(img_times[-1], format="unix")).sec
+                         < TimeDelta(15 * 60, format="sec").sec)
+                    ):
                 fits_filename = imgs[-2].absolute()
             else:
                 fits_filename = imgs[-1].absolute()
@@ -208,8 +241,11 @@ class DS9Window:
 
     def update(self):
         """Update the display"""
-
-        fil = self.latest_fits_file(self.regex)
+        try:
+            fil = self.latest_fits_file(self.regex)
+        except OSError:  # This happens with nfs file mounts due to inactivity
+            # It always works with a second query
+            fil = self.latest_fits_file(self.regex)
         if fil is None:
             print("No files found in today's folder, skipping.")
             return
@@ -276,21 +312,24 @@ def parseargs():
                              ' directory of dated folders, where the newest'
                              ' folder has the newest data.'
                              ' Default is {}'.format(default_dir))
-
     parser.add_argument('-e', '--ecam', action='store_true',
                         help='If included, will display engineering camera'
                              'images. Overrides most arguments.')
+    parser.add_argument("-f", "--fsc", action="store_true",
+                        help="If included, will display FSC images")
     parser.add_argument('-g', '--guider', action='store_true',
                         help='If included, will display guider images.'
                              ' Overrides most arguments.')
-    parser.add_argument('-j', '--info', dest='info', action='store_true',
-                        help='If included, it will show the info panel like a' 
-                             ' normal DS9 window. Without info, it will be more' 
-                             ' compact and may easily fit on the monitor')
     parser.add_argument('-i', '--interval', dest='interval', default=60,
                         type=int, help='Set the refresh rate.	Default is 5'
                                        'seconds. Refreshes will be this '
                                        'number  of seconds apart.')
+    parser.add_argument('-j', '--info', dest='info', action='store_true',
+                        help='If included, it will show the info panel like a' 
+                             ' normal DS9 window. Without info, it will be more' 
+                             ' compact and may easily fit on the monitor')
+    parser.add_argument("-k", "--fvc", dest="fvc", action="store_true",
+                        help="If included, will display FVC images")
     parser.add_argument('-n', '--name', dest='name', default='Scanner',
                         type=str,
                         help='Set ds9 Window name. Default is autogenerated.')
@@ -355,6 +394,17 @@ def parseargs():
         args.scale = args.scale
         args.zoom = args.zoom
         args.regex = 'proc-gimg-*'
+    
+    elif args.fsc:
+        args.fits_dir = sdss_paths.fsc
+        args.name = "FSC"
+        args.regex = "raw-*"
+
+    elif args.fvc:
+        args.fits_dir = sdss_paths.fvc
+        args.name = "FVC"
+        args.regex = "fimg-fvc1n-*.fits"
+        args.scale = "log"
 
     return args
 

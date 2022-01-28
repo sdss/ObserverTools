@@ -2,38 +2,28 @@
 
 ## [3.1.0] - 2020-07-01
 
-### Changed
-
 - Added changelog and changed version numbers to 3-part strings in compliance
  with SDSS coding standards
- 
-## [3.2.0] - 2020-07-02
 
-### Changed
+## [3.2.0] - 2020-07-02
 
 - Added help.py and test_help.py
 
 ## [3.2.1] - 2020-07-05
 
-### Changed
-
 - Improved authorship credit in bin, included authors from old_bin into README
 
 ## [3.2.2] - 2020-07-09
-
-### Changed
 
 - ds9_live.py now reads the previous image if it's APOGEE and not on the APOGEE
  virtual machine. This eliminates all known crashes.
 
 - Added several symlinks to scripts to preserve old naming support, this won't
  work for all scripts though
- 
+
 - Added BSD 3 Clause License
 
 ## [3.2.3] - 2020-07-29
-
-### Changed
 
 - sloan_log.py now returns a clear warning when you try to get morning cals that
  don't exist yet
@@ -45,20 +35,16 @@
 
 ## [3.3.0] - 2020-08-12
 
-### Changed
-
 - sloan_log.py uses the ap_test in apogee_data instead of ap_test. It will be
  more like the actual APOGEE reduction since it uses the quickred files.
- 
+
 - Removed several TODOs related to ap_test, now passes unittests
 
 - Changed the apogee quickred flat file to one of the oldest available at APO,
  this is not a permanent solution, the original file's quickred version should
  be used once found.
- 
-## [3.3.1] - 2020-08-17
 
-### Changed
+## [3.3.1] - 2020-08-17
 
 - help.py now includes WAVEMID and XMID
 
@@ -66,14 +52,12 @@
 
 - WAVEMID and XMID are now symlinked to x_mid.py and wave_mid.py for import
  (this usually won't work, but it gives some flexibility)
- 
+
 - ds9_live.py should support 2-camera modes and should only open 2 ds9 tiles
 
 - help text has been updated in several argparses
 
 ## [3.4.0] - 2020-10-10
-
-### Changed
 
 - Added setup.py, requirements, and a modulefile, both of which could be used to
  setup an environment, although if you need to setup an Anaconda environment,
@@ -95,26 +79,18 @@
 
 ## [3.4.1] - 2020-10-11
 
-### Changed
-
 - Removed `python=3.7.8` from requirements.txt because that breaks the pip
  install
 
 ## [3.4.2] - 2020-10-11
 
-### Changed
-
 - Added MANIFEST.in to include CHNAGELOG and LICENSE for installation
 
 ## [3.4.3] - 2020-10-11
 
-### Changed
-
 - Added requirements.txt to MANIFEST.in
 
 ## [3.4.4] - 2020-10-12
-
-### Changed
 
 - Offset outputs now print using textwrap more efficiently
 
@@ -128,15 +104,13 @@
 
 ## [3.4.5] - 2020-10-17
 
-### Changed
-
 - log_support has a new keyword based on the changes made to actorkeys today
  (note: the new keyword will not work until there has been a sequence using that
  keyword.)
 
 - Changed a raise Warning in apogee_data.py to a print so it doesn't cause
  the program to exit, encountered in img 35780004
- 
+
 ## [3.4.6] - 2020-10-18
 
 - ds9_live.py has args.info incorporated throughout (also in the tests)
@@ -217,38 +191,35 @@
 - Added vertical layout option to ds9_live tests  
 
 - Integrated telescope_status into sloan_log
-
-
+  
 ## [3.5.1] - 2020-11-5
 
 - Removed pyfits from requirements.txt. The newest verion of pyfits breaks on
  the Macs
- 
+
 ## [3.5.2] - 2020-11-5
 
 - Removed fitsio version from requirements.txt The newest version of fitsio
  breaks on the Macs
- 
+
 ## [3.5.3] - 2020-11-5
 
 - With more Mac issues, I removed any fits package requirements and numpy's
  version
- 
+
 ## [3.5.4] - 2020-11-5
 
 - Screw it, removed all versions from requirements.txt because of this new pip
  change
- 
+
 ## [3.5.5] - 2020-11-5
 
 - By installing packages one by one, it looks like pytest-astropy uses psutil
  which is not python-3-only pip ready. Removing from requirements.txt
- 
-## [3.5.5] - 2020-11-5
 
 - In sloan_log.py, it would break without tpmdgram via telescope_status.py,
- fixed 
- 
+ fixed
+
 ## [3.5.6] - 2020-11-5
 
 - Minor fix pushes
@@ -291,24 +262,24 @@
 
 - Added dat and tests to packages in an attempt to get them included in the dist
  which is more important now that we have a new master flat.
- 
+
 - Converted pathlib.Path to str in sloan_log.py
 
 - Added dat folder contents to setup.py as package_data, works on my machine,
  ready for testing at hub
- 
+
 ## [3.5.11] - 2020-11-30
 
 - hub installs a script differently than I do locally, so the previous method
  didn't work. pkg_resources also didn't work, so I settled on using a path
  relative to apogee_data, which installs in a location more similar to the
  master flat than scripts like sloan_log.py
- 
+
 ## [3.5.12] - 2020-12-05
 
 - Made some changes to tpm_fetch.py to have some features Dan0 included in a
  similar script.
- 
+
 - Added an mjd window test for test_tpm_fetch.py
 
 ## [3.6.0] - 2021-01-20
@@ -325,7 +296,7 @@
 
 - log_support uses apogee:exposureWroteSummary for callbacks
 
-- log_support checks to see if the mission is defined in each callback 
+- log_support checks to see if the mission is defined in each callback
   (not during cals)
 
 - Fixed a bug with sossy on plates with only 1 table row
@@ -334,7 +305,7 @@
 
 - Changed a variety of tests to support Macs that can't make /data and must
   instead use ~/data
- 
+
 ## [3.6.1] - 2021-03-09
 
 - Fixed a bug in time_track.py where images taken with NoBOSS bypass would
@@ -362,7 +333,7 @@
 
 - Added legacy aptest support to ap_test.py
 
-- Refactored python/* to python/sdssobstools/*
+- Refactored python /*to python/sdssobstools/*
 
 ## [3.6.6] - 2021-05-11
 
@@ -405,7 +376,6 @@
 
 - Major changes to epics_fetch.py to parse multiple keys into one table
 
-
 ## [3.6.15] - 2021-09-06
 
 - Added eval_pointing.py to study ecam images with plots, tables, and more
@@ -413,7 +383,6 @@
 - Added pydl to requirements
 
 - Added FPI support to sloan_log.py
-
 
 ## [3.7.0] - 2021-09-28
 
@@ -427,3 +396,96 @@
  in main to None, important for unittests
 
 - Changed many unittests to use new dates (SJD 59392)
+
+## [3.7.3] - 2021-10-13
+
+- With the (alleged) death of sdss-telemetry, epics_fetch now always fails, it
+ has been resolved in all testable ways
+
+- After discovering that symlinks don't install with setuptools, some
+ mini-scripts have been added to bin with common aliases that point to the
+ desired location
+
+- Fixed several keywords like cart id and plateid in apogee_data, boss_data,
+ and sloan_log.py
+
+- Added /Volumes/data to the sdss_paths library
+
+- Added bin/fsc_coord_convert.py to help track coordinates in the fsc.
+
+## [3.7.4] - 2021-11-14
+
+- Supppressed the output when pyds9 initializes a DS9 window
+
+- Removed epics_fetch.py from telescope_status.py, log_support.py,
+ apogee_data.py, get_dust.py
+
+- Changed apogee dither checker lines
+
+- Added sdss_paths support to list_ap
+
+- Fixed a ds9_live bug with nfs file mounts that aren't always ready to be read
+
+## [3.7.5] - 2021-11-15
+
+- Fixed a bug where setuptools wouldn't include files that didn't end in py
+
+## [3.7.6] - 2021-11-21
+
+- Fixed list_ap for non-hub
+- Fixed ds9_live.py to run on sdss5-display for multiple days
+- ds9_live.py now displays the most recent apogee images
+- Added FVC to ds9_live.py with -k
+
+## [3.7.7a] - 2021-12-04
+
+- Added gfa_fwhm.py that computes the fwhm of gfa exposures
+- Added kronos and roboscheduler to versions.py
+- Almost have a working version of influx_fetch.py
+
+## [3.7.7b] - 2021-12-14
+
+- Supports gfa_fwhm.py for gzipped images.
+
+## [3.7.7c] - 2021-12-31
+
+- Major changes to influx_fetch.py
+- Various flux queries added under /flux
+- get_dust.py now uses influx
+- log_support.py now uses influx
+- versions.py checks disk usage
+- telescope_status.py checks enclosure history
+- influx_fetch.py can read an environment variable or influx.key file
+- help.py simplified a ton
+- epics_fetch.py removed
+
+## [3.7.7] - 2022-01-16
+
+- tpm queries use multiprocess to handle failure
+- test updates to keep up with influx changes
+- Added new master dome flat using apq quickred files
+- Removed old_bin, almost nothing there works anymore.
+
+## [3.7.8a] - 2022-01-17
+
+- README.md changes
+- setup.py added missing stuff like flux folder and master flat
+
+## [3.7.8b] - 2022-01-17
+
+- Remapped paths to .flux files
+
+## [3.7.8] - 2022-01-20
+
+- Bump version for release
+
+## [3.7.9] - 2022-01-28
+
+- gfa_fwhm.py accounts for optimal focus offsets of added filters, actual values
+  may need adjustment
+- tpm_feed.py was causing a seg fault for plotting, the GtkAgg setting was
+  removed to fix it
+- aptest can now plot (previously, the plot would close instantly)
+- Cleaned up some .open('r').read() methods
+- Some test case updates, mostly moving to newer dates
+- Some NFS error hanlding in sloan_log.py

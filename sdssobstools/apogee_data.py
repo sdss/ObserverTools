@@ -8,13 +8,7 @@ import numpy as np
 import textwrap
 from . import sdss_paths
 
-try:
-    from bin import epics_fetch
-except ImportError as e:
-    raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:\n'
-                      '    {}'.format(e))
-
-__version__ = '3.2.1'
+__version__ = '3.2.2'
 
 
 class APOGEERaw:
@@ -36,24 +30,38 @@ class APOGEERaw:
             raise FileNotFoundError(f"Could not find file {self.file.absolute()}")
         self.ext = ext
         self.args = args
-        header = fitsio.read_header(fil, ext=ext)
-        self.telemetry = epics_fetch.telemetry
-        dithers = self.telemetry.get('25m:apogee:ditherNamedPositions',
-                                     start=(Time.now() - 5 / 24 / 60).datetime,
-                                     end=Time.now().datetime,
-                                     scan_archives=False, interpolation='raw')
-        # layer = self.image[layer_ind]
-        # An A dither is DITHPIX=12.994, a B dither is DITHPIX=13.499
-        if (header['DITHPIX'] - dithers.values[-1][0]) < 0.05:
+        try:
+            header = fitsio.read_header(fil, ext=ext)
+        except OSErrors:
+            header = fitsio.read_header(fil, ext=ext)
+        if (header['DITHPIX'] - 12.994) < 0.05:
             self.dither = 'A'
-        elif (header['DITHPIX'] - dithers.values[-1][1]) < 0.05:
+        elif (header['DITHPIX'] - 13.494) < 0.05:
             self.dither = 'B'
         else:
             self.dither = '{:.1f}'.format(header['DITHPIX'])
         self.exp_time = header['EXPTIME']
         self.isot = Time(header['DATE-OBS'])  # Local
         self.plate_id = header['PLATEID']
-        self.cart_id = header['CARTID']
+        if "CONFIGID" in header.keys():
+            if isinstance(header["CONFIGID"], int):
+                self.design_id = header["DESIGNID"]
+                self.config_id = header["CONFIGID"]
+            else:
+                self.design_id = 0
+                self.config_id = 0 
+        else:
+            self.design_id = 0
+            self.config_id = 0 
+
+        if "CARTID" in header.keys():
+            if isinstance(header["CARTID"], int):
+                self.cart_id = f"{header['CARTID']:.0f}"
+            else:
+                self.cart_id = header["CARTID"]
+        else:
+            self.cart_id = 0
+
         self.exp_id = int(str(fil).split('-')[-1].split('.')[0])
         if header['EXPTYPE'].capitalize() == 'Arclamp':
             if header['LAMPUNE']:
@@ -63,7 +71,9 @@ class APOGEERaw:
             elif "FPI" in header["OBSCMNT"]:
                 self.exp_type = "FPI Lamp"
             else:
-                print('Could not process exposure type of {}'.format(self.file))
+                self.exp_type = "Arc"
+                if args.verbose:
+                    print('Could not process exposure type of {}'.format(self.file))
         else:
             self.exp_type = header['EXPTYPE'].capitalize()
         self.n_read = header['NREAD']
@@ -73,14 +83,14 @@ class APOGEERaw:
             self.seeing = header['SEEING']
         else:
             self.seeing = 0.0
-
+        self.mjd = self.file.absolute().parent.name
         self.quickred_data = np.array([[]])
-        self.quickred_file = ''
+        self.quickred_file = sdss_paths.ap_qr / f"{self.mjd}/apq-{self.exp_id}.fits"
         self.utr_file = ''
         self.utr_data = np.array([[]])
 
     # noinspection PyTupleAssignmentBalance,PyTypeChecker
-    def compute_offset(self, fibers=(30, 35), w0=939, dw=40, sigma=1.2745):
+    def compute_offset(self, fibers=(60, 70), w0: int=1105, dw:int=40, sigma:float=1.2745):
         """This is based off of apogeeThar.OneFileFitting written by Elena. It
         is supposed to generate a float for the pixel offsets of an APOGEE
         ThAr cal. Here is how it works:
@@ -100,23 +110,27 @@ class APOGEERaw:
         """
         w0 = int(w0)
         dw = int(dw)
-        mjd = self.file.absolute().parent.name
-        self.quickred_file = (self.file.absolute().parent.parent.parent
-                              / 'quickred/{}/ap1D-a-{}.fits.fz'
-                                ''.format(mjd, self.exp_id))
-        try:
-            if not self.quickred_data:
+        if self.quickred_data.size == 0:
+            if self.quickred_file.exists():
+                self.quickred_data = fitsio.read(self.quickred_file, 3)[0][0]
+            else:
+                self.quickred_file = (sdss_paths.ap_qr
+                                      / 'quickred/{}/ap1D-a-{}.fits.fz'
+                                        ''.format(self.mjd, self.exp_id))
+                if not self.quickred_file.exists():
+                    print(f"Offsets for {self.file.name} could not be read")
+                    return np.nan
                 self.quickred_data = fitsio.read(self.quickred_file, 1)
-        except OSError as e:
-            if self.args.verbose:
-                print('Offsets for {} produced this error\n{}'.format(self.file,
-                                                                      e))
-            return np.nan
         lower = w0 - dw // 2
         upper = w0 + dw // 2
         line_inds = np.arange(self.quickred_data.shape[1])[lower:upper]
-        line = np.average(self.quickred_data[fibers[0]:fibers[1], lower:upper],
+        try:
+            line = np.average(self.quickred_data[fibers[0]:fibers[1], lower:upper],
                           axis=0)
+        except ZeroDivisionError:
+            print(f"Couldn't find dither offsets of image {self.file} with"
+                  f" shape {self.quickred_data.shape}")
+            return np.nan
 
         def fit_func(w, x):
             return np.exp(-0.5 * ((x - w) / sigma) ** 2)
@@ -134,54 +148,28 @@ class APOGEERaw:
                   ''.format(self.exp_id, diff, w0))
         return diff
 
-    def ap_test(self, ws=(900, 910), master_col=None, plot=False, legacy=False,
-                dome_flat_shape=None, n_fibers=300, print_it=False):
+    def ap_test(self, ws=(550, 910), master_col=None, plot=False,
+                print_it=False):
         if master_col is None:
             raise ValueError("APTest didn't receive a valid master_col: {}"
                              "".format(master_col))
-        if legacy:
-            mjd = self.file.absolute().parent.name
-            self.utr_file = sdss_paths.ap_utr / f"{mjd}/apRaw-{self.exp_id}.fits"
-            if not self.utr_file.exists():
-                raise FileNotFoundError(f"Couldn't fine the file: {self.utr_file.as_posix()}")
-            try:
-                self.utr_data = fitsio.read(self.utr_file, 0)
-            except OSError as e:
-                if self.args.verbose:
-                    print('APTest for {} produced this error\n{}'.format(
-                        self.file, e))
-            slc0 = np.average(self.utr_data[::-1, ws[0]:ws[1]], axis=1)
-            # print(slc0.mean(), slc0.shape, slc0[0])
-            slc = np.zeros(n_fibers)
-            for j in range(n_fibers):
-                for k in range(10):
-                    if dome_flat_shape[j, k] != 0:
-                        slc[j] += slc0[dome_flat_shape[j, k]]
-            # print(slc.mean(), slc.shape, slc[100])
-
-        else:
-            if self.quickred_data.size == 0:
-                mjd = self.file.absolute().parent.name
-                self.quickred_file = (self.file.absolute().parent.parent.parent
+        if self.quickred_data.size == 0:
+            if self.quickred_file.exists():
+                self.quickred_data = fitsio.read(self.quickred_file, 3)[0][0]
+            else:
+                self.quickred_file = (sdss_paths.ap_qr
                                       / 'quickred/{}/ap1D-a-{}.fits.fz'
-                                        ''.format(mjd, self.exp_id))
-                try:
-                    self.quickred_data = fitsio.read(self.quickred_file, 1)
-                except OSError as e:
-                    if self.args.verbose:
-                        print('APTest for {} produced this error\n{}'.format(
-                            self.file, e))
-            slc = np.average(self.quickred_data[:, ws[0]:ws[1]], axis=1)
-        # print(master_col.mean(), master_col.shape, master_col[100])
+                                        ''.format(self.mjd, self.exp_id))
+                if not self.quickred_file.exists():
+                    print(f"Offsets for {self.file.name} could not be read")
+                    return [], [], np.nan
+                self.quickred_data = fitsio.read(self.quickred_file, 1)
+        slc = np.median(self.quickred_data[:, ws[0]:ws[1]], axis=1)
         flux_ratio = slc / master_col
-        # flux_ratio = flux_ratio / flux_ratio.sum() / flux_ratio.shape[0]
-        flux_ratio = flux_ratio / flux_ratio.sum() * flux_ratio.shape[0]
-        # print(flux_ratio.mean(), flux_ratio.shape, flux_ratio[100])
         bad_data = ((flux_ratio == np.inf)
                     | (flux_ratio == -np.inf)
                     | np.isnan(flux_ratio))
         flux_ratio[bad_data] = np.nan
-        avg = np.nanmean(flux_ratio)
         missing = flux_ratio < 0.2
         faint = (flux_ratio < 0.7) & (0.2 <= flux_ratio)
         bright = ~missing & ~faint
@@ -191,7 +179,6 @@ class APOGEERaw:
         missing_bundles = self.create_bundles(i_missing)
         faint_bundles = self.create_bundles(i_faint)
         if print_it:
-
             print(textwrap.fill('Missing Fibers: {}'.format(missing_bundles),
                                 80))
             print(textwrap.fill('Faint Fibers: {}'.format(faint_bundles), 80))
@@ -214,9 +201,9 @@ class APOGEERaw:
             ax.axhline(0.2, c=(0.933, 0.466, 0.2))
             ax.set_title('APOGEE Fiber Relative Intensity {}'.format(
                 self.exp_id), size=15)
-            fig.show()
+            plt.show()
 
-        return missing_bundles, faint_bundles, avg
+        return missing_bundles, faint_bundles, flux_ratio
 
     @staticmethod
     def create_bundles(subset):
@@ -268,19 +255,19 @@ def main():
                              " data, whether or not the night is complete."
                              " Note: must be run after 00:00Z")
     parser.add_argument('-m', '--mjd',
-                        help='If not today (-t), the mjd to search')
+                        help='If not today (-t), the self.mjd to search')
     parser.add_argument('-v', '--verbose', action='count', default=1,
                         help='Show details, can be stacked')
     args = parser.parse_args()
     if args.today:
         mjd_today = int(Time.now().sjd)
         data_dir = sdss_paths.ap_archive / f"{mjd_today}/"
-    elif args.mjd:
-        data_dir = sdss_paths.ap_archive / f"{args.mjd}"
+    elif args.self.mjd:
+        data_dir = sdss_paths.ap_archive / f"{args.self.mjd}"
     else:
         raise Exception('No date specified')
     # print(data_dir)
-    for path in data_dir.rglob('apR*.apz'):
+    for path in data_dir.rglob('apq*.fits'):
         print(path)
 
 
