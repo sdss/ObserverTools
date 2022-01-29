@@ -291,7 +291,7 @@ class GFASet:
     def continuous_plot_update(self, i):
         today = sjd.sjd()
         img_dir = sdss_paths.gcam / f"{today:.0f}/"
-        im_num = self.aim_nums[-1] + 1
+        im_num = self.im_nums[-1] + 1
         im_num_0 = im_num
         p = img_dir / f"proc-gimg-gfa4n-{im_num:0>4.0f}.fits"
         current_range = self.im_nums[-1] - self.im_nums[0]
@@ -386,7 +386,7 @@ def main(args=None):
         # it is apparently essential to the existence of an animation loop
         anis.append(animation.FuncAnimation(gfas.ani_fig,
             gfas.continuous_plot_update,
-                                interval=1000))
+                                interval=1000 * 15))
         plt.show()
         
     elif not args.window and not args.continuous:
