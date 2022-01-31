@@ -60,10 +60,29 @@ def show_img(obj_arr: np.ndarray, obj_filt, data_sub: np.ndarray, plot_file=""):
     if plot_file:
         fig.savefig(plot_file)
 
+    
+def get_img_path(mjd: int, cam_num: int, exp_num: int):
+    """Resolves a path of a gfa image, if none can be found, it will return a
+    path object 'Null'
+    """
+    p = (sdss_paths.gcam / f"{mjd}/proc-gimg-gfa{cam_num:.0f}n-"
+         f"{exp_num:0>4.0f}.fits")
+    if not p.exists():
+        p = (sdss_paths.gcam / f"{mjd}/proc-gimg-gfa{cam_num:.0f}n-"
+             f"{exp_num:0>4.0f}.fits.gz")
+    if not p.exists():
+        p = (sdss_paths.gcam / f"{mjd}/gimg-gfa{cam_num:.0f}n-"
+             f"{exp_num:0>4.0f}.fits")
+    if not p.exists():
+        p = (sdss_paths.gcam / f"{mjd}/gimg-gfa{cam_num:.0f}n-"
+             f"{exp_num:0>4.0f}.fits.gz")
+    if not p.exists():
+        p = Path("Null")
+    return p
 
 
 class GFASet:
-    def __init__(self, verbose=False):
+    def __init__(self, verbose: bool=False):
         self.paths = []
         self.filter = []
         self.isots = []
@@ -75,7 +94,7 @@ class GFASet:
         self.ani_fig = None
         self.ani_ax = None
 
-    def add_index(self, paths_iter, im_num):
+    def add_index(self, paths_iter, im_num: int):
         paths = []
         filter = []
         focus = []
@@ -174,7 +193,7 @@ class GFASet:
             )
     
     @staticmethod
-    def quadratic(x, a, b, c): 
+    def quadratic(x: float, a: float, b: float, c:float): 
         return a * x**2 + x * b + c
 
     def plot(self, plot_file, fig=None, ax=None):
@@ -275,13 +294,13 @@ class GFASet:
         today = sjd.sjd()
         img_dir = sdss_paths.gcam / f"{today:.0f}/"
         latest = 0
-        for fil in img_dir.glob("proc-gimg-gfa4n-*.fits"):
+        for fil in img_dir.glob("gimg-gfa4n-*.fits"):
             current_num = int(fil.name.split("gfa4n-")[-1].split(".fits")[0])
             latest = max(latest, current_num)
         for im_num in tqdm.tqdm(range(latest - 20, latest + 1)):
             im_ps = []
             for n in range(1, 7):
-                p = img_dir / f"proc-gimg-gfa{n:.0f}n-{im_num:0>4.0f}.fits"
+                p = get_img_path(today, n, im_num)
                 im_ps.append(p)
             self.add_index(im_ps, im_num)
         self.sort()
@@ -293,12 +312,12 @@ class GFASet:
         img_dir = sdss_paths.gcam / f"{today:.0f}/"
         im_num = self.im_nums[-1] + 1
         im_num_0 = im_num
-        p = img_dir / f"proc-gimg-gfa4n-{im_num:0>4.0f}.fits"
+        p = get_img_path(today, 4, im_num)
         current_range = self.im_nums[-1] - self.im_nums[0]
         while p.exists() and (im_num - im_num_0 < current_range):
             im_ps = []
             for n in range(1, 7):
-                p = img_dir / f"proc-gimg-gfa{n:.0f}n-{im_num:0>4.0f}.fits"
+                p = get_img_path(today, n, im_num)
                 im_ps.append(p)
             self.add_index(im_ps, im_num)
             self.remove_first_index()
@@ -385,8 +404,7 @@ def main(args=None):
         # animation to run. By rights, it should not be necessary. However,
         # it is apparently essential to the existence of an animation loop
         anis.append(animation.FuncAnimation(gfas.ani_fig,
-            gfas.continuous_plot_update,
-                                interval=1000 * 15))
+            gfas.continuous_plot_update, interval=1000 * 15))
         plt.show()
         
     elif not args.window and not args.continuous:
@@ -395,14 +413,13 @@ def main(args=None):
         high = 0
         for file in path_stem.glob("gimg-gfa5n-*.fits*"):
             ind = int(file.name.split("-")[-1].rstrip(
-                ".fits").rstrip(".fits.gz"))
+                ".fits.gz"))
             if ind < low:
                 low = ind
             if ind > high:
                 high = ind
         if high > low:
             args.window = f"{low:.0f}-{high:.0f}"
-
     
     if args.window:
         low, high = args.window.split("-")
@@ -417,21 +434,7 @@ def main(args=None):
         for im_num in tqdm.tqdm(range(low, high + 1)):
             im_ps = []
             for n in range(1, 7):
-                p = (sdss_paths.gcam / f"{args.mjd}/proc-gimg-gfa{n:.0f}n-"
-                     f"{im_num:0>4.0f}.fits")
-                try:
-                    p.exists()
-                except OSError:
-                    pass
-                if not p.exists():
-                    p = (sdss_paths.gcam / f"{args.mjd}/proc-gimg-gfa{n:.0f}n-"
-                         f"{im_num:0>4.0f}.fits.gz")
-                if not p.exists():
-                    p = (sdss_paths.gcam / f"{args.mjd}/gimg-gfa{n:.0f}n-"
-                         f"{im_num:0>4.0f}.fits")
-                if not p.exists():
-                    p = (sdss_paths.gcam / f"{args.mjd}/gimg-gfa{n:.0f}n-"
-                         f"{im_num:0>4.0f}.fits.gz")
+                p = get_img_path(args.mjd, n, im_num)
                 im_ps.append(p)
 
             gfas.add_index(im_ps, im_num)

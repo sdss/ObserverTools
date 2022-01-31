@@ -489,3 +489,8 @@
 - Cleaned up some .open('r').read() methods
 - Some test case updates, mostly moving to newer dates
 - Some NFS error hanlding in sloan_log.py
+
+## [3.7.10] - 2022-01-30
+
+- gfa_fwhm.py gained a function get_img_path that finds the optimal gfa image,
+  now used everywhere in gfa_fwhm.py
