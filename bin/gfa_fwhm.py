@@ -301,6 +301,8 @@ class GFASet:
         img_dir = sdss_paths.gcam / f"{today:.0f}/"
         latest = 0
         for fil in img_dir.glob("gimg-gfa4n-*.fits"):
+            if "snap" in fil.name:
+                continue
             current_num = int(fil.name.split("gfa4n-")[-1].split(".fits")[0])
             latest = max(latest, current_num)
         for im_num in tqdm.tqdm(range(latest - 20, latest + 1)):
@@ -315,11 +317,13 @@ class GFASet:
 
     def continuous_plot_update(self, i):
         today = sjd.sjd()
-        img_dir = sdss_paths.gcam / f"{today:.0f}/"
         im_num = self.im_nums[-1] + 1
         im_num_0 = im_num
         p = get_img_path(today, 4, im_num)
         current_range = self.im_nums[-1] - self.im_nums[0]
+        if self.verbose:
+            print(im_num, p.exists(), im_num_0)
+            print(current_range)
         while p.exists() and (im_num - im_num_0 < current_range):
             im_ps = []
             for n in range(1, 7):
