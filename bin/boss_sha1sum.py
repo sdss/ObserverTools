@@ -46,7 +46,7 @@ def parseargs():
     parser.add_argument('mjds', nargs='?', default=[sjd.sjd()],
                         help='The mjd (or mjds) which you want to create a sum'
                              ' for')
-    parser.add_argument('-f', '--file', 
+    parser.add_argument('-f', '--file',
                         help='The location of the sha1sum file for output,'
                              ' default is /data/spectro/<mjd>/<mjd>.sha1sum.'
                              ' Only works if one or fewer mjds is provided.')

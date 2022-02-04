@@ -24,6 +24,7 @@ from photutils.aperture import CircularAperture
 from bin import sjd
 from sdssobstools import sdss_paths
 
+
 class ECamData:
     def __init__(self, master_img: int = None):
         self.times = []

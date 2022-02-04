@@ -23,21 +23,21 @@ class ApogeeFlat:
         self.args = args
         # self.args.verbose = True
         master_path = (Path(apogee_data.__file__).absolute().parent.parent
-                           / "dat/master_dome_flat.fits.gz")
+                       / "dat/master_dome_flat.fits.gz")
         if not master_path.exists():
             master_path = (Path(apogee_data.__file__).absolute(
-                ).parent.parent.parent / "dat/master_dome_flat.fits.gz")
+            ).parent.parent.parent / "dat/master_dome_flat.fits.gz")
         master_data = fitsio.read(master_path.as_posix())
         self.ap_master = np.median(master_data[:, 550:910], axis=1)
 
     def run_inputs(self):
         for i, sjd in enumerate(self.args.sjds):
             for exp in self.args.exps[i]:
-                ap_img = apogee_data.APOGEERaw(sdss_paths.ap_archive / 
+                ap_img = apogee_data.APOGEERaw(sdss_paths.ap_archive /
                                                f"{sjd}/apR-a-{exp}.apz",
                                                self.args)
                 ap_img.ap_test((550, 910), master_col=self.ap_master,
-                    plot=self.args.plot, print_it=True)
+                               plot=self.args.plot, print_it=True)
 
 
 def parse_args():
@@ -66,7 +66,7 @@ def parse_args():
     day_i = 0
     for arg in args.positionals:
         # if "test" in arg or "python" in arg:
-            # continue
+        # continue
         if len(str(arg)) <= 5:
             args.sjds.append(arg)
             args.exps.append([])

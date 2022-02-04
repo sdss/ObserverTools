@@ -26,13 +26,13 @@ try:
     from bin import m4l, telescope_status, get_dust
 except ImportError as e:
     raise ImportError('Please add ObserverTools/bin to your PYTHONPATH:'
-        '\n    {}'.format(e))
+                      '\n    {}'.format(e))
 from pathlib import Path
 from tqdm import tqdm
 from astropy.time import Time
 
 from sdssobstools import apogee_data, log_support, boss_data, sdss_paths
-    
+
 from bin import sjd
 
 if sys.version_info.major < 3:
@@ -47,6 +47,7 @@ __version__ = '3.7.5'
 
 ap_dir = sdss_paths.ap_archive
 b_dir = sdss_paths.boss
+
 
 class Logging:
     """
@@ -92,7 +93,7 @@ class Logging:
         self.ap_data = {'dDesign': [], "dConfig": [], 'dTime': [],
                         'iTime': [], 'iID': [],
                         'iSeeing': [], 'iDetector': [], 'iDither': [],
-                        'iNRead': [], 'iEType': [], 'iDesign': [], 
+                        'iNRead': [], 'iEType': [], 'iDesign': [],
                         "iDesign": [], "iConfig": [],
                         'fDesign': [], 'fTime': [], 'fMissing': [], 'fFaint': [],
                         'fNMissing': [], 'fNFaint': [], 'fRatio': [], 'aTime': [],
@@ -109,15 +110,15 @@ class Logging:
         # time, since some boss carts use shorter exposures. All these are
         # combined to fill Summary in self.count_dithers
         self.design_data = {'cNAPA': [], 'cNAPB': [], 'cNBN': [], 'cNBS': [],
-                          'cNBE': [], 'cNBC': [], 'cBdt': [], 'cNB': [],
-                          'cAPSummary': [],
-                          'cBSummary': []}
+                            'cNBE': [], 'cNBC': [], 'cBdt': [], 'cNB': [],
+                            'cAPSummary': [],
+                            'cBSummary': []}
         self.test_procs = []
         master_path = (Path(apogee_data.__file__).absolute().parent.parent
-                           / "dat/master_dome_flat.fits.gz")
+                       / "dat/master_dome_flat.fits.gz")
         if not master_path.exists():
             master_path = (Path(apogee_data.__file__).absolute(
-                ).parent.parent.parent / "dat/master_dome_flat.fits.gz")
+            ).parent.parent.parent / "dat/master_dome_flat.fits.gz")
         master_data = fitsio.read(master_path.as_posix())
         self.ap_master = np.median(master_data[:, 550:910], axis=1)
         self.morning_filter = None
@@ -227,7 +228,7 @@ class Logging:
                 else:
                     i = self.ap_data['dDesign'].index(img.design_id)
                     self.ap_data["dConfig"][i] = min(self.ap_data["dConfig"][i],
-                                                  img.config_id)
+                                                     img.config_id)
                     if img.isot < self.ap_data['dTime'][i]:
                         self.ap_data['dTime'].pop(i)
                         self.ap_data['dTime'].insert(i, img.isot)
@@ -279,7 +280,7 @@ class Logging:
                     try:
                         self.data['cLead'].append(img.lead)
                     except AttributeError:
-                        self.data["cLead"].append("")    
+                        self.data["cLead"].append("")
                     self.data['dTime'].append(img.isot)
                 else:
                     i = self.data['dDesign'].index(img.design_id)
@@ -295,7 +296,7 @@ class Logging:
                 else:
                     i = self.b_data['dDesign'].index(img.design_id)
                     self.b_data["dConfig"][i] = min(self.b_data["dConfig"][i],
-                                                  img.config_id)
+                                                    img.config_id)
                     if img.isot < self.b_data['dTime'][i]:
                         self.b_data['dTime'].pop(i)
                         self.b_data['dTime'].insert(i, img.isot)
@@ -543,11 +544,11 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('Observing Summary'))
         print('=' * 80)
-        for i, design  in enumerate(self.data['dDesign']):
+        for i, design in enumerate(self.data['dDesign']):
             print('')
             print("Design {}, Config {}, {}, {}".format(design,
-                self.data['dConfig'][i], self.design_data['cAPSummary'][i],
-                self.design_data['cBSummary'][i]))
+                                                        self.data['dConfig'][i], self.design_data['cAPSummary'][i],
+                                                        self.design_data['cBSummary'][i]))
         print()
         if len(self.ap_data["fRatio"]) > 0:
             flux_ratio = np.nanmean(np.array(self.ap_data["fRatio"]), axis=0)
@@ -562,9 +563,9 @@ class Logging:
                 missing_bundles = self.ap_image.create_bundles(i_missing)
                 faint_bundles = self.ap_image.create_bundles(i_faint)
                 print("APOGEE Dome Flats\n"
-                    f"Missing Fibers: {missing_bundles}\n"
-                    f" Faint fibers: {faint_bundles}\n"
-                    f" Average Throughput: {avg:.3f}")
+                      f"Missing Fibers: {missing_bundles}\n"
+                      f" Faint fibers: {faint_bundles}\n"
+                      f" Average Throughput: {avg:.3f}")
                 print()
             else:
                 print("No APOGEE Dome Flats")
@@ -606,7 +607,7 @@ class Logging:
         print('=' * 80 + '\n')
         for i, design in enumerate(self.data['dDesign']):
             print('### Design {}\n'.format(design))
-            if design  in self.ap_data['dDesign']:
+            if design in self.ap_data['dDesign']:
                 ap_design = np.where(design == self.ap_data['dDesign'])[0][0]
 
                 print('# APOGEE')
@@ -651,7 +652,7 @@ class Logging:
                                 'Dith', 'SOS', 'ETime', 'Hart'))
                 print('-' * 80)
                 # i is an index for data, but it will disagree with b_data
-                # if there is an apogee-onlydesign 
+                # if there is an apogee-onlydesign
                 b_design = np.where(design == self.b_data['dDesign'])[0][0]
                 window = self.get_window(self.b_data, b_design)
                 for (mjd, iso, conf, exp_id, exp_type, dith,
@@ -724,7 +725,7 @@ class Logging:
         print('=' * 80 + '\n')
         print('{:<5} {:<8} {:<13} {:<8} {:<12} {:<4} {:<5} {:<5}'
               ''.format('MJD', 'UTC', 'Design-Config', 'Exposure', 'Type',
-                              'Dith', 'Reads', 'Arch'))
+                        'Dith', 'Reads', 'Arch'))
         print('-' * 80)
         if self.args.morning:
             for (mjd, iso, design, config, exp_id, exp_type, dith, nread,
@@ -743,8 +744,8 @@ class Logging:
                       ' {:>5}'
                       ' {:<5}'
                       ''.format(int(mjd), iso[11:19], design, config,
-                                         exp_id, exp_type,
-                                         dith, nread, detectors))
+                                exp_id, exp_type,
+                                dith, nread, detectors))
 
         else:
             for (mjd, iso, design, config, exp_id, exp_type, dith, nread,
@@ -767,8 +768,8 @@ class Logging:
                       ' {:>5}'
                       ' {:<5}'
                       ''.format(int(mjd), iso[11:19], design, config,
-                                         exp_id, exp_type,
-                                         dith, nread, detectors))
+                                exp_id, exp_type,
+                                dith, nread, detectors))
 
         # Usually, there are 4 ThAr and 4 UNe arcs in a night, and they're
         # assumed to be alternating ThAr UNe ThAr UNe. When you grab every

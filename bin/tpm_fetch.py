@@ -18,7 +18,7 @@ __version__ = '3.1.0'
 
 
 class TPMSJD:
-    def __init__(self, sjd:int, channels:iter, verbose=False):
+    def __init__(self, sjd: int, channels: iter, verbose=False):
         self.sjd = sjd
         self.channels = channels
         self.verbose = verbose
@@ -35,7 +35,7 @@ class TPMSJD:
                             useful_lines.append(line.split())
             useful_lines = np.array(useful_lines)
             self.data = Table(useful_lines, names=('Time', 'Key', 'Value'),
-                    dtype=(float, str, float))
+                              dtype=(float, str, float))
             # self.data = ascii.read(uncompressed,
             #                        names=('Time', 'Key', 'Value'))
         else:
@@ -61,7 +61,8 @@ class TPMSJD:
 
 
 def parse_args():
-    parser = ArgumentParser(description='A tool to query the TPM data archives')
+    parser = ArgumentParser(
+        description='A tool to query the TPM data archives')
     parser.add_argument('--t1', nargs=1,
                         help='The start time of the query')
     parser.add_argument('--t2', nargs=1,

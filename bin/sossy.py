@@ -50,7 +50,8 @@ class Plate:
                 for line in plate.find('tr').decode().split('<tr>'):
                     if '>(S/N)^2' in line:
                         sci_images = line.split('<td align="RIGHT">')
-                        exp_ids.append(sci_images[0].split('SCIENCE-')[-1][:-1])
+                        exp_ids.append(
+                            sci_images[0].split('SCIENCE-')[-1][:-1])
                         if 'bold' not in sci_images[2]:
                             exp_snrs.append(sci_images[2:4])
                         else:
@@ -102,7 +103,7 @@ class Plate:
                 *self.snr_totals[i]))
         if bool(self.snr_totals.sum()):
             print('\nTotal S/N^2: {:4.1f} {:4.1f}\n'.format(
-                    *self.snr_totals.sum(axis=0)))
+                *self.snr_totals.sum(axis=0)))
 
         else:
             print("This plate hasn't been observed\n")

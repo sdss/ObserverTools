@@ -22,7 +22,11 @@ sns.set(style="darkgrid")
 __author__ = "Dylan Gatlin"
 
 # The offsets given by the filters + observed errors
-camera_offsets = np.array([0., -85.3, -60.93, 0, 67.99, 11.85])
+# From 1 set on 59608
+# camera_offsets = np.array([0., -85.3, -60.93, 0, 67.99, 11.85])
+# From 5 sets on 59611
+camera_offsets = np.array([0., -55.28, -56.06666667, 0., 38.74333333,
+                           3.85666667])
 
 
 def build_filt(obj_arr: np.ndarray):
@@ -36,10 +40,11 @@ def build_filt(obj_arr: np.ndarray):
         & (obj_arr["cpeak"] < 60000)
         # & (obj_arr["npix"] > 5)
         & (ecc < 0.7)
-        )
+    )
     # print(obj_arr["a"] * 0.216, obj_arr["b"] * 0.216,
     # np.mean([obj_arr["a"], obj_arr["b"]]))
     return filt
+
 
 def show_img(obj_arr: np.ndarray, obj_filt, data_sub: np.ndarray, plot_file=""):
     fig, ax = plt.subplots(1, 1, figsize=(8, 8))
@@ -60,7 +65,7 @@ def show_img(obj_arr: np.ndarray, obj_filt, data_sub: np.ndarray, plot_file=""):
     if plot_file:
         fig.savefig(plot_file)
 
-    
+
 def get_img_path(mjd: int, cam_num: int, exp_num: int):
     """Resolves a path of a gfa image, if none can be found, it will return a
     path object 'Null'
@@ -82,7 +87,7 @@ def get_img_path(mjd: int, cam_num: int, exp_num: int):
 
 
 class GFASet:
-    def __init__(self, verbose: bool=False):
+    def __init__(self, verbose: bool = False):
         self.paths = []
         self.filter = []
         self.isots = []
@@ -124,7 +129,7 @@ class GFASet:
         self.fwhms.append(fwhms)
         self.n_objs.append(n_objs)
         self.isots.append(isots)
-    
+
     def remove_first_index(self):
         self.paths.pop(0)
         self.filter.pop(0)
@@ -135,7 +140,7 @@ class GFASet:
         self.im_nums.pop(0)
 
     @staticmethod
-    def get_fwhm(path: Path, verbose: bool=False):
+    def get_fwhm(path: Path, verbose: bool = False):
         data = fitsio.read(path, 1)
         bkg = sep.Background(data.astype(float))
         objs = sep.extract(data - bkg, 1.5, bkg.globalrms)
@@ -146,8 +151,8 @@ class GFASet:
             # 2.0*np.log(2)*(objs['a'][filt]**2 + objs['b'][filt]**2))
         # )
         fwhm = 0.216 * np.mean(
-             2 * np.sqrt(np.log(2) * (objs['a'][filt]**2 + objs['b'][filt]**2))
-            )
+            2 * np.sqrt(np.log(2) * (objs['a'][filt]**2 + objs['b'][filt]**2))
+        )
         if fwhm > 5:
             fwhm = np.nan
         return fwhm, filt.sum(), objs
@@ -174,7 +179,7 @@ class GFASet:
             print("Measurements in arcseconds with a place scale of 0.216")
         print(f"{'Img #':<6} {'Focus':<5} {'GFA1':<6} {'GFA2':<6} {'GFA3':<6}"
               f" {'GFA4':<6}"
-            f" {'GFA5':<6} {'GFA6':<6} {'N Objs':<6}")
+              f" {'GFA5':<6} {'GFA6':<6} {'N Objs':<6}")
         print('=' * 80)
         for i, (im, foc) in enumerate(zip(self.aim_nums, self.afocuses)):
             if np.isnan(foc[1]):
@@ -186,14 +191,14 @@ class GFASet:
             else:
                 n_objs = f"{np.nanmean(self.an_objs[i]):>6.0f}"
             print(f"{im:>6} {foc:>5} "
-                + " ".join([f"{f:>6.2f}"
-                    if not np.isnan(f) else f"{'-':>6}"
-                    for (j, f) in enumerate(self.afwhms[i])]
-                ) + f" {n_objs:6>}"
-            )
-    
+                  + " ".join([f"{f:>6.2f}"
+                              if not np.isnan(f) else f"{'-':>6}"
+                              for (j, f) in enumerate(self.afwhms[i])]
+                             ) + f" {n_objs:6>}"
+                  )
+
     @staticmethod
-    def quadratic(x: float, a: float, b: float, c:float): 
+    def quadratic(x: float, a: float, b: float, c: float):
         return a * x**2 + x * b + c
 
     def plot(self, plot_file, fig=None, ax=None):
@@ -214,7 +219,7 @@ class GFASet:
                              w=weight)
         focs = np.linspace(flat_foc[nan_filt].min(),
                            flat_foc[nan_filt].max(), 100)
-        fit = -b / 2 /a
+        fit = -b / 2 / a
         fwhm = self.quadratic(fit, a, b, c)
         mum = "\u03BCm"
         if a < 0:  # Not a parabola with a minimum
@@ -222,13 +227,14 @@ class GFASet:
             print("Optimal focus not found")
         else:
             fit_found = True
-            print(f'Optimal focus is at {fit:>4.0f}{mum} with FWHM {fwhm:>4.1f}"')
+            print(
+                f'Optimal focus is at {fit:>4.0f}{mum} with FWHM {fwhm:>4.1f}"')
         if fig is None:
             for_ani = False
             fig, ax = plt.subplots(1, 1, figsize=(6, 4))
         else:
             for_ani = True
-            
+
         if fit_found:
             ax.plot(focs, self.quadratic(focs, a, b, c),
                     alpha=0.8,
@@ -236,13 +242,13 @@ class GFASet:
             ax.set_title(f"Best Focus is {-b / 2 / a:.0f}{mum} with FWHM"
                          f' {fwhm:.1f}"')
             ax.axvline(-b / 2 / a, c="r", linestyle="--", alpha=0.6)
-            
+
         not_old = 10 - (np.nanmax(self.aisots) - self.aisots) > 0
         for i in range(6):
             ax.scatter(self.afocuses[not_old[:, i], i] + camera_offsets[i],
                        self.afwhms[not_old[:, i], i], s=6,
                        alpha=0.8,
-            label=f"GFA {i+1}")
+                       label=f"GFA {i+1}")
         ax.legend()
         ax.set_xlabel("Focus ($\mu m$)")
         ax.set_ylabel("FWHM (arcseconds)")
@@ -251,7 +257,7 @@ class GFASet:
             if plot_file:
                 fig.savefig(plot_file, dpi=100)
         return fig
-            
+
     def separate_plot(self, plot_file=None):
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
         xs = np.linspace(np.nanmin(self.afocuses), np.nanmax(self.afocuses))
@@ -273,15 +279,15 @@ class GFASet:
         if plot_file:
             fig.savefig(plot_file, dpi=100)
         return fig
-    
+
     def exp_num_plot(self, plot_file=None):
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
         for i in range(6):
             ax.plot(self.aim_nums, self.afwhms[:, i], linewidth=1,
-                            alpha=0.8,
+                    alpha=0.8,
                     label=f"GFA {i+1}")
             ax.scatter(self.aim_nums, self.afwhms[:, i], s=6,
-                alpha=0.8)
+                       alpha=0.8)
         ax.legend()
         ax.set_xlabel("Exposure Number")
         ax.set_ylabel("FWHM (arcseconds)")
@@ -289,7 +295,7 @@ class GFASet:
         if plot_file:
             fig.savefig(plot_file, dpi=100)
         return fig
-    
+
     def init_continuous_plot(self):
         today = sjd.sjd()
         img_dir = sdss_paths.gcam / f"{today:.0f}/"
@@ -306,7 +312,7 @@ class GFASet:
         self.sort()
         self.ani_fig, self.ani_ax = plt.subplots(1, 1, figsize=(6, 4))
         return self.plot(None, self.ani_fig, self.ani_ax)
-        
+
     def continuous_plot_update(self, i):
         today = sjd.sjd()
         img_dir = sdss_paths.gcam / f"{today:.0f}/"
@@ -331,7 +337,7 @@ class GFASet:
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Prints a table of FWHMs from"
-        " GFAs, useful for focus sweeps")
+                                     " GFAs, useful for focus sweeps")
     parser.add_argument("-c", "--continuous", action="store_true",
                         help="Update plot/fit continuously, overrides all other"
                         " plots")
@@ -360,8 +366,8 @@ def parse_args():
     parser.add_argument("-s", "--separate", action="store_true",
                         help="Creates separate fits for each gfa in a plot")
     parser.add_argument("-d", "--plot-image", action="store_true",
-        help="Plot an the sky image with ellipses traced, only works with -f"
-    )
+                        help="Plot an the sky image with ellipses traced, only works with -f"
+                        )
     args = parser.parse_args()
 
     if args.continuous and args.window:
@@ -384,9 +390,9 @@ def main(args=None):
                 fwhm, n_objs, objs = gfas.get_fwhm(file)
                 filt = build_filt(objs)
                 ecc = (np.sqrt(objs['a'][filt]**2 - objs['b'][filt]**2)
-                    / objs['a'][filt])
+                       / objs['a'][filt])
                 print(f"{file.name:<20} {fwhm:>6.2f} {filt.sum():>5.0f}"
-                    f"/{len(objs):<5.0f}  {np.mean(ecc):>6.2f}")
+                      f"/{len(objs):<5.0f}  {np.mean(ecc):>6.2f}")
                 if args.plot_image:
                     data = fitsio.read(file, 1)
                     bkg = sep.Background(data.astype(float))
@@ -395,7 +401,7 @@ def main(args=None):
                 file = Path(file)
                 for p in file.parent.glob(file.name):
                     pass
-                
+
     if args.continuous:
         anis = []
         print("Plotting continuously")
@@ -404,9 +410,9 @@ def main(args=None):
         # animation to run. By rights, it should not be necessary. However,
         # it is apparently essential to the existence of an animation loop
         anis.append(animation.FuncAnimation(gfas.ani_fig,
-            gfas.continuous_plot_update, interval=1000 * 15))
+                                            gfas.continuous_plot_update, interval=1000 * 15))
         plt.show()
-        
+
     elif not args.window and not args.continuous:
         path_stem = sdss_paths.gcam / f"{args.mjd}"
         low = 1000
@@ -420,7 +426,7 @@ def main(args=None):
                 high = ind
         if high > low:
             args.window = f"{low:.0f}-{high:.0f}"
-    
+
     if args.window:
         low, high = args.window.split("-")
         try:
@@ -447,7 +453,7 @@ def main(args=None):
             gfas.exp_num_plot(args.plot_file)
         elif args.plot:
             gfas.plot(args.plot_file)
-            
+
     return 0
 
 

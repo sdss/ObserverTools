@@ -92,7 +92,7 @@ else:
 # print "sosInd=", tblInd
 # print "tblCart=", tblCart[tblInd]
 
-# select line for requested cart and calulate the difference 
+# select line for requested cart and calulate the difference
 tblWmidC = tblWmid[tblInd, 0:len(sosWmid)]  # requested cart parameters from
 # table
 difWmid = sosWmid - tblWmidC  # difference between sos and table for requested

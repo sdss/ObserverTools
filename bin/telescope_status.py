@@ -22,11 +22,13 @@ def get_tpm_packet(out_dict):
         out_dict[key] = val
     return 0
 
+
 def query():
-    
+
     t_start = Time(sjd.sjd() - 0.3, format="mjd")
     t_end = Time.now()
-    enclosure_path = Path(sdss_paths.__file__).parent.parent / "flux/enclosure.flux"
+    enclosure_path = Path(
+        sdss_paths.__file__).parent.parent / "flux/enclosure.flux"
     with enclosure_path.open('r') as fil:
         state = influx_fetch.query(fil.read(), t_start, t_end)[0]
     enclosure_hist = ""
@@ -42,11 +44,10 @@ def query():
             enclosure_hist += f"Closed at {t.isot[11:19]}\n"
     if enclosure_hist == "":
         enclosure_hist = "Closed all night\n"
-            
-        
+
     if tpmdata is None:
         raise ConnectionError("Cannot query the tpm without tpmdata installed")
-    
+
     data = multiprocessing.Manager().dict()
     tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
     tpm_thread.start()
@@ -63,8 +64,8 @@ def query():
                f" {data['alt_actual_pos']*data['alt_spt']/3600:>5.1f},"
                f" {data['rot_actual_pos']*data['rot_spt']/3600:>5.1f} mount\n")
     # epics_data = epics_fetch.get_data(["25m:mcp:instrumentNum"],
-                                    #   start_time=Time.now().to_datetime(),
-                                    #   end_time=Time.now().to_datetime())
+    #   start_time=Time.now().to_datetime(),
+    #   end_time=Time.now().to_datetime())
     cart = "FPS" if data["inst_id_0"] == 0 else f"{data['inst_id_0']:.0f}"
     output += f"Instrument mounted:  {cart}\n"
     output += (f"Counterweights at:  {data['plc_cw_0']:.1f},"

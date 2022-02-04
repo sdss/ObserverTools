@@ -22,6 +22,7 @@ def get_tpm_packet(out_dict):
         out_dict[key] = val
     return 0
 
+
 class StripChart:
     def __init__(self, key, fig, ax):
         self.key = key
@@ -30,12 +31,13 @@ class StripChart:
         self.fig = fig
         self.ax = ax
         self.formatter = dates.DateFormatter('%H:%M')
-        
+
         data = multiprocessing.Manager().dict()
-        tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
+        tpm_thread = multiprocessing.Process(
+            target=get_tpm_packet, args=(data,))
         tpm_thread.start()
         tpm_thread.join(2)
-    
+
         if tpm_thread.is_alive():
             tpm_thread.kill()
             raise ConnectionError("Could not reach TPM")
@@ -51,10 +53,11 @@ class StripChart:
 
     def update(self, i):
         data = multiprocessing.Manager().dict()
-        tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
+        tpm_thread = multiprocessing.Process(
+            target=get_tpm_packet, args=(data,))
         tpm_thread.start()
         tpm_thread.join(2)
-    
+
         if tpm_thread.is_alive():
             tpm_thread.kill()
             raise ConnectionError("Could not reach TPM")
@@ -104,7 +107,7 @@ def parseargs():
 
 def main(args=None):
     if args is None:
-            args = parseargs()
+        args = parseargs()
 
     if args.list_channels:
         args.channels = []
@@ -114,10 +117,11 @@ def main(args=None):
 
     if args.list_channels:
         data = multiprocessing.Manager().dict()
-        tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
+        tpm_thread = multiprocessing.Process(
+            target=get_tpm_packet, args=(data,))
         tpm_thread.start()
         tpm_thread.join(2)
-    
+
         if tpm_thread.is_alive():
             tpm_thread.kill()
             raise ConnectionError("Could not reach TPM")
@@ -143,10 +147,11 @@ def main(args=None):
                                         for channel in args.channels]))
         while True:
             data = multiprocessing.Manager().dict()
-            tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
+            tpm_thread = multiprocessing.Process(
+                target=get_tpm_packet, args=(data,))
             tpm_thread.start()
             tpm_thread.join(2)
-    
+
             if tpm_thread.is_alive():
                 tpm_thread.kill()
                 raise ConnectionError("Could not reach TPM")
@@ -155,10 +160,11 @@ def main(args=None):
             loop_cond = True
             while loop_cond:
                 data = multiprocessing.Manager().dict()
-                tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
+                tpm_thread = multiprocessing.Process(
+                    target=get_tpm_packet, args=(data,))
                 tpm_thread.start()
                 tpm_thread.join(2)
-    
+
                 if tpm_thread.is_alive():
                     tpm_thread.kill()
                     raise ConnectionError("Could not reach TPM")

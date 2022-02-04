@@ -146,9 +146,9 @@ class DS9Window:
         except ValueError:
             newest_dir = dirs[-2]
         dirname = self.fits_dir / newest_dir
-       
+
         # This old method failed with nfs file mounts because the latest mtime
-        # was a local variable that would update when the folder was rescanned 
+        # was a local variable that would update when the folder was rescanned
         # for fil in Path(self.fits_dir).glob('*'):
         #     fil = fil.absolute()
 
@@ -212,7 +212,7 @@ class DS9Window:
                     and ('summary' not in self.fits_dir.as_posix())
                     and ((Time.now() - Time(img_times[-1], format="unix")).sec
                          < TimeDelta(15 * 60, format="sec").sec)
-                    ):
+                ):
                 fits_filename = imgs[-2].absolute()
             else:
                 fits_filename = imgs[-1].absolute()
@@ -325,8 +325,8 @@ def parseargs():
                                        'seconds. Refreshes will be this '
                                        'number  of seconds apart.')
     parser.add_argument('-j', '--info', dest='info', action='store_true',
-                        help='If included, it will show the info panel like a' 
-                             ' normal DS9 window. Without info, it will be more' 
+                        help='If included, it will show the info panel like a'
+                             ' normal DS9 window. Without info, it will be more'
                              ' compact and may easily fit on the monitor')
     parser.add_argument("-k", "--fvc", dest="fvc", action="store_true",
                         help="If included, will display FVC images")
@@ -394,7 +394,7 @@ def parseargs():
         args.scale = args.scale
         args.zoom = args.zoom
         args.regex = 'proc-gimg-*'
-    
+
     elif args.fsc:
         args.fits_dir = sdss_paths.fsc
         args.name = "FSC"

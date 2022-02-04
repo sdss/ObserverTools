@@ -29,7 +29,7 @@ if not sys.argv[1:2]:
 nPar = len(sys.argv)
 # print " "
 
-# read sosXmids arguments  
+# read sosXmids arguments
 sosXmid = np.array(sys.argv[1:]).astype(float)
 
 # read sosCart & plot options
@@ -84,7 +84,7 @@ for i in range(0, n):
 #    if i == 0: print ss, "(sos nominal)"
 #   else: print ss
 
-# search sos cart number in Kaike's table 
+# search sos cart number in Kaike's table
 iii = np.nonzero(tblCart == sosCart)[0]
 # print iii,  len(iii)
 if len(iii) == 0:
@@ -96,7 +96,7 @@ else:
 # print "sosInd=", tblInd
 # print "tblCart=", tblCart[tblInd]
 
-# select line for rewuested cart and calulate the difference 
+# select line for rewuested cart and calulate the difference
 tblXmidC = tblXmid[tblInd, 0:len(sosXmid)]  # requested cart parameters from
 # table
 difXmidC = sosXmid - tblXmidC  # difference between sos and table for requested
@@ -158,10 +158,10 @@ plt.xlabel('b1 - b1(nominal), pix')
 plt.ylabel('r1 - r1(nominal), pix')
 plt.title('sp1 xmid', size=15)
 plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
-                     [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
+         [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
 plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
-                      [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
-                      linewidth=0.6)
+         [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
+         linewidth=0.6)
 plt.plot(sosXmidN[0], sosXmidN[1], 'rs')
 plt.annotate("current", [sosXmidN[0] + 0.5, sosXmidN[1] - 0.1], color="r",
              size=13)
@@ -179,10 +179,10 @@ plt.xlabel('b2 - b2(nominal), pix')
 plt.ylabel('r2 - r2(nominal), pix')
 plt.title('sp2 xmid', size=15)
 plt.plot([-xtol, xtol, xtol, -xtol, -xtol],
-                     [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
+         [ytol, ytol, -ytol, -ytol, ytol], color='b', linewidth=0.6)
 plt.plot([-xtol1, xtol1, xtol1, -xtol1, -xtol1],
-                      [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
-                      linewidth=0.6)
+         [ytol1, ytol1, -ytol1, -ytol1, ytol1], color='r',
+         linewidth=0.6)
 plt.plot(sosXmidN[2], sosXmidN[3], 'rs')
 plt.annotate("current", [sosXmidN[2] + 0.5, sosXmidN[3] - 0.1], color="r",
              size=13)

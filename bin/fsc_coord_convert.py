@@ -15,16 +15,19 @@ def converter(r, theta):
 
 def arg_parse():
     parser = ArgumentParser(description="A tool for converting coordinates to"
-            " from FSC's r, theta to RA and Dec offsets for tcc. If given with"
-            " arguments, give them in pairs of space-separated r and thetas."
-            " You can put multiple, as long as they're in order. If no pairs"
-            " are given, then a default value will be filled which will cover"
-            " the entire focal plane and is what we have done in the past.")
+                            " from FSC's r, theta to RA and Dec offsets for"
+                            " tcc. If given with arguments, give them in pairs"
+                            " of space-separated r and thetas. You can put"
+                            " multiple, as long as they're in order. If no"
+                            " pairs are given, then a default value will be"
+                            " filled which will cover the entire focal plane"
+                            " and is what we have done in the past.")
     parser.add_argument("rthetapairs",
-            help="r and theta, separated by spaces, as many times as you like."
-                 " in sky degrees (1.5deg = 333.3mm)", nargs='*', type=float)
+                        help="r and theta, separated by spaces, as many times"
+                        " as you like. in sky degrees (1.5deg = 333.3mm)",
+                        nargs='*', type=float)
     parser.add_argument("--tcc-offset", action="store_true", help="Print tcc"
-            " offset commands instead of a table")
+                        " offset commands instead of a table")
     return parser.parse_args()
 
 
@@ -46,7 +49,7 @@ def main(args=None):
         ra, dec = converter(r, theta)
         if not args.tcc_offset:
             print(f"{r:9.5f}\N{DEGREE SIGN} {theta:9.1f}\N{DEGREE SIGN}"
-            f"{ra:9.5f}\N{DEGREE SIGN} {dec:9.5f}\N{DEGREE SIGN}")
+                  f"{ra:9.5f}\N{DEGREE SIGN} {dec:9.5f}\N{DEGREE SIGN}")
         else:
             print(f"tcc offset arc/pabs /computed {ra:.5f}, {dec:.5f}")
     return 0
@@ -54,4 +57,3 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
-

@@ -15,7 +15,7 @@ This is a file to pull the help for all programs in bin. Each script must be
 __version__ = '3.2.0'
 
 
-doc="""
+doc = """
 ObserverTools
 
 Most of these tools have their own --help explanations that are more verbose

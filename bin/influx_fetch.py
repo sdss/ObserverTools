@@ -49,7 +49,7 @@ def get_key():
         org_id = os.environ["INFLUXDB_V2_ORG"]
         token = os.environ["INFLUXDB_V2_TOKEN"]
         return user_id, org_id, token
-        
+
     key_path = Path.home() / ".influx.key"
     if not key_path.exists():
         key_path = Path(".") / ".influx.key"
@@ -84,24 +84,24 @@ def query(flux_script, start, end, interval="1s", verbose=False):
         print(query)
     result = client.query(query=query, org=org)
     return result
-    
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--mjd", type=float, help="SJD of observations")
     parser.add_argument("--t1", "--start-time", dest="start_time", help="Start"
-        " time for astropy.time to parse, preferable isot")
+                        " time for astropy.time to parse, preferable isot")
     parser.add_argument("--t2", "--end-time", dest="end_time", help="Start time"
-        " for astropy.time to parse, preferable isot")
+                        " for astropy.time to parse, preferable isot")
     parser.add_argument("-f", "--file", nargs='+', help="A file path of a .flux"
-        " influxdb query file")
+                        " influxdb query file")
     parser.add_argument("-i", "--interval", default="1m", help="Time interval")
     parser.add_argument("-v", "--verbose", action="store_true",
-        help="Verbose debugging")
+                        help="Verbose debugging")
 
     args = parser.parse_args()
 
-    if (not args.mjd ) and (not args.start_time and not args.end_time):
+    if (not args.mjd) and (not args.start_time and not args.end_time):
         args.start_time = Time(sjd.sjd(), format="mjd") - 0.3
         args.end_time = Time.now()
     elif args.mjd:

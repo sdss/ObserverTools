@@ -25,8 +25,8 @@ def parse_args():
     parser.add_argument('-v', '--verbose', action="store_true",
                         help='print incremental dust data')
     args = parser.parse_args()
-    
-    if (not args.mjd ) and (not args.start_time and not args.end_time):
+
+    if (not args.mjd) and (not args.start_time and not args.end_time):
         args.start_time = Time(sjd.sjd(), format="mjd")
         args.end_time = Time.now()
     elif args.mjd:
@@ -38,7 +38,8 @@ def parse_args():
 def get_dust(start_time, end_time, verbose):
     q_path = Path(sdss_paths.__file__).parent.parent / "flux/dust.flux"
     if not q_path.exists():
-        raise FileNotFoundError(f"Couldn't find Flux query {q_path.absolute()}")
+        raise FileNotFoundError(
+            f"Couldn't find Flux query {q_path.absolute()}")
     with q_path.open('r') as fil:
         query = fil.read()
     if verbose:
@@ -52,13 +53,13 @@ def get_dust(start_time, end_time, verbose):
         # times = []
         # vals = []
         # for row in result[0].records:
-            # times.append(row.get_time())
-            # vals.append(row.get_value())
+        # times.append(row.get_time())
+        # vals.append(row.get_value())
         # times = Time(times).mjd
         # vals = np.array(vals)
         # dust_sum = np.sum(np.gradient(times) * 24 * vals )
         dust_sum = result[0].records[-1].get_value()
-        
+
     if len(result) == 0:
         return dust_sum
     if verbose:
@@ -66,13 +67,13 @@ def get_dust(start_time, end_time, verbose):
             print(row.get_time(), row.get_value())
     return dust_sum
 
+
 def main(args=None):
     if args is None:
         args = parse_args()
-    dust_sum = get_dust(args.start_time, args.end_time, args.verbose) 
+    dust_sum = get_dust(args.start_time, args.end_time, args.verbose)
     print("Integrated Dust Counts: ~{:<.0f} dust-hrs".format(
           dust_sum - dust_sum % 100))
-
 
 
 if __name__ == '__main__':

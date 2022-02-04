@@ -154,13 +154,13 @@ def main(args=None):
                 else:
                     if header['SRVYMODE'] != 'None':
                         plates[header['DESIGNID']] = Plate(header['DESIGNID'],
-                                                          header['SRVYMODE'],
-                                                          header['CARTID'])
+                                                           header['SRVYMODE'],
+                                                           header['CARTID'])
                         plates[header['DESIGNID']].a_count += 1
                     else:  # APOGEE-2
                         plates[header['DESIGNID']] = Plate(header['DESIGNID'],
-                                                          header['PLATETYP'],
-                                                          header['CARTID'])
+                                                           header['PLATETYP'],
+                                                           header['CARTID'])
                         plates[header['DESIGNID']].a_count += 1
 
         # SOS Check
