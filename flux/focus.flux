@@ -12,4 +12,5 @@ from(bucket: "apo-medium-retention")
         or r._measurement == "windd"
         ))
     )
+    |> aggregateWindow(every:1m, fn:last, createEmpty: false)
     |> yield()
