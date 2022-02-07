@@ -6,6 +6,7 @@ STUI, but by bypassing STUI and directly accessing telemetry
 TODO: Thread these queries
 """
 import argparse
+import multiprocessing
 
 import numpy as np
 
@@ -17,11 +18,47 @@ from bin import influx_fetch, sjd
 __version__ = '3.3.0'
 
 
+def get_boss_callbacks(tstart, tend, call_dict):
+    out = []
+    boss_exp_path = Path(__file__).parent.parent / "flux/science_exposures.flux"
+    with boss_exp_path.open('r') as fil:
+        tables = influx_fetch.query(fil.read(), tstart, tend)
+    for table in tables:
+        for row in table.records:
+            out.append(row.get_time())
+    
+    call_dict["boss_calls"] = out
+
+def get_apogee_callbacks(tstart, tend, call_dict):
+    out = []
+    apog_exp_path = Path(__file__).parent.parent / "flux/apogee_science.flux"
+    with apog_exp_path.open('r') as fil:
+        tables = influx_fetch.query(fil.read(), tstart, tend)
+    for table in tables:
+        for row in table.records:
+            out.append(row.get_time())
+    call_dict["apogee_calls"] = out
+    
+def get_enclosure_history(tstart, tend, call_dict):
+    out_times = []
+    out_states = []
+    flx_path = Path(__file__).parent.parent / "flux/enclosure.flux"
+    with flx_path.open('r') as fil:
+        tables = influx_fetch.query(fil.read(), tstart, tend)
+    for table in tables:
+        for row in table.records:
+            out_times.append(row.get_time())
+            out_states.append(row.get_value())
+    call_dict["enclosure_times"] = out_times
+    call_dict["enclosure_states"] = out_states
+ 
 class LogSupport:
     def __init__(self, tstart, tend, args):
         self.tstart = Time(tstart)
         self.tend = Time(tend)
         self.args = args
+        if args.verbose:
+            print(f"Log Support Window: {self.tstart}-{self.tend}")
 
         self.call_times = []
         self.offsets = ""
@@ -29,9 +66,51 @@ class LogSupport:
         self.weather = ""
         self.hartmann = ""
 
+       
     def set_callbacks(self):
-        self.call_times = Time(np.arange((self.tstart + 0.3).mjd, self.tend.mjd,
-                15 * 60 / 86400), format="mjd")
+        callback_dict = multiprocessing.Manager().dict()
+        boss = multiprocessing.Process(target=get_boss_callbacks,
+                                       args=(self.tstart, self.tend,
+                                             callback_dict,))
+        apogee = multiprocessing.Process(target=get_apogee_callbacks,
+                                       args=(self.tstart, self.tend,
+                                             callback_dict,))
+        enclosure = multiprocessing.Process(target=get_enclosure_history,
+                                       args=(self.tstart, self.tend,
+                                             callback_dict,))
+        boss.start()
+        apogee.start()
+        enclosure.start()
+        boss.join(5)
+        apogee.join(5)
+        enclosure.join(5)
+        try:
+            all_times = Time(callback_dict["boss_calls"]
+                             + callback_dict["apogee_calls"])
+        except ValueError:
+            self.call_times = []
+            return
+        all_times = all_times[all_times.argsort()]
+        encl_times = Time(callback_dict["enclosure_times"])
+        encl_vals = np.array(callback_dict["enclosure_states"])
+        encl_vals = encl_vals[encl_times.argsort()]
+        encl_times = encl_times[encl_times.argsort()]
+        new_times = []
+        for time in all_times:
+            before = encl_times < time
+            if before.sum() == 0:
+                continue
+            if encl_vals[before][-1] != 1:
+                continue
+            if np.all([time - (15 / 24 / 60) > t for t in new_times]):
+                new_times.append(time)
+        
+        try:
+            self.call_times = Time(new_times)
+        except ValueError:
+            self.call_times = Time(new_times, format="mjd")
+        # self.call_times = Time(np.arange((self.tstart + 0.3).mjd, self.tend.mjd,
+                # 15 * 60 / 86400), format="mjd")
 
     def get_offsets(self, out_dict={}):
         self.offsets = f"{'Time':<8} {'Az':<6} {'Alt':<4} {'Rot':<6}\n"
@@ -141,6 +220,7 @@ class LogSupport:
         # is above 90
         for i, h in enumerate(weather_tab["humidPT"]):
             if h > 90:
+                print(weather_tab["thumidPT"][i], h)
                 weather_tab["dustb"].append(np.nan)
                 weather_tab["tdustb"].append(weather_tab["thumidPT"][i])
         for key in weather_tab.keys():
@@ -148,10 +228,15 @@ class LogSupport:
                 weather_tab[key] = Time(weather_tab[key])
             else:
                 weather_tab[key] = np.array(weather_tab[key])
-        
+        # Most data is assumed to be sorted, but because of the dewpoint filter
+        # for dust, we need to resort it to put the added values in their
+        # proper places
+        weather_tab["dustb"] = weather_tab["dustb"][
+            weather_tab["tdustb"].argsort()]
+        weather_tab["tdustb"] = weather_tab["tdustb"][
+            weather_tab["tdustb"].argsort()]
         for t in self.call_times:
             line = [t.isot[11:19]] 
-            skip_line = False
             for key in ["airTempPT", "airTempPT", "dpTempPT", "humidPT", "winds", "windd",
                         "dustb", "irscsd", "irscmean"]:
                 if 't' + key in weather_tab.keys():

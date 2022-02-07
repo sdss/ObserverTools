@@ -108,8 +108,14 @@ def parse_args():
         args.start_time = Time(args.mjd - 1, format="mjd")
         args.end_time = Time(args.mjd, format="mjd")
     elif args.start_time:
-        args.start_time = Time(args.start_time)
-        args.end_time = Time(args.end_time)
+        try:
+            args.start_time = Time(args.start_time)
+        except ValueError:
+            args.start_time = Time(args.start_time, format="mjd")
+        try:
+            args.end_time = Time(args.end_time)
+        except ValueError:
+            args.end_time = Time(args.end_time, format="mjd")
     return args
 
 
