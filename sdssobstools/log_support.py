@@ -191,11 +191,19 @@ class LogSupport:
                 else:
                     weather_tab[f"t{measurement}"] = [row.get_time()]
                     weather_tab[measurement] = [row.get_value()]
+                    
+        # Filter out dpDep values by adding a fake value every time the humidity
+        # is above 90
+        for i, h in enumerate(weather_tab["humidPT"]):
+            if h > 90:
+                weather_tab["dustb"].append(np.nan)
+                weather_tab["tdustb"].append(weather_tab["thumidPT"][i])
         for key in weather_tab.keys():
             if key[0] == 't':
                 weather_tab[key] = Time(weather_tab[key])
             else:
                 weather_tab[key] = np.array(weather_tab[key])
+        
         for t in self.call_times:
             line = [t.isot[11:19]] 
             skip_line = False
