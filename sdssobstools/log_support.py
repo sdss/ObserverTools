@@ -33,7 +33,7 @@ class LogSupport:
         self.call_times = Time(np.arange((self.tstart + 0.3).mjd, self.tend.mjd,
                 15 * 60 / 86400), format="mjd")
 
-    def get_offsets(self):
+    def get_offsets(self, out_dict={}):
         self.offsets = f"{'Time':<8} {'Az':<6} {'Alt':<4} {'Rot':<6}\n"
         self.offsets += '=' * 80 + '\n'
         offsets_tab = {}
@@ -68,18 +68,9 @@ class LogSupport:
             if np.all(np.isnan(np.array(line[1:]))):
                 continue
             self.offsets += "{:<8} {:>6.1f} {:>4.1f} {:>6.1f}\n".format(*line)
-                
-            
-        # offsets_tab_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
-        #                 '25m:guider:cartridgeLoaded:plateID',
-        #                 '25m:guider:survey:plateType',
-        #                 '25m:tcc:axePos:az', '25m:tcc:axePos:alt',
-        #                 '25m:tcc:axePos:rot', '25m:tcc:objArcOff:az',
-        #                 '25m:tcc:objArcOff:alt', '25m:tcc:guideOff:rot',
-        #                 '25m:tcc:calibOff:az', '25m:tcc:calibOff:alt',
-        #                 '25m:tcc:calibOff:rot', '25m:guider:guideRMS:RMSerror']
+        out_dict["offsets"] = self.offsets        
 
-    def get_focus(self):
+    def get_focus(self, out_dict={}):
         self.focus = (f"{'Time':<8} {'M1':<4} {'M2':<4} {'Focus':<5}"
                       f" {'Az':<6} {'Alt':<5} {'Temp':<5} {'Wind':<4}"
                       f" {'Dir':<3}\n")
@@ -121,55 +112,9 @@ class LogSupport:
             self.focus += ("{:<8} {:>4.0f} {:>4.0f} {:>5.0f} {:>6.1f} {:>5.1f}"
                            " {:>5.1f} {:>4.0f} {:>3.0f}\n".format(
                                  *line))
-                
-        # focus_keys = ['25m:guider:cartridgeLoaded:cartridgeID',
-        #               '25m:guider:cartridgeLoaded:plateID',
-        #               '25m:guider:survey:plateType',
-        #               '25m:tcc:scaleFac', '25m:tcc:primOrient:pos',
-        #               '25m:tcc:secOrient:piston', '25m:tcc:secFocus',
-        #               '25m:tcc:axePos:az', '25m:tcc:axePos:alt',
-        #               '25m:apo:airTempPT', '25m:apo:winds',
-        #               '25m:apo:windd', '25m:guider:seeing']
-        # foc_data = {}
-        # for key in focus_keys:
-        #     foc_data[key] = []
-        # for time in self.call_times:
-        #     self.query(focus_keys, time.datetime, time.datetime,
-        #                foc_data)
+        out_dict["focus"] = self.focus
 
-        # self.focus += '=' * 80 + '\n'
-        # self.focus += '{:^80}\n'.format('Telescope Focus')
-        # self.focus += '=' * 80 + '\n\n'
-        # self.focus += ('{:<5} {:<9} {:<6} {:<5} {:<5} {:<5} {:<6} {:<5}'
-        #                ' {:<5} {:<4} {:<3}'
-        #                ' {:<4}\n'.format('Time', 'Cart', 'Scale', 'M1', 'M2',
-        #                                  'Focus', 'Az', 'Alt', 'Temp',
-        #                                  'Wind', 'Dir', 'FWHM'))
-        # self.focus += '-' * 80 + '\n'
-        # for i, time in enumerate(self.call_times):
-        #     if foc_data[focus_keys[2]][i] == '':
-        #         continue
-        #     self.focus += ('{:>5} {:>2}-{:0>5}{:>1} {:>6.1f} {:>5.0f}'
-        #                    ' {:>5.0f}'
-        #                    ' {:>5.0f} {:>6.1f} {:>5.1f} {:>5.1f} {:>4.0f}'
-        #                    ' {:>3.0f}'
-        #                    ' {:>4.1f}\n'.format(time.isot[11:16],
-        #                                         foc_data[focus_keys[0]][i],
-        #                                         foc_data[focus_keys[1]][i],
-        #                                         foc_data[focus_keys[2]][i][0],
-        #                                         (foc_data[focus_keys[3]][i]
-        #                                          - 1) * 1e6,
-        #                                         foc_data[focus_keys[4]][i],
-        #                                         foc_data[focus_keys[5]][i],
-        #                                         foc_data[focus_keys[6]][i],
-        #                                         foc_data[focus_keys[7]][i],
-        #                                         foc_data[focus_keys[8]][i],
-        #                                         foc_data[focus_keys[9]][i],
-        #                                         foc_data[focus_keys[10]][i],
-        #                                         foc_data[focus_keys[11]][i],
-        #                                         foc_data[focus_keys[12]][i]))
-
-    def get_weather(self):
+    def get_weather(self, out_dict={}):
         dust = "1\u03BCm Dust"
         irscs = "IRSC \u03C3"
         irscm = "IRSC \u03BC"
@@ -226,8 +171,9 @@ class LogSupport:
             self.weather += ("{:<8} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f}"
                              " {:>3.0f} {:>8.0f} {:>6.1f} {:>6.0f}\n".format(
                                  *line))
+        out_dict["weather"] = self.weather
 
-    def get_hartmann(self):
+    def get_hartmann(self, out_dict={}):
         self.hartmann = f"{'Time':8} {'Temp':<6} {'R off':<6} {'B off':<6}"
         self.hartmann += f" {'Move':<6} {'Resid':<6}\n"
         self.hartmann += '=' * 80 + '\n'
@@ -273,6 +219,7 @@ class LogSupport:
                 line.append(harts[key][in_window][0])
             self.hartmann += ("{:8} {:>6.1f} {:>6.0f} {:>6.1f} {:>6.0f}"
                               " {:>6.1f}\n".format(*line))
+        out_dict["hartmann"] = self.hartmann
 
 def main():
     parser = argparse.ArgumentParser()

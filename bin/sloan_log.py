@@ -16,6 +16,7 @@ In order to run it locally, you will need to either have access to /data, or
  /data/apogee/archive. You'll also need setup local forwarding for InfluxDB
 """
 import argparse
+import multiprocessing
 import sys
 import textwrap
 import warnings
@@ -813,16 +814,29 @@ class Logging:
         end = Time(self.args.sjd + 1, format='mjd') - 0.3
         end = Time.now() if Time.now() < end else end
         tel = log_support.LogSupport(start, end, self.args)
+        support = multiprocessing.Manager().dict()
         tel.set_callbacks()
-        tel.get_offsets()
-        tel.get_focus()
-        tel.get_weather()
-        tel.get_hartmann()
-        print(tel.offsets)
-        print(tel.focus)
-        print(tel.weather)
-        print(tel.hartmann)
-
+        offsets = multiprocessing.Process(target=tel.get_offsets,
+                                          args=(support,))
+        focus = multiprocessing.Process(target=tel.get_focus,
+                                          args=(support,))
+        weather = multiprocessing.Process(target=tel.get_weather,
+                                          args=(support,))
+        hartmann = multiprocessing.Process(target=tel.get_hartmann,
+                                           args=(support,))
+        offsets.start()
+        focus.start()
+        weather.start()
+        hartmann.start()
+        offsets.join(10)
+        focus.join(10)
+        weather.join(10)
+        hartmann.join(10)
+        print(support["offsets"])
+        print(support["focus"])
+        print(support["weather"])
+        print(support["hartmann"])
+        
     @staticmethod
     def mirror_numbers():
         print('=' * 80)
