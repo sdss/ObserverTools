@@ -25,8 +25,8 @@ __author__ = "Dylan Gatlin"
 # From 1 set on 59608
 # camera_offsets = np.array([0., -85.3, -60.93, 0, 67.99, 11.85])
 # From 5 sets on 59611
-camera_offsets = np.array([0., -55.28, -56.06666667, 0., 38.74333333,
-                           3.85666667])
+camera_offsets = np.array([0.0, -53.65107142857143, -61.558140703517566, 0.0,
+                           41.45345609065155, -5.526348039215692])
 
 
 def build_filt(obj_arr: np.ndarray):
@@ -72,6 +72,10 @@ def get_img_path(mjd: int, cam_num: int, exp_num: int):
     """
     p = (sdss_paths.gcam / f"{mjd}/proc-gimg-gfa{cam_num:.0f}n-"
          f"{exp_num:0>4.0f}.fits")
+    try:
+        p.exists()
+    except OSError:
+        pass
     if not p.exists():
         p = (sdss_paths.gcam / f"{mjd}/proc-gimg-gfa{cam_num:.0f}n-"
              f"{exp_num:0>4.0f}.fits.gz")
@@ -207,7 +211,7 @@ class GFASet:
         flat_nstars = self.an_objs.flatten()
         nan_filt = ~np.isnan(flat_fwhms)
         weight_nstars = flat_nstars[nan_filt] / np.nanmax(flat_nstars)
-        weight_times = (10 - (np.nanmax(self.aisots)
+        weight_times = (20 - (np.nanmax(self.aisots)
                               - self.aisots.flatten()[nan_filt]
                               ) * 24 * 60)
         weight_times[weight_times < 0] = 0
@@ -355,6 +359,8 @@ def parse_args():
                         help="A dash separated beginning and end of the window."
                              " Always include a --master-field with your window."
                              " Ex: -w 15-50 -s 35")
+    parser.add_argument("-i", "--ignore", nargs="+", type=int, default=[],
+                        help="Image numbers to ignore in a window")
     parser.add_argument("-e", "--exp-num", action="store_true",
                         help="Plot fwhm relative to exposure number")
     # parser.add_argument("-s", "--master-field", type=int,
@@ -442,6 +448,8 @@ def main(args=None):
         if args.verbose:
             print(f"Reading Images from {low} to {high} in MJD {args.mjd}")
         for im_num in tqdm.tqdm(range(low, high + 1)):
+            if im_num in args.ignore:
+                continue
             im_ps = []
             for n in range(1, 7):
                 p = get_img_path(args.mjd, n, im_num)
