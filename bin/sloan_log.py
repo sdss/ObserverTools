@@ -788,7 +788,9 @@ class Logging:
         print('\n'.join(wrapper.wrap(une_str)))
         if len(self.ap_data['oOffset']) > 1:
             # Put it under an if in case we didn't open.
-            rel_offsets = np.abs(np.diff(self.ap_data['oOffset']))
+            did_move = self.ap_data["oDither"][:-1] != self.ap_data["oDither"][1:]
+            rel_offsets = np.abs(self.ap_data['oOffset'][1:][did_move]
+                                 - self.ap_data["oOffset"][:-1][did_move])
             obj_str = ('Object Offsets: Max: {:.2f}, Min: {:.2f}, Mean: {:.2f}'
                        ''.format(np.nanmax(rel_offsets), np.nanmin(rel_offsets),
                                  np.nanmean(rel_offsets)))
