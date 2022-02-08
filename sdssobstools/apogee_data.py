@@ -111,6 +111,10 @@ class APOGEERaw:
         w0 = int(w0)
         dw = int(dw)
         if self.quickred_data.size == 0:
+            try:
+                self.quickred_file.exists()
+            except OSError:
+                pass
             if self.quickred_file.exists():
                 self.quickred_data = fitsio.read(self.quickred_file, 3)[0][0]
             else:

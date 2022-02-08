@@ -21,12 +21,8 @@ sns.set(style="darkgrid")
 
 __author__ = "Dylan Gatlin"
 
-# The offsets given by the filters + observed errors
-# From 1 set on 59608
-# camera_offsets = np.array([0., -85.3, -60.93, 0, 67.99, 11.85])
-# From 5 sets on 59611
-camera_offsets = np.array([0.0, -53.65107142857143, -61.558140703517566, 0.0,
-                           41.45345609065155, -5.526348039215692])
+camera_offsets = np.array([0.0, -58.27473684210525, -46.28157894736838,
+                           17.825263157894756, 50.06315789473686, 0.0])
 
 
 def build_filt(obj_arr: np.ndarray):
@@ -145,6 +141,10 @@ class GFASet:
 
     @staticmethod
     def get_fwhm(path: Path, verbose: bool = False):
+        try:
+            path.exists()
+        except OSError:
+            pass
         data = fitsio.read(path, 1)
         bkg = sep.Background(data.astype(float))
         objs = sep.extract(data - bkg, 1.5, bkg.globalrms)
@@ -210,6 +210,9 @@ class GFASet:
         flat_fwhms = self.afwhms.flatten()
         flat_nstars = self.an_objs.flatten()
         nan_filt = ~np.isnan(flat_fwhms)
+        if flat_nstars[nan_filt].size == 0:
+            print("Nothing to plot")
+            return
         weight_nstars = flat_nstars[nan_filt] / np.nanmax(flat_nstars)
         weight_times = (20 - (np.nanmax(self.aisots)
                               - self.aisots.flatten()[nan_filt]
@@ -242,7 +245,8 @@ class GFASet:
         if fit_found:
             ax.plot(focs, self.quadratic(focs, a, b, c),
                     alpha=0.8,
-                    label="Best Fit")
+                    # label="Best Fit"
+                    )
             ax.set_title(f"Best Focus is {-b / 2 / a:.0f}{mum} with FWHM"
                          f' {fwhm:.1f}"')
             ax.axvline(-b / 2 / a, c="r", linestyle="--", alpha=0.6)
@@ -252,8 +256,8 @@ class GFASet:
             ax.scatter(self.afocuses[not_old[:, i], i] + camera_offsets[i],
                        self.afwhms[not_old[:, i], i], s=6,
                        alpha=0.8,
-                       label=f"GFA {i+1}")
-        ax.legend()
+                       label=f"{i+1}")
+        ax.legend(ncol=6)
         ax.set_xlabel("Focus ($\mu m$)")
         ax.set_ylabel("FWHM (arcseconds)")
         if not for_ani:
