@@ -367,6 +367,8 @@ def parse_args():
                         help="Image numbers to ignore in a window")
     parser.add_argument("-e", "--exp-num", action="store_true",
                         help="Plot fwhm relative to exposure number")
+    parser.add_argument("-t", "--interval", default=15,
+                        help="Gap between reading images when using -c")
     # parser.add_argument("-s", "--master-field", type=int,
     #                     help="The master field with all stars you want. Only"
     #                     " used in conjunction with --window. You need both"
@@ -424,7 +426,8 @@ def main(args=None):
         # animation to run. By rights, it should not be necessary. However,
         # it is apparently essential to the existence of an animation loop
         anis.append(animation.FuncAnimation(gfas.ani_fig,
-                                            gfas.continuous_plot_update, interval=1000 * 15))
+                                            gfas.continuous_plot_update,
+                                            interval=1000 * args.interval))
         plt.show()
 
     elif not args.window and not args.continuous:
