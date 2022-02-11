@@ -145,7 +145,12 @@ class GFASet:
             path.exists()
         except OSError:
             pass
-        data = fitsio.read(path, 1)
+        try:
+            data = fitsio.read(path, 1)
+        except OSError:
+            # For cases when the file is actively being written
+            time.sleep(1)
+            data = fitsio.read(path, 1)
         bkg = sep.Background(data.astype(float))
         objs = sep.extract(data - bkg, 1.5, bkg.globalrms)
         filt = build_filt(objs)
