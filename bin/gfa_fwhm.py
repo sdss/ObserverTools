@@ -224,6 +224,9 @@ class GFASet:
         a, b, c = np.polyfit(flat_foc[nan_filt],
                              flat_fwhms[nan_filt], deg=2,
                              w=weight)
+        expected = self.quadratic(flat_foc[nan_filt], a, b, c)
+        chi_squared = (expected - flat_fwhms[nan_filt])**2 / expected
+        print(chi_squared)
         focs = np.linspace(flat_foc[nan_filt].min(),
                            flat_foc[nan_filt].max(), 100)
         fit = -b / 2 / a
