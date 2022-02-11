@@ -226,7 +226,10 @@ class GFASet:
                              w=weight)
         expected = self.quadratic(flat_foc[nan_filt], a, b, c)
         chi_squared = (expected - flat_fwhms[nan_filt])**2 / expected
-        print(chi_squared)
+        chi_rejects = chi_squared > np.percentile(chi_squared, 90)
+        a, b, c = np.polyfit(flat_foc[nan_filt][~chi_rejects],
+                             flat_fwhms[nan_filt][~chi_rejects],
+                             deg=2, w=weight[~chi_rejects])
         focs = np.linspace(flat_foc[nan_filt].min(),
                            flat_foc[nan_filt].max(), 100)
         fit = -b / 2 / a
@@ -258,8 +261,10 @@ class GFASet:
         for i in range(6):
             ax.scatter(self.afocuses[not_old[:, i], i] + camera_offsets[i],
                        self.afwhms[not_old[:, i], i], s=6,
-                       alpha=0.8,
+                       alpha=0.7,
                        label=f"{i+1}")
+        ax.scatter(flat_foc[nan_filt][chi_rejects],
+                   flat_fwhms[nan_filt][chi_rejects], marker="x", alpha=0.7)
         ax.legend(ncol=6)
         ax.set_xlabel("Focus ($\mu m$)")
         ax.set_ylabel("FWHM (arcseconds)")
