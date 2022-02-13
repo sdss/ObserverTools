@@ -34,7 +34,6 @@ class APOGEERaw:
         try:
             header = fitsio.read_header(fil, ext=ext)
         except OSError:
-            time.sleep(1)
             header = fitsio.read_header(fil, ext=ext)
         if (header['DITHPIX'] - 12.994) < 0.05:
             self.dither = 'A'

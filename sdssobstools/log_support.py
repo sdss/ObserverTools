@@ -220,7 +220,7 @@ class LogSupport:
         # is above 90
         for i, h in enumerate(weather_tab["humidPT"]):
             if h > 90:
-                print(weather_tab["thumidPT"][i], h)
+                # print(weather_tab["thumidPT"][i], h)
                 weather_tab["dustb"].append(np.nan)
                 weather_tab["tdustb"].append(weather_tab["thumidPT"][i])
         for key in weather_tab.keys():
