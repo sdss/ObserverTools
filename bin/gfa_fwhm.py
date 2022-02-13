@@ -21,8 +21,8 @@ sns.set(style="darkgrid")
 
 __author__ = "Dylan Gatlin"
 
-camera_offsets = np.array([0.0, -58.27473684210525, -46.28157894736838,
-                           17.825263157894756, 50.06315789473686, 0.0])
+camera_offsets = np.array([0.0, -49.255862068965506, -37.601724137931015,
+                           16.171724137931037, 49.0344827586207, 0.0])
 
 
 def build_filt(obj_arr: np.ndarray):
@@ -71,7 +71,7 @@ def get_img_path(mjd: int, cam_num: int, exp_num: int):
     try:
         p.exists()
     except OSError:
-        pass
+        time.sleep(1)
     if not p.exists():
         p = (sdss_paths.gcam / f"{mjd}/proc-gimg-gfa{cam_num:.0f}n-"
              f"{exp_num:0>4.0f}.fits.gz")
@@ -210,7 +210,7 @@ class GFASet:
     def quadratic(x: float, a: float, b: float, c: float):
         return a * x**2 + x * b + c
 
-    def plot(self, plot_file, fig=None, ax=None):
+    def plot(self, plot_file, fig=None, ax=None, dont_print=False):
         flat_foc = (self.afocuses + camera_offsets).flatten()
         flat_fwhms = self.afwhms.flatten()
         flat_nstars = self.an_objs.flatten()
@@ -245,8 +245,9 @@ class GFASet:
             print("Optimal focus not found")
         else:
             fit_found = True
-            print(
-                f'Optimal focus is at {fit:>4.0f}{mum} with FWHM {fwhm:>4.1f}"')
+            if not dont_print:
+                print(f'Optimal focus is at {fit:>4.0f}{mum} with FWHM'
+                      f' {fwhm:>4.1f}"')
         if fig is None:
             for_ani = False
             fig, ax = plt.subplots(1, 1, figsize=(6, 4))
@@ -269,8 +270,9 @@ class GFASet:
                        alpha=0.7,
                        label=f"{i+1}")
         ax.scatter(flat_foc[nan_filt][chi_rejects],
-                   flat_fwhms[nan_filt][chi_rejects], marker="x", alpha=0.7)
-        ax.legend(ncol=6)
+                   flat_fwhms[nan_filt][chi_rejects], marker="x", alpha=0.7,
+                   linewidth=0.5, c="k")
+        ax.legend(ncol=6, loc=1)
         ax.set_xlabel("Focus ($\mu m$)")
         ax.set_ylabel("FWHM (arcseconds)")
         if not for_ani:
@@ -321,6 +323,10 @@ class GFASet:
         today = sjd.sjd()
         img_dir = sdss_paths.gcam / f"{today:.0f}/"
         latest = 0
+        try:
+            img_dir.exists()
+        except OSError:
+            pass
         for fil in img_dir.glob("gimg-gfa4n-*.fits"):
             if "snap" in fil.name:
                 continue
@@ -334,7 +340,8 @@ class GFASet:
             self.add_index(im_ps, im_num)
         self.sort()
         self.ani_fig, self.ani_ax = plt.subplots(1, 1, figsize=(6, 4))
-        return self.plot(None, self.ani_fig, self.ani_ax)
+        return self.plot(None, self.ani_fig, self.ani_ax,
+                         dont_print=not self.verbose)
 
     def continuous_plot_update(self, i):
         today = sjd.sjd()
@@ -355,9 +362,11 @@ class GFASet:
             im_num += 1
         self.sort()
         self.ani_ax.clear()
-        print(f"Plotting from {self.im_nums[0]:>3.0f}-{self.im_nums[-1]:>3.0f}"
-              ", ", end="")
-        return self.plot(None, fig=self.ani_fig, ax=self.ani_ax)
+        if self.verbose:
+            print(f"Plotting from {self.im_nums[0]:>3.0f}-{self.im_nums[-1]:>3.0f}"
+                  ", ", end="")
+        return self.plot(None, fig=self.ani_fig, ax=self.ani_ax,
+                         dont_print=not self.verbose)
 
 
 def parse_args():

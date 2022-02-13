@@ -110,10 +110,10 @@ class Logging:
         # for BOSS dithers, and AB for APOGEE dithers, dt for boss exposure
         # time, since some boss carts use shorter exposures. All these are
         # combined to fill Summary in self.count_dithers
-        self.design_data = {'cNAPA': [], 'cNAPB': [], 'cNBN': [], 'cNBS': [],
-                            'cNBE': [], 'cNBC': [], 'cBdt': [], 'cNB': [],
-                            'cAPSummary': [],
-                            'cBSummary': []}
+        self.design_data = {'dNAPA': [], 'dNAPB': [], 'dNBN': [], 'dNBS': [],
+                            'dNBE': [], 'dNBC': [], 'dBdt': [], 'dNB': [],
+                            'dAPSummary': [],
+                            'dBSummary': []}
         self.test_procs = []
         master_path = (Path(apogee_data.__file__).absolute().parent.parent
                        / "dat/master_dome_flat.fits.gz")
@@ -451,74 +451,74 @@ class Logging:
 
     def count_dithers(self):
         for i, design in enumerate(self.data['dDesign']):
-            self.design_data['cNAPA'].append(np.sum(
+            self.design_data["dNAPA"].append(np.sum(
                 (self.ap_data['iDesign'] == design)
                 & (self.ap_data['iDither'] == 'A')
                 & (self.ap_data['iEType'] == 'Object')))
-            self.design_data['cNAPB'].append(np.sum(
+            self.design_data["dNAPB"].append(np.sum(
                 (self.ap_data['iDesign'] == design)
                 & (self.ap_data['iDither'] == 'B')
                 & (self.ap_data['iEType'] == 'Object')))
-            # self.design_data['cNBN'].append(np.sum(
+            # self.design_data["dNBN'].append(np.sum(
             # (self.b_data['iDesign'] == design)
             # & (self.b_data['iDither'] == 'N')
             # & (self.b_data['iEType'] == 'Science')))
-            # self.design_data['cNBS'].append(np.sum(
+            # self.design_data["dNBS'].append(np.sum(
             # (self.b_data['iDesign'] == design)
             # & (self.b_data['iDither'] == 'S')
             # & (self.b_data['iEType'] == 'Science')))
-            # self.design_data['cNBE'].append(np.sum(
+            # self.design_data["dNBE'].append(np.sum(
             # (self.b_data['iDesign'] == design)
             # & (self.b_data['iDither'] == 'E')
             # & (self.b_data['iEType'] == 'Science')))
-            # self.design_data['cNBC'].append(np.sum(
+            # self.design_data["dNBC'].append(np.sum(
             # (self.b_data['iDesign'] == design)
             # & (self.b_data['iDither'] == 'C')
             # & (self.b_data['iEType'] == 'Science')))
-            self.design_data['cNB'].append(np.sum(
+            self.design_data["dNB"].append(np.sum(
                 (self.b_data['iDesign'] == design)
                 & (self.b_data['iEType'] == 'Science')))
-            if self.design_data['cNB'][-1] != 0:
-                self.design_data['cBdt'].append(np.max(
+            if self.design_data["dNB"][-1] != 0:
+                self.design_data["dBdt"].append(np.max(
                     self.b_data['idt'][
                         (self.b_data['iDesign'] == design)
                         & (self.b_data['iEType'] == 'Science')]))
             else:
-                self.design_data['cBdt'].append(0)
+                self.design_data["dBdt"].append(0)
 
         for i, design in enumerate(self.data['dDesign']):
             """To determine the number of apogee a dithers per design (cNAPA),
             as well as b dithers (cNAPB), and the same for NSE dithers."""
             # APOGEE dithers
-            if self.design_data['cNAPA'][i] == self.design_data['cNAPB'][i]:
-                if self.design_data['cNAPA'][i] != 0:
-                    self.design_data['cAPSummary'].append(
-                        '{}xAB'.format(self.design_data['cNAPA'][i]))
+            if self.design_data["dNAPA"][i] == self.design_data["dNAPB"][i]:
+                if self.design_data["dNAPA"][i] != 0:
+                    self.design_data['dAPSummary'].append(
+                        '{}xAB'.format(self.design_data["dNAPA"][i]))
                 else:
-                    self.design_data['cAPSummary'].append('No APOGEE')
+                    self.design_data['dAPSummary'].append('No APOGEE')
             else:
-                self.design_data['cAPSummary'].append(
-                    '{}xA {}xB'.format(self.design_data['cNAPA'][i],
-                                       self.design_data['cNAPB'][i]))
+                self.design_data['dAPSummary'].append(
+                    '{}xA {}xB'.format(self.design_data["dNAPA"][i],
+                                       self.design_data["dNAPB"][i]))
             # BOSS (MaNGA) dithers
-            # if self.design_data['cNBC'][i] == 0:
-            # if (self.design_data['cNBN'][i]
-            # == self.design_data['cNBS'][i]
-            # == self.design_data['cNBE'][i]):
-            # self.design_data['cBSummary'].append(
-            # '{}xNSE'.format(self.design_data['cNBN'][i]))
+            # if self.design_data["dNBC'][i] == 0:
+            # if (self.design_data["dNBN'][i]
+            # == self.design_data["dNBS'][i]
+            # == self.design_data["dNBE'][i]):
+            # self.design_data['dBSummary'].append(
+            # '{}xNSE'.format(self.design_data["dNBN'][i]))
             # else:
-            # self.design_data['cBSummary'].append(
-            # '{}xN {}xS {}xE'.format(self.design_data['cNBN'][i],
-            # self.design_data['cNBS'][i],
-            # self.design_data['cNBE'][i]))
+            # self.design_data['dBSummary'].append(
+            # '{}xN {}xS {}xE'.format(self.design_data["dNBN'][i],
+            # self.design_data["dNBS'][i],
+            # self.design_data["dNBE'][i]))
             # else:
-            if self.design_data['cNB'][i] != 0:
-                self.design_data['cBSummary'].append(
-                    '{}x{}s'.format(self.design_data['cNB'][i],
-                                    self.design_data['cBdt'][i]))
+            if self.design_data["dNB"][i] != 0:
+                self.design_data["dBSummary"].append(
+                    '{}x{}s'.format(self.design_data["dNB"][i],
+                                    self.design_data["dBdt"][i]))
             else:
-                self.design_data['cBSummary'].append('No BOSS')
+                self.design_data['dBSummary'].append('No BOSS')
 
     @staticmethod
     def hartmann_parse(hart):
@@ -548,8 +548,9 @@ class Logging:
         for i, design in enumerate(self.data['dDesign']):
             print('')
             print("Design {}, Config {}, {}, {}".format(design,
-                                                        self.data['dConfig'][i], self.design_data['cAPSummary'][i],
-                                                        self.design_data['cBSummary'][i]))
+                                                        self.data['dConfig'][i],
+                                                        self.design_data['dAPSummary'][i],
+                                                        self.design_data['dBSummary'][i]))
         print()
         if len(self.ap_data["fRatio"]) > 0:
             flux_ratio = np.nanmean(np.array(self.ap_data["fRatio"]), axis=0)
@@ -585,18 +586,21 @@ class Logging:
         # print()
 
     @staticmethod
-    def get_window(data, i):
+    def get_window(data, i, design):
         try:
             window = ((data['iTime']
                        >= data['dTime'][i])
                       & (data['iTime']
                          < data['dTime'][i + 1])
+                      & (data["iDesign"][i] == design)
                       )
 
         except IndexError:
             try:
                 window = ((data['iTime'] >= data['dTime'][i])
-                          & (data['iTime'] < Time.now() + 0.3))
+                          & (data['iTime'] < Time.now() + 0.3)
+                          & (data["iDesign"][i] == design)
+                         )
             except IndexError:
                 window = np.array([False] * len(data['iTime']))
 
@@ -617,7 +621,8 @@ class Logging:
                                       'Dith', 'Reads', 'Arch',
                                       'Seeing'))
                 print('-' * 80)
-                window = self.get_window(self.ap_data, ap_design)
+                # window = self.get_window(self.ap_data, ap_design, design)
+                window = self.ap_data["iDesign"] == design
                 for (mjd, iso, conf, exp_id, exp_type, dith, nread,
                      detectors, see) in zip(
                     self.ap_data['iTime'][window].mjd + 0.3,
@@ -644,6 +649,8 @@ class Logging:
                                 self.ap_data['fMissing'][j]), 80))
                             print(textwrap.fill('Faint fibers: {}'.format(
                                 self.ap_data['fFaint'][j]), 80))
+                            print(f"Average Throughput:"
+                                  f" {np.nanmean(self.ap_data['fRatio'][j]):.2f}")
                             print()
 
             if design in self.b_data['dDesign']:
@@ -655,7 +662,8 @@ class Logging:
                 # i is an index for data, but it will disagree with b_data
                 # if there is an apogee-onlydesign
                 b_design = np.where(design == self.b_data['dDesign'])[0][0]
-                window = self.get_window(self.b_data, b_design)
+                # window = self.get_window(self.b_data, b_design, design)
+                window = self.b_data["iDesign"] == design
                 for (mjd, iso, conf, exp_id, exp_type, dith,
                      detectors, etime, hart) in zip(
                     self.b_data['iTime'][window].mjd + 0.3,
@@ -674,22 +682,22 @@ class Logging:
                                     exp_type.strip(),
                                     dith.strip(), detectors, etime,
                                     hart))
-                try:
-                    window = ((self.b_data['hTime']
-                               >= self.data['dTime'][i])
-                              & (self.b_data['hTime']
-                                 < self.data['dTime'][i + 1])
-                              )
-                except IndexError:
-                    window = ((self.b_data['hTime']
-                               >= self.data['dTime'][i])
-                              & (self.b_data['hTime'] < Time.now()))
-                if self.b_data['hTime'][window]:
-                    print()
-                    # print('Hartmanns')
-                for t, hart in zip(self.b_data['hTime'][window],
-                                   self.b_data['hHart'][window]):
-                    print(self.hartmann_parse(hart))
+                #try:
+                #    window = ((self.b_data['hTime']
+                #               >= self.data['dTime'][i])
+                #              & (self.b_data['hTime']
+                #                 < self.data['dTime'][i + 1])
+                #              )
+                #except IndexError:
+                #    window = ((self.b_data['hTime']
+                #               >= self.data['dTime'][i])
+                #              & (self.b_data['hTime'] < Time.now()))
+                #if self.b_data['hTime'][window]:
+                #    print()
+                #    # print('Hartmanns')
+                #for t, hart in zip(self.b_data['hTime'][window],
+                #                   self.b_data['hHart'][window]):
+                #    print(self.hartmann_parse(hart))
                 print()
 
     def p_boss(self):
@@ -916,6 +924,19 @@ def main():
     ap_data_dir = ap_dir / '{}'.format(args.sjd)
     b_data_dir = b_dir / '{}'.format(args.sjd)
     ap_images = Path(ap_data_dir).glob('apR-a*.apz')
+    try:
+        for img in ap_images:
+            img.exists()
+    except OSError:
+        pass
+    ap_images = Path(ap_data_dir).glob('apR-a*.apz')
+    
+    b_images = Path(b_data_dir).glob('sdR-r1*fit.gz')
+    try:
+        for img in b_images:
+            img.exists()
+    except OSError:
+        pass
     b_images = Path(b_data_dir).glob('sdR-r1*fit.gz')
 
     if not args.noprogress:
