@@ -21,9 +21,9 @@ sns.set(style="darkgrid")
 
 __author__ = "Dylan Gatlin"
 
-camera_offsets = np.array([0.0, -49.255862068965506, -37.601724137931015,
-                           16.171724137931037, 49.0344827586207, 0.0])
-
+camera_offsets = np.array([0.0, -50.2985, -41.05837499999998,
+                           11.466562500000009, 52.425531914893625, 0.0])
+camera_shifts = np.array([0., 0., +0.05, 0., -0.02])
 
 def build_filt(obj_arr: np.ndarray):
     ecc = np.sqrt(obj_arr['a']**2 - obj_arr['b']**2) / obj_arr['a']
@@ -216,7 +216,8 @@ class GFASet:
         flat_nstars = self.an_objs.flatten()
         nan_filt = ~np.isnan(flat_fwhms)
         if flat_nstars[nan_filt].size == 0:
-            print("Nothing to plot")
+            if not dont_print:
+                print("Nothing to plot")
             return
         weight_nstars = flat_nstars[nan_filt] / np.nanmax(flat_nstars)
         weight_times = (20 - (np.nanmax(self.aisots)
@@ -231,7 +232,7 @@ class GFASet:
                              w=weight)
         expected = self.quadratic(flat_foc[nan_filt], a, b, c)
         chi_squared = (expected - flat_fwhms[nan_filt])**2 / expected
-        chi_rejects = chi_squared > np.percentile(chi_squared, 90)
+        chi_rejects = chi_squared > np.percentile(chi_squared, 85)
         a, b, c = np.polyfit(flat_foc[nan_filt][~chi_rejects],
                              flat_fwhms[nan_filt][~chi_rejects],
                              deg=2, w=weight[~chi_rejects])

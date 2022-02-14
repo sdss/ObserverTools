@@ -956,8 +956,8 @@ def main():
         args.apogee = True
         p_boss = True
         p_apogee = True
-        # args.log_support = True  # Because this usually produces wrong results
-        args.mirrors = True
+        args.log_support = True  # Because this usually produces wrong results
+        # args.mirrors = True
         args.telstatus = True
 
     if args.summary:
@@ -993,8 +993,8 @@ def main():
         log.log_support()
 
     if args.mirrors:
-        pass
-        # log.mirror_numbers()
+        # pass
+        log.mirror_numbers()
 
     if args.telstatus:
         log.tel_status()

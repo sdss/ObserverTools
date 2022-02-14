@@ -21,7 +21,6 @@ class BOSSRaw:
         try:
             header = fitsio.read_header(fil)
         except OSError:
-            time.sleep(1)
             header = fitsio.read_header(fil)
             
         if "MGDPOS" in header.keys():  # SDSS-IV
