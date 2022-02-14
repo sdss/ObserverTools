@@ -494,3 +494,9 @@
 
 - gfa_fwhm.py gained a function get_img_path that finds the optimal gfa image,
   now used everywhere in gfa_fwhm.py
+- gfa_fwhm.py offsets have been adjusted, based on several nights of data
+- gfa_fwhm.py refines the quadratic fit with chi squared rejection
+- Various scripts have better nfs error handling (although it's not perfect)
+- sloan_log.py bundles -d sets based on design, not time
+- APOGEE master flat updated after a bug was found in the apogee pipeline
+- gfa_fwhm.py can now ignore images with -i

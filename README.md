@@ -19,13 +19,8 @@ In addition to the moderators who maintain this repo, scripts were written by
 For observers at on their personal laptops, they can install these scripts via
  `pip install sdss-obstools`. The pip page can be found
  [here](https://pypi.org/project/sdss-obstools/). This will install the scripts
- in your current pip
- environment, but most scripts won't work unless you also setup a telemetry
- tunnel via
-
-```bash
-ssh -L 5080:sdss4-telemetry.apo.nmsu.edu:80 observer@ sdss-gateway.apo.nmsu.edu
-```
+ in your current pip environment. To run, you must have proper tunnels to
+ Influx/sdss5 servers.
 
 ## Structure
 
