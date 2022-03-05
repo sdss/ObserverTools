@@ -113,7 +113,9 @@ class LogSupport:
                 # 15 * 60 / 86400), format="mjd")
 
     def get_offsets(self, out_dict={}):
-        self.offsets = f"{'Time':<8} {'Az':<6} {'Alt':<4} {'Rot':<6}\n"
+        self.offsets = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'Az':<6}"
+            f" {'Alt':<4} {'Rot':<6} {'Az Off':<6} {'Alt Off':<7}"
+            f" {'Rot Off':<7} {'Guide RMS (um)':<14}\n")
         self.offsets += '=' * 80 + '\n'
         offsets_tab = {}
         offsets_tab_path = Path(__file__).parent.parent / "flux/offsets.flux"
@@ -138,7 +140,10 @@ class LogSupport:
             return
         for t in self.call_times:
             line = [t.isot[11:19]] 
-            for key in ["az", "alt", "rot"]:
+            for key in ["configuration_loaded_2", "configuration_loaded_1",
+                        "axePos_az", "axePos_alt", "axePos_rot",
+                        "objArcOff_0_P", "objArcOff_1_P", "guideOff_2_P",
+                        "guide_rms_3"]:
                 before = offsets_tab['t' + key] < t
                 if before.sum() == 0:
                     line.append(np.nan)
@@ -146,11 +151,14 @@ class LogSupport:
                     line.append(offsets_tab[key][before][-1])
             if np.all(np.isnan(np.array(line[1:]))):
                 continue
-            self.offsets += "{:<8} {:>6.1f} {:>4.1f} {:>6.1f}\n".format(*line)
+            self.offsets += ("{:<8} {:>6.0f}-{:<6.0f} {:>6.1f} {:>4.1f}"
+                             " {:>6.1f} {:>6.3f} {:>7.3f} {:>7.3f} {:>14.3f}"
+                             "\n".format(*line))
         out_dict["offsets"] = self.offsets        
 
     def get_focus(self, out_dict={}):
-        self.focus = (f"{'Time':<8} {'M1':<4} {'M2':<4} {'Focus':<5}"
+        self.focus = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'M1':<7}"
+                      f" {'M2':<7} {'Focus':<5}"
                       f" {'Az':<6} {'Alt':<5} {'Temp':<5} {'Wind':<4}"
                       f" {'Dir':<3}\n")
         self.focus += '=' * 80 + '\n'
@@ -161,14 +169,13 @@ class LogSupport:
                 self.tstart, self.tend)
         for table in off_tables:
             for row in table.records:
-                measurement = row.get_measurement()
-                measurement = measurement if measurement != "axePos" else row.get_field()
-                if measurement in focus_tab.keys():
-                    focus_tab[f"t{measurement}"].append(row.get_time())
-                    focus_tab[measurement].append(row.get_value())
+                field = row.get_field()
+                if field in focus_tab.keys():
+                    focus_tab[f"t{field}"].append(row.get_time())
+                    focus_tab[field].append(row.get_value())
                 else:
-                    focus_tab[f"t{measurement}"] = [row.get_time()]
-                    focus_tab[measurement] = [row.get_value()]
+                    focus_tab[f"t{field}"] = [row.get_time()]
+                    focus_tab[field] = [row.get_value()]
         for key in focus_tab.keys():
             if key[0] == 't':
                 focus_tab[key] = Time(focus_tab[key])
@@ -176,8 +183,10 @@ class LogSupport:
                 focus_tab[key] = np.array(focus_tab[key])
         for t in self.call_times:
             line = [t.isot[11:19]] 
-            for key in ["primOrient", "secOrient", "secFocus", "az", "alt",
-                        "airTempPT", "winds", "windd"]:
+            for key in ["configuration_loaded_2", "configuration_loaded_1",
+                        "primOrient_pos", "secOrient_piston", "secFocus",
+                        "axePos_az",
+                        "axePos_alt", "airTempPT", "winds", "windd"]:
                 if 't' + key in focus_tab.keys():
                     before = focus_tab['t' + key] < t
                     if before.sum() == 0:
@@ -188,7 +197,8 @@ class LogSupport:
                     line.append(np.nan)
             if np.all(np.isnan(np.array(line[1:]))):
                 continue
-            self.focus += ("{:<8} {:>4.0f} {:>4.0f} {:>5.0f} {:>6.1f} {:>5.1f}"
+            self.focus += ("{:<8} {:>6.0f}-{:<6.0f} {:>7.2f} {:>7.2f} {:>5.0f}"
+                           " {:>6.1f} {:>5.1f}"
                            " {:>5.1f} {:>4.0f} {:>3.0f}\n".format(
                                  *line))
         out_dict["focus"] = self.focus
@@ -197,7 +207,7 @@ class LogSupport:
         dust = "1\u03BCm Dust"
         irscs = "IRSC \u03C3"
         irscm = "IRSC \u03BC"
-        self.weather = (f"{'Time':<8} {'Temp':<5} {'DP':<5} {'Diff':<5}"
+        self.weather = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'Temp':<5} {'DP':<5} {'Diff':<5}"
             f" {'Humid':<5} {'Wind':<5} {'Dir':<3} {dust:<8}"
             f" {irscs:<6} {irscm:<6}\n")
         self.weather += '=' * 80 + '\n'
@@ -208,19 +218,18 @@ class LogSupport:
                 self.tstart, self.tend)
         for table in off_tables:
             for row in table.records:
-                measurement = row.get_measurement()
-                if measurement in weather_tab.keys():
-                    weather_tab[f"t{measurement}"].append(row.get_time())
-                    weather_tab[measurement].append(row.get_value())
+                field = row.get_field()
+                if field in weather_tab.keys():
+                    weather_tab[f"t{field}"].append(row.get_time())
+                    weather_tab[field].append(row.get_value())
                 else:
-                    weather_tab[f"t{measurement}"] = [row.get_time()]
-                    weather_tab[measurement] = [row.get_value()]
+                    weather_tab[f"t{field}"] = [row.get_time()]
+                    weather_tab[field] = [row.get_value()]
                     
         # Filter out dpDep values by adding a fake value every time the humidity
         # is above 90
         for i, h in enumerate(weather_tab["humidPT"]):
             if h > 90:
-                print(weather_tab["thumidPT"][i], h)
                 weather_tab["dustb"].append(np.nan)
                 weather_tab["tdustb"].append(weather_tab["thumidPT"][i])
         for key in weather_tab.keys():
@@ -237,8 +246,9 @@ class LogSupport:
             weather_tab["tdustb"].argsort()]
         for t in self.call_times:
             line = [t.isot[11:19]] 
-            for key in ["airTempPT", "airTempPT", "dpTempPT", "humidPT", "winds", "windd",
-                        "dustb", "irscsd", "irscmean"]:
+            for key in ["configuration_loaded_2", "configuration_loaded_1",
+                        "airTempPT", "airTempPT", "dpTempPT", "humidPT",
+                        "winds", "windd", "dustb", "irscsd", "irscmean"]:
                 if 't' + key in weather_tab.keys():
                     before = weather_tab['t' + key] < t
                     if before.sum() == 0:
@@ -253,56 +263,71 @@ class LogSupport:
                 
             if np.all(np.isnan(np.array(line[1:]))):
                 continue
-            self.weather += ("{:<8} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f} {:>5.1f}"
+            self.weather += ("{:<8} {:>6.0f}-{:<6.0f} {:>5.1f} {:>5.1f}"
+                             " {:>5.1f} {:>5.1f} {:>5.1f}"
                              " {:>3.0f} {:>8.0f} {:>6.1f} {:>6.0f}\n".format(
                                  *line))
         out_dict["weather"] = self.weather
 
     def get_hartmann(self, out_dict={}):
-        self.hartmann = f"{'Time':8} {'Temp':<6} {'R off':<6} {'B off':<6}"
-        self.hartmann += f" {'Move':<6} {'Resid':<6}\n"
+        self.hartmann = (f"{'Time':8} {'Field':>6}-{'Design':<6} {'Temp':<6}"
+                         f" {'R off':<6} {'B off':<6} {'Move':<6} {'Resid':<6}"
+                         " \n")
         self.hartmann += '=' * 80 + '\n'
         harts = {}
         boss_temps = []
         boss_times = []
         hartmanns_path = Path(__file__).parent.parent / "flux/hartmanns.flux"
-        boss_temps_path = Path(__file__).parent.parent / "flux/boss_temps.flux"
+        # boss_temps_path = Path(__file__).parent.parent / "flux/boss_temps.flux"
         with hartmanns_path.open('r') as fil:
             hart_tables = influx_fetch.query(fil.read(),
                 self.tstart, self.tend)
-        with boss_temps_path.open('r') as fil:
-            boss_tables = influx_fetch.query(fil.read(),
-                self.tstart, self.tend)
-        if len(boss_tables) == 0 or len(hart_tables) == 0:
+        # with boss_temps_path.open('r') as fil:
+            # boss_tables = influx_fetch.query(fil.read(),
+                # self.tstart, self.tend)
+        if len(hart_tables) == 0:
             return
-        for table in boss_tables:
-            for row in table.records:
-                boss_times.append(row.get_time()) 
-                boss_temps.append(row.get_value())
+        # for table in boss_tables:
+            # for row in table.records:
+                # boss_times.append(row.get_time()) 
+                # boss_temps.append(row.get_value())
         for table in hart_tables:
             for row in table.records:
-                if row.get_measurement() in harts.keys():
-                    harts[f"t{row.get_measurement()}"].append(row.get_time())
-                    harts[row.get_measurement()].append(row.get_value())
+                if row.get_field() in harts.keys():
+                    harts[f"t{row.get_field()}"].append(row.get_time())
+                    harts[row.get_field()].append(row.get_value())
                 else:
-                    harts[f"t{row.get_measurement()}"] = [row.get_time()]
-                    harts[row.get_measurement()] = [row.get_value()]
+                    harts[f"t{row.get_field()}"] = [row.get_time()]
+                    harts[row.get_field()] = [row.get_value()]
         for key in harts.keys():
             if key[0] == 't':
                 harts[key] = Time(harts[key])
             else:
                 harts[key] = np.array(harts[key])
-        boss_times = Time(boss_times)
-        boss_temps = np.array(boss_temps)
-        for t in harts["tsp1Residuals"]:
+        # boss_times = Time(boss_times)
+        # boss_temps = np.array(boss_temps)
+        for t in harts["tsp1Residuals_deg"]:
             line = [t.isot[11:19]]
-            last_temp_filt = boss_times < t
-            line.append(boss_temps[last_temp_filt][-1])
-            for key in ["r1PistonMove", "b1RingMove",
-                        "sp1AverageMove", "sp1Residuals"]:
-                in_window = np.abs(harts['t' + key] - t) < 10 / 86400
-                line.append(harts[key][in_window][0])
-            self.hartmann += ("{:8} {:>6.1f} {:>6.0f} {:>6.1f} {:>6.0f}"
+            # last_temp_filt = boss_times < t
+            # line.append(boss_temps[last_temp_filt][-1])
+            for key in ["configuration_loaded_2", "configuration_loaded_1",
+                        "sp1Temp_median",
+                        "r1PistonMove_steps", "b1RingMove",
+                        "sp1AverageMove_steps", "sp1Residuals_deg"]:
+                if 't' + key in harts.keys():
+                    if ("configuration_loaded" in key) or ("sp1Temp" in key):
+                        before = harts['t' + key] < t
+                        if before.sum() == 0:
+                            line.append(np.nan)
+                        else:
+                            line.append(harts[key][before][-1])
+                    else:
+                        in_window = np.abs(harts['t' + key] - t) < 10 / 86400
+                        line.append(harts[key][in_window][0])
+                else:
+                    line.append(np.nan)
+            self.hartmann += ("{:8} {:>6.0f}-{:<6.0f} {:>6.1f} {:>6.0f}"
+                              " {:>6.1f} {:>6.0f}"
                               " {:>6.1f}\n".format(*line))
         out_dict["hartmann"] = self.hartmann
 
