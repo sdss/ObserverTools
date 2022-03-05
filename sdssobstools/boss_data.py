@@ -3,6 +3,7 @@
 A tool to grab a single BOSS image and pull a few items from its header. It is
  used in bin/sloan_log.py, but it could be used directly as well.
 """
+import time
 import argparse
 from pathlib import Path
 from astropy.time import Time

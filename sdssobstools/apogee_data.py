@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import time
 import argparse
 from pathlib import Path
 from astropy.time import Time
@@ -32,7 +33,7 @@ class APOGEERaw:
         self.args = args
         try:
             header = fitsio.read_header(fil, ext=ext)
-        except OSErrors:
+        except OSError:
             header = fitsio.read_header(fil, ext=ext)
         if (header['DITHPIX'] - 12.994) < 0.05:
             self.dither = 'A'

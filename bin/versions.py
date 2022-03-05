@@ -73,7 +73,7 @@ def main():
         names = ["idlspec2d", "Kronos", "roboscheduler"]
         cmds = ["module load idlspec2d; idlspec2d_version",
                 "module load kronos; kronosversion.py",
-                "module load roboscheduler; roboschedulerversion.py"]
+                "module load kronos; roboschedulerversion.py"]
         for n, c in zip(names, cmds):
             ver = sub.run(c, shell=True, stdout=sub.PIPE, stderr=sub.PIPE
                           ).stdout.decode("utf-8").rstrip('\n')
