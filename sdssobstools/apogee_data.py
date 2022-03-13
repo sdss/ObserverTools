@@ -43,6 +43,7 @@ class APOGEERaw:
             self.dither = '{:.1f}'.format(header['DITHPIX'])
         self.exp_time = header['EXPTIME']
         self.isot = Time(header['DATE-OBS'])  # Local
+        self.field_id = int(header["FIELDID"])
         self.plate_id = header['PLATEID']
         if "CONFIGID" in header.keys():
             if isinstance(header["CONFIGID"], int):

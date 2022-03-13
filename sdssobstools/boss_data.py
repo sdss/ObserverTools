@@ -37,12 +37,12 @@ class BOSSRaw:
             self.config_id = header["CONFID"]
         else:
             self.config_id = 0
-        if "PLATEID" in header.keys():
-            self.plate_id = header['PLATEID']
-        elif "FIELDID" in header.keys():
-            self.plate_id = header["FIELDID"]
+        if "FIELDID" in header.keys():
+            self.field_id = header['FIELDID']
+        elif "PLATEID" in header.keys():
+            self.field_id = header["PLATEID"]
         else:
-            self.plate_id = 0
+            self.field_id = 0
         if "CARTID" in header.keys():
             if isinstance(header["CARTID"], int):
                 self.cart_id = f"{header['CARTID']:.0f}"

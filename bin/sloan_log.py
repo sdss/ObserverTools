@@ -90,7 +90,8 @@ class Logging:
         # a Time key for each new letter, and a new sorter argument must be
         # added to self.sort. All of these dictionary items begin as lists,
         # and are converted to np.arrays or astropy.time.Times in self.sort.
-        self.data = {'dDesign': [], 'dTime': [], 'dConfig': [], 'cLead': []}
+        self.data = {'dField': [], 'dTime': [], 'dConfig': [], 'cLead': [],
+                     "dDesign": []}
         self.ap_data = {'dDesign': [], "dConfig": [], 'dTime': [],
                         'iTime': [], 'iID': [],
                         'iSeeing': [], 'iDetector': [], 'iDither': [],
@@ -99,11 +100,12 @@ class Logging:
                         'fDesign': [], 'fTime': [], 'fMissing': [], 'fFaint': [],
                         'fNMissing': [], 'fNFaint': [], 'fRatio': [], 'aTime': [],
                         'aOffset': [], 'aID': [], 'aLamp': [], 'oTime': [],
-                        'oOffset': [], 'oDither': []}
-        self.b_data = {'dDesign': [], "dConfig": [], 'dTime': [],
+                        'oOffset': [], 'oDither': [], "dField": [],
+                        "iField": [], "fField": []}
+        self.b_data = {'dDesign': [], "dConfig": [], 'dTime': [], "dField": [],
                        'iTime': [], 'iID': [],
                        'iDetector': [], 'iDither': [],
-                       'iEType': [], 'idt': [], 'iDesign': [], 'iHart': [],
+                       'iEType': [], 'idt': [], 'iField': [], 'iHart': [],
                        'iDesign': [], "iConfig": [], 'hHart': [], 'hTime': []}
         # These values are not known from the header and must be created
         # after self.sort. N for number, AP or B for APOGEE or BOSS, and NSE
@@ -114,7 +116,6 @@ class Logging:
                             'dNBE': [], 'dNBC': [], 'dBdt': [], 'dNB': [],
                             'dAPSummary': [],
                             'dBSummary': []}
-        self.test_procs = []
         master_path = (Path(apogee_data.__file__).absolute().parent.parent
                        / "dat/master_dome_flat.fits.gz")
         if not master_path.exists():
@@ -161,6 +162,7 @@ class Logging:
         self.ap_data['fFaint'].append(faint)
         self.ap_data['fRatio'].append(flux_ratio)
         self.ap_data['fDesign'].append(img.design_id)
+        self.ap_data['fField'].append(img.field_id)
         self.ap_data['fTime'].append(img.isot)
 
     def parse_images(self):
@@ -181,7 +183,6 @@ class Logging:
                     continue
                 if (img.exp_type == 'Domeflat') and ('-a-' in img.file.name):
                     self.ap_test(img)
-                    self.test_procs.append(img.design_id)
                 elif ('Arc' in img.exp_type) and ('-a-' in img.file.name):
                     self.ap_data['aTime'].append(img.isot)
                     self.ap_data['aID'].append(img.exp_id)
@@ -191,7 +192,7 @@ class Logging:
                         self.ap_data['aLamp'].append('ThAr')
                     elif 'UNe' in img.exp_type:
                         self.ap_data['aOffset'].append(
-                            img.compute_offset((60, 70), 1180, 30, 3))
+                            img.compute_offset((60, 70), 1190, 30, 3))
                         self.ap_data['aLamp'].append('UNe')
                     else:
                         print("Couldn't parse the arc image: {} with exposure"
@@ -203,33 +204,36 @@ class Logging:
                     # input)
                     self.ap_data['oTime'].append(img.isot)
                     self.ap_data['oOffset'].append(
-                        img.compute_offset((30, 35), 1090, 40, 2))
+                        # img.compute_offset((30, 35), 1090, 40, 2))
+                        img.compute_offset((30, 35), 1100, 40, 2))
                     self.ap_data['oDither'].append(img.dither)
 
-                if img.design_id not in self.data['dDesign']:
-                    self.data['dDesign'].append(img.design_id)
-                    self.data['dConfig'].append(img.config_id)
+                if img.field_id not in self.data['dField']:
+                    self.data['dField'].append(img.field_id)
+                    self.data['dDesign'].append([img.design_id])
+                    self.data['dConfig'].append([img.config_id])
                     self.data['dTime'].append(img.isot)
                     try:
                         self.data['cLead'].append(img.lead)
                     except AttributeError:
                         self.data["cLead"].append("")
                 else:
-                    i = self.data['dDesign'].index(img.design_id)
+                    i = self.data['dField'].index(img.field_id)
                     # If a design has multiple configs, take the lowest (first)
-                    self.data["dConfig"][i] = min(self.data["dConfig"][i],
-                                                  img.config_id)
+                    self.data["dDesign"][i].append(img.design_id)
+                    self.data["dConfig"][i].append(img.config_id)
                     if img.isot < self.data['dTime'][i]:
                         self.data['dTime'].pop(i)
                         self.data['dTime'].insert(i, img.isot)
-                if img.design_id not in self.ap_data['dDesign']:
-                    self.ap_data['dDesign'].append(img.design_id)
-                    self.ap_data['dConfig'].append(img.config_id)
-                    self.ap_data['dTime'].append(img.isot)
+                if img.field_id not in self.ap_data['dField']:
+                    self.ap_data['dField'].append(img.field_id)
+                    self.ap_data['dDesign'].append([img.design_id])
+                    self.ap_data['dConfig'].append([img.config_id])
+                    self.ap_data['dTime'].append([img.isot])
                 else:
-                    i = self.ap_data['dDesign'].index(img.design_id)
-                    self.ap_data["dConfig"][i] = min(self.ap_data["dConfig"][i],
-                                                     img.config_id)
+                    i = self.ap_data['dField'].index(img.field_id)
+                    self.ap_data["dDesign"][i].append(img.design_id)
+                    self.ap_data["dConfig"][i].append(img.config_id)
                     if img.isot < self.ap_data['dTime'][i]:
                         self.ap_data['dTime'].pop(i)
                         self.ap_data['dTime'].insert(i, img.isot)
@@ -268,6 +272,7 @@ class Logging:
                 self.ap_data['iNRead'].append(img.n_read)
                 self.ap_data['iEType'].append(img.exp_type)
                 self.ap_data['iDesign'].append(img.design_id)
+                self.ap_data["iField"].append(img.field_id)
                 self.ap_data['iConfig'].append(img.config_id)
             if img is not None:
                 self.ap_image = img
@@ -275,29 +280,31 @@ class Logging:
             print('Reading BOSS Data ({})'.format(len(self.b_images)))
             for image in tqdm(self.b_images):
                 img = boss_data.BOSSRaw(image)
-                if img.design_id not in self.data['dDesign']:
-                    self.data['dDesign'].append(img.design_id)
-                    self.data['dConfig'].append(img.config_id)
+                if img.field_id not in self.data['dField']:
+                    self.data['dField'].append(img.field_id)
+                    self.data['dDesign'].append([img.design_id])
+                    self.data['dConfig'].append([img.config_id])
                     try:
                         self.data['cLead'].append(img.lead)
                     except AttributeError:
                         self.data["cLead"].append("")
                     self.data['dTime'].append(img.isot)
                 else:
-                    i = self.data['dDesign'].index(img.design_id)
-                    self.data["dConfig"][i] = min(self.data["dConfig"][i],
-                                                  img.config_id)
+                    i = self.data['dField'].index(img.field_id)
+                    self.data["dDesign"][i].append(img.design_id)
+                    self.data["dConfig"][i].append(img.config_id)
                     if img.isot < self.data['dTime'][i]:
                         self.data['dTime'].pop(i)
                         self.data['dTime'].insert(i, img.isot)
-                if img.design_id not in self.b_data['dDesign']:
-                    self.b_data['dDesign'].append(img.design_id)
-                    self.b_data["dConfig"].append(img.config_id)
+                if img.field_id not in self.b_data['dField']:
+                    self.b_data['dField'].append(img.field_id)
+                    self.b_data["dDesign"].append([img.design_id])
+                    self.b_data["dConfig"].append([img.config_id])
                     self.b_data['dTime'].append(img.isot)
                 else:
-                    i = self.b_data['dDesign'].index(img.design_id)
-                    self.b_data["dConfig"][i] = min(self.b_data["dConfig"][i],
-                                                    img.config_id)
+                    i = self.b_data['dField'].index(img.field_id)
+                    self.b_data["dDesign"][i].append(img.config_id)
+                    self.b_data["dConfig"][i].append(img.config_id)
                     if img.isot < self.b_data['dTime'][i]:
                         self.b_data['dTime'].pop(i)
                         self.b_data['dTime'].insert(i, img.isot)
@@ -310,6 +317,7 @@ class Logging:
                 self.b_data['iDesign'].append(img.design_id)
                 self.b_data['iHart'].append(img.hartmann)
                 self.b_data['iConfig'].append(img.config_id)
+                self.b_data["iField"].append(img.field_id)
 
                 # if img.hartmann == 'Left' and self.telemetry:
                 #     # Note that times are sent in UTC and received in local, yet
@@ -386,6 +394,8 @@ class Logging:
                         self.ap_data[key] = Time(item)
                     except ValueError:
                         self.ap_data[key] = Time(item, format='isot')
+                    except AttributeError:
+                        print(f"Could not read key {key} as time")
                 else:
                     self.ap_data[key] = np.array(item)
             ap_design_sorter = self.ap_data['dTime'].argsort()
@@ -610,23 +620,25 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('Data Log'))
         print('=' * 80 + '\n')
-        for i, design in enumerate(self.data['dDesign']):
-            print('### Design {}\n'.format(design))
-            if design in self.ap_data['dDesign']:
-                ap_design = np.where(design == self.ap_data['dDesign'])[0][0]
+        for i, field in enumerate(self.data['dField']):
+            print('### Field {}\n'.format(field))
+            if field in self.ap_data['dField']:
+                ap_design = np.where(field == self.ap_data['dField'])[0][0]
 
                 print('# APOGEE')
-                print('{:<5} {:<8} {:<6} {:<8} {:<12} {:<4} {:<6} {:<5}'
-                      ' {:<4}'.format('MJD', 'UTC', "Config", 'Exposure', 'Type',
+                print('{:<5} {:<8} {:>}-{:<6} {:<8} {:<12} {:<4} {:<6} {:<5}'
+                      ' {:<4}'.format('MJD', 'UTC', "Design", "Config",
+                                      'Exposure', 'Type',
                                       'Dith', 'Reads', 'Arch',
                                       'Seeing'))
                 print('-' * 80)
                 # window = self.get_window(self.ap_data, ap_design, design)
-                window = self.ap_data["iDesign"] == design
-                for (mjd, iso, conf, exp_id, exp_type, dith, nread,
+                window = self.ap_data["iField"] == field
+                for (mjd, iso, des, conf, exp_id, exp_type, dith, nread,
                      detectors, see) in zip(
                     self.ap_data['iTime'][window].mjd + 0.3,
                     self.ap_data['iTime'][window].iso,
+                    self.ap_data["iDesign"][window],
                     self.ap_data["iConfig"][window],
                     self.ap_data['iID'][window],
                     self.ap_data['iEType'][window],
@@ -635,15 +647,15 @@ class Logging:
                     self.ap_data['iDetector'][window],
                     self.ap_data['iSeeing'][window]
                 ):
-                    print('{:<5.0f} {:0>8} {:>6.0f} {:<8.0f} {:<12} {:<4} {:>5}'
-                          ' {:<5}'
-                          ' {:>4.1f}'.format(int(mjd), iso[11:19], conf, exp_id,
-                                             exp_type,
+                    print('{:<5.0f} {:0>8} {:>6.0f}-{:<6.0f} {:<8.0f} {:<12}'
+                          ' {:<4} {:>5} {:<5}'
+                          ' {:>4.1f}'.format(int(mjd), iso[11:19], des, conf,
+                                             exp_id, exp_type,
                                              dith, nread, detectors, see))
                 print()
-                if design in self.ap_data['dDesign']:
-                    for j, dome in enumerate(self.ap_data['fDesign']):
-                        if dome == design:
+                if field in self.ap_data['dField']:
+                    for j, dome in enumerate(self.ap_data['fField']):
+                        if dome == field:
                             print(self.ap_data['fTime'][j].iso)
                             print(textwrap.fill('Missing fibers: {}'.format(
                                 self.ap_data['fMissing'][j]), 80))
@@ -653,21 +665,22 @@ class Logging:
                                   f" {np.nanmean(self.ap_data['fRatio'][j]):.2f}")
                             print()
 
-            if design in self.b_data['dDesign']:
+            if field in self.b_data['dField']:
                 print('# BOSS')
-                print('{:<5} {:<8} {:<6} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
-                      ''.format('MJD', 'UTC', "Config", 'Exposure', 'Type',
-                                'Dith', 'SOS', 'ETime', 'Hart'))
+                print('{:<5} {:<8} {:>6}-{:<6} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
+                      ''.format('MJD', 'UTC', "Design", "Config", 'Exposure',
+                                'Type', 'Dith', 'SOS', 'ETime', 'Hart'))
                 print('-' * 80)
                 # i is an index for data, but it will disagree with b_data
                 # if there is an apogee-onlydesign
-                b_design = np.where(design == self.b_data['dDesign'])[0][0]
+                b_field = np.where(field == self.b_data['dField'])[0][0]
                 # window = self.get_window(self.b_data, b_design, design)
-                window = self.b_data["iDesign"] == design
-                for (mjd, iso, conf, exp_id, exp_type, dith,
+                window = self.b_data["iField"] == field
+                for (mjd, iso, design, conf, exp_id, exp_type, dith,
                      detectors, etime, hart) in zip(
                     self.b_data['iTime'][window].mjd + 0.3,
                     self.b_data['iTime'][window].iso,
+                    self.b_data["iDesign"][window],
                     self.b_data["iConfig"][window],
                     self.b_data['iID'][window],
                     self.b_data['iEType'][window],
@@ -676,9 +689,10 @@ class Logging:
                     self.b_data['idt'][window],
                     self.b_data['iHart'][window],
                 ):
-                    print('{:<5.0f} {:0>8} {:>6.0f} {:0>8.0f} {:<7} {:<4} {:<11}'
+                    print('{:<5.0f} {:0>8} {:>6.0f}-{:<6.0f} {:0>8.0f} {:<7}'
+                          ' {:<4} {:<11}'
                           ' {:>5.0f} {:<5}'
-                          ''.format(int(mjd), iso[11:19], conf, exp_id,
+                          ''.format(int(mjd), iso[11:19], design, conf, exp_id,
                                     exp_type.strip(),
                                     dith.strip(), detectors, etime,
                                     hart))
