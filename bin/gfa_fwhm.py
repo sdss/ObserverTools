@@ -320,7 +320,9 @@ class GFASet:
             fig.savefig(plot_file, dpi=100)
         return fig
 
-    def init_continuous_plot(self):
+    def init_continuous_plot(self, window="0-15"):
+        low, high = window.split("-")
+        n_images = int(high) - int(low)
         today = sjd.sjd()
         img_dir = sdss_paths.gcam / f"{today:.0f}/"
         latest = 0
@@ -333,7 +335,7 @@ class GFASet:
                 continue
             current_num = int(fil.name.split("gfa4n-")[-1].split(".fits")[0])
             latest = max(latest, current_num)
-        for im_num in tqdm.tqdm(range(latest - 20, latest + 1)):
+        for im_num in tqdm.tqdm(range(latest - n_images, latest + 1)):
             im_ps = []
             for n in range(1, 7):
                 p = get_img_path(today, n, im_num)
@@ -444,7 +446,10 @@ def main(args=None):
     if args.continuous:
         anis = []
         print("Plotting continuously")
-        gfas.init_continuous_plot()
+        if args.window is None:
+            gfas.init_continuous_plot()
+        else:
+            gfas.init_continuous_plot(args.window)
         # I cannot explain why I must create a list I will never use to get an
         # animation to run. By rights, it should not be necessary. However,
         # it is apparently essential to the existence of an animation loop

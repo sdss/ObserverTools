@@ -210,8 +210,8 @@ class Logging:
 
                 if img.field_id not in self.data['dField']:
                     self.data['dField'].append(img.field_id)
-                    self.data['dDesign'].append([img.design_id])
-                    self.data['dConfig'].append([img.config_id])
+                    self.data['dDesign'].append(set([img.design_id]))
+                    self.data['dConfig'].append(set([img.config_id]))
                     self.data['dTime'].append(img.isot)
                     try:
                         self.data['cLead'].append(img.lead)
@@ -220,20 +220,20 @@ class Logging:
                 else:
                     i = self.data['dField'].index(img.field_id)
                     # If a design has multiple configs, take the lowest (first)
-                    self.data["dDesign"][i].append(img.design_id)
-                    self.data["dConfig"][i].append(img.config_id)
+                    self.data["dDesign"][i].add(img.design_id)
+                    self.data["dConfig"][i].add(img.config_id)
                     if img.isot < self.data['dTime'][i]:
                         self.data['dTime'].pop(i)
                         self.data['dTime'].insert(i, img.isot)
                 if img.field_id not in self.ap_data['dField']:
                     self.ap_data['dField'].append(img.field_id)
-                    self.ap_data['dDesign'].append([img.design_id])
-                    self.ap_data['dConfig'].append([img.config_id])
-                    self.ap_data['dTime'].append([img.isot])
+                    self.ap_data['dDesign'].append(set([img.design_id]))
+                    self.ap_data['dConfig'].append(set([img.config_id]))
+                    self.ap_data['dTime'].append(img.isot)
                 else:
                     i = self.ap_data['dField'].index(img.field_id)
-                    self.ap_data["dDesign"][i].append(img.design_id)
-                    self.ap_data["dConfig"][i].append(img.config_id)
+                    self.ap_data["dDesign"][i].add(img.design_id)
+                    self.ap_data["dConfig"][i].add(img.config_id)
                     if img.isot < self.ap_data['dTime'][i]:
                         self.ap_data['dTime'].pop(i)
                         self.ap_data['dTime'].insert(i, img.isot)
@@ -282,8 +282,8 @@ class Logging:
                 img = boss_data.BOSSRaw(image)
                 if img.field_id not in self.data['dField']:
                     self.data['dField'].append(img.field_id)
-                    self.data['dDesign'].append([img.design_id])
-                    self.data['dConfig'].append([img.config_id])
+                    self.data['dDesign'].append(set([img.design_id]))
+                    self.data['dConfig'].append(set([img.config_id]))
                     try:
                         self.data['cLead'].append(img.lead)
                     except AttributeError:
@@ -291,20 +291,20 @@ class Logging:
                     self.data['dTime'].append(img.isot)
                 else:
                     i = self.data['dField'].index(img.field_id)
-                    self.data["dDesign"][i].append(img.design_id)
-                    self.data["dConfig"][i].append(img.config_id)
+                    self.data["dDesign"][i].add(img.design_id)
+                    self.data["dConfig"][i].add(img.config_id)
                     if img.isot < self.data['dTime'][i]:
                         self.data['dTime'].pop(i)
                         self.data['dTime'].insert(i, img.isot)
                 if img.field_id not in self.b_data['dField']:
                     self.b_data['dField'].append(img.field_id)
-                    self.b_data["dDesign"].append([img.design_id])
-                    self.b_data["dConfig"].append([img.config_id])
+                    self.b_data["dDesign"].append(set([img.design_id]))
+                    self.b_data["dConfig"].append(set([img.config_id]))
                     self.b_data['dTime'].append(img.isot)
                 else:
                     i = self.b_data['dField'].index(img.field_id)
-                    self.b_data["dDesign"][i].append(img.config_id)
-                    self.b_data["dConfig"][i].append(img.config_id)
+                    self.b_data["dDesign"][i].add(img.config_id)
+                    self.b_data["dConfig"][i].add(img.config_id)
                     if img.isot < self.b_data['dTime'][i]:
                         self.b_data['dTime'].pop(i)
                         self.b_data['dTime'].insert(i, img.isot)
@@ -395,7 +395,8 @@ class Logging:
                     except ValueError:
                         self.ap_data[key] = Time(item, format='isot')
                     except AttributeError:
-                        print(f"Could not read key {key} as time")
+                        print(f"Could not read key {key} as time\n"
+                              f"{self.ap_data[key]}")
                 else:
                     self.ap_data[key] = np.array(item)
             ap_design_sorter = self.ap_data['dTime'].argsort()
@@ -460,43 +461,27 @@ class Logging:
                     self.b_data[key] = item[b_h_sorter]
 
     def count_dithers(self):
-        for i, design in enumerate(self.data['dDesign']):
+        for i, field in enumerate(self.data['dField']):
             self.design_data["dNAPA"].append(np.sum(
-                (self.ap_data['iDesign'] == design)
+                (self.ap_data['iField'] == field)
                 & (self.ap_data['iDither'] == 'A')
                 & (self.ap_data['iEType'] == 'Object')))
             self.design_data["dNAPB"].append(np.sum(
-                (self.ap_data['iDesign'] == design)
+                (self.ap_data['iField'] == field)
                 & (self.ap_data['iDither'] == 'B')
                 & (self.ap_data['iEType'] == 'Object')))
-            # self.design_data["dNBN'].append(np.sum(
-            # (self.b_data['iDesign'] == design)
-            # & (self.b_data['iDither'] == 'N')
-            # & (self.b_data['iEType'] == 'Science')))
-            # self.design_data["dNBS'].append(np.sum(
-            # (self.b_data['iDesign'] == design)
-            # & (self.b_data['iDither'] == 'S')
-            # & (self.b_data['iEType'] == 'Science')))
-            # self.design_data["dNBE'].append(np.sum(
-            # (self.b_data['iDesign'] == design)
-            # & (self.b_data['iDither'] == 'E')
-            # & (self.b_data['iEType'] == 'Science')))
-            # self.design_data["dNBC'].append(np.sum(
-            # (self.b_data['iDesign'] == design)
-            # & (self.b_data['iDither'] == 'C')
-            # & (self.b_data['iEType'] == 'Science')))
             self.design_data["dNB"].append(np.sum(
-                (self.b_data['iDesign'] == design)
+                (self.b_data['iField'] == field)
                 & (self.b_data['iEType'] == 'Science')))
             if self.design_data["dNB"][-1] != 0:
                 self.design_data["dBdt"].append(np.max(
                     self.b_data['idt'][
-                        (self.b_data['iDesign'] == design)
+                        (self.b_data['iField'] == field)
                         & (self.b_data['iEType'] == 'Science')]))
             else:
                 self.design_data["dBdt"].append(0)
 
-        for i, design in enumerate(self.data['dDesign']):
+        for i, field in enumerate(self.data['dField']):
             """To determine the number of apogee a dithers per design (cNAPA),
             as well as b dithers (cNAPB), and the same for NSE dithers."""
             # APOGEE dithers
@@ -510,19 +495,6 @@ class Logging:
                 self.design_data['dAPSummary'].append(
                     '{}xA {}xB'.format(self.design_data["dNAPA"][i],
                                        self.design_data["dNAPB"][i]))
-            # BOSS (MaNGA) dithers
-            # if self.design_data["dNBC'][i] == 0:
-            # if (self.design_data["dNBN'][i]
-            # == self.design_data["dNBS'][i]
-            # == self.design_data["dNBE'][i]):
-            # self.design_data['dBSummary'].append(
-            # '{}xNSE'.format(self.design_data["dNBN'][i]))
-            # else:
-            # self.design_data['dBSummary'].append(
-            # '{}xN {}xS {}xE'.format(self.design_data["dNBN'][i],
-            # self.design_data["dNBS'][i],
-            # self.design_data["dNBE'][i]))
-            # else:
             if self.design_data["dNB"][i] != 0:
                 self.design_data["dBSummary"].append(
                     '{}x{}s'.format(self.design_data["dNB"][i],
@@ -555,12 +527,17 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('Observing Summary'))
         print('=' * 80)
-        for i, design in enumerate(self.data['dDesign']):
+        for i, field in enumerate(self.data['dField']):
             print('')
-            print("Design {}, Config {}, {}, {}".format(design,
-                                                        self.data['dConfig'][i],
-                                                        self.design_data['dAPSummary'][i],
-                                                        self.design_data['dBSummary'][i]))
+            designs = ', '.join([f"{x:.0f}" for x in self.data['dDesign'][i]])
+            configs = ', '.join([f"{x:.0f}" for x in self.data['dConfig'][i]])
+            plurald = 's' if len(self.data["dDesign"][i]) > 1 else ''
+            pluralc = 's' if len(self.data["dConfig"][i]) > 1 else ''
+            print('\n'.join(textwrap.wrap(
+                f"Field {field:.0f} Design{plurald} {designs},"
+                f" Config{pluralc} {configs},"
+                f" {self.design_data['dAPSummary'][i]},"
+                f" {self.design_data['dBSummary'][i]}", 80)))
         print()
         if len(self.ap_data["fRatio"]) > 0:
             flux_ratio = np.nanmean(np.array(self.ap_data["fRatio"]), axis=0)
@@ -576,8 +553,8 @@ class Logging:
                 faint_bundles = self.ap_image.create_bundles(i_faint)
                 print("APOGEE Dome Flats\n"
                       f"Missing Fibers: {missing_bundles}\n"
-                      f" Faint fibers: {faint_bundles}\n"
-                      f" Average Throughput: {avg:.3f}")
+                      f"Faint fibers: {faint_bundles}\n"
+                      f"Average Throughput: {avg:.3f}")
                 print()
             else:
                 print("No APOGEE Dome Flats")
@@ -610,7 +587,7 @@ class Logging:
                 window = ((data['iTime'] >= data['dTime'][i])
                           & (data['iTime'] < Time.now() + 0.3)
                           & (data["iDesign"][i] == design)
-                         )
+                          )
             except IndexError:
                 window = np.array([False] * len(data['iTime']))
 
@@ -696,20 +673,20 @@ class Logging:
                                     exp_type.strip(),
                                     dith.strip(), detectors, etime,
                                     hart))
-                #try:
+                # try:
                 #    window = ((self.b_data['hTime']
                 #               >= self.data['dTime'][i])
                 #              & (self.b_data['hTime']
                 #                 < self.data['dTime'][i + 1])
                 #              )
-                #except IndexError:
+                # except IndexError:
                 #    window = ((self.b_data['hTime']
                 #               >= self.data['dTime'][i])
                 #              & (self.b_data['hTime'] < Time.now()))
-                #if self.b_data['hTime'][window]:
+                # if self.b_data['hTime'][window]:
                 #    print()
                 #    # print('Hartmanns')
-                #for t, hart in zip(self.b_data['hTime'][window],
+                # for t, hart in zip(self.b_data['hTime'][window],
                 #                   self.b_data['hHart'][window]):
                 #    print(self.hartmann_parse(hart))
                 print()
@@ -810,7 +787,8 @@ class Logging:
         print('\n'.join(wrapper.wrap(une_str)))
         if len(self.ap_data['oOffset']) > 1:
             # Put it under an if in case we didn't open.
-            did_move = self.ap_data["oDither"][:-1] != self.ap_data["oDither"][1:]
+            did_move = self.ap_data["oDither"][:-
+                                               1] != self.ap_data["oDither"][1:]
             rel_offsets = np.abs(self.ap_data['oOffset'][1:][did_move]
                                  - self.ap_data["oOffset"][:-1][did_move])
             obj_str = ('Object Offsets: Max: {:.2f}, Min: {:.2f}, Mean: {:.2f}'
@@ -843,7 +821,7 @@ class Logging:
         offsets = multiprocessing.Process(target=tel.get_offsets,
                                           args=(support,))
         focus = multiprocessing.Process(target=tel.get_focus,
-                                          args=(support,))
+                                        args=(support,))
         weather = multiprocessing.Process(target=tel.get_weather,
                                           args=(support,))
         hartmann = multiprocessing.Process(target=tel.get_hartmann,
@@ -860,7 +838,7 @@ class Logging:
         print(support["focus"])
         print(support["weather"])
         print(support["hartmann"])
-        
+
     @staticmethod
     def mirror_numbers():
         print('=' * 80)
@@ -944,7 +922,7 @@ def main():
     except OSError:
         pass
     ap_images = Path(ap_data_dir).glob('apR-a*.apz')
-    
+
     b_images = Path(b_data_dir).glob('sdR-r1*fit.gz')
     try:
         for img in b_images:
