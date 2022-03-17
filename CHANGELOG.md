@@ -505,3 +505,7 @@
 
 - Some flux queries use the new actors bucket, log support is now fully
  populated
+- sloan_log.py -d adds a hartmann section for each field
+- dither centers adjusted in sloan_log.py
+- sloan_log.py uses a field-based pairing for the data section instead of a
+  desgin-based pairing

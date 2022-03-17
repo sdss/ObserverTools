@@ -106,7 +106,8 @@ class Logging:
                        'iTime': [], 'iID': [],
                        'iDetector': [], 'iDither': [],
                        'iEType': [], 'idt': [], 'iField': [], 'iHart': [],
-                       'iDesign': [], "iConfig": [], 'hHart': [], 'hTime': []}
+                       'iDesign': [], "iConfig": [], 'hHart': [], 'hTime': [],
+                       "hField": []}
         # These values are not known from the header and must be created
         # after self.sort. N for number, AP or B for APOGEE or BOSS, and NSE
         # for BOSS dithers, and AB for APOGEE dithers, dt for boss exposure
@@ -316,34 +317,12 @@ class Logging:
                 self.b_data['idt'].append(img.exp_time)
                 self.b_data['iDesign'].append(img.design_id)
                 self.b_data['iHart'].append(img.hartmann)
+                if img.hartmann == "Left":
+                    self.b_data["hTime"].append(img.isot)
+                    self.b_data["hField"].append(img.field_id)
                 self.b_data['iConfig'].append(img.config_id)
                 self.b_data["iField"].append(img.field_id)
 
-                # if img.hartmann == 'Left' and self.telemetry:
-                #     # Note that times are sent in UTC and received in local, yet
-                #     # those times are marked as UTC
-                #     tstart = Time(img.isot).datetime
-                #     tend = (Time(img.isot) + 5 / 24 / 60).datetime
-                #     hart = self.telemetry.get([
-                #         '25m:hartmann:r1PistonMove',
-                #         # '25m:hartmann:r2PistonMove',
-                #         '25m:hartmann:b1RingMove',
-                #         # '25m:hartmann:b2RingMove',
-                #         '25m:hartmann:sp1AverageMove',
-                #         # '25m:hartmann:sp2AverageMove',
-                #         '25m:hartmann:sp1Residuals:steps',
-                #         '25m:hartmann:sp1Residuals:deg',
-                #         # '25m:hartmann:sp2Residuals:deg',
-                #         '25m:boss:sp1Temp:median',
-                #         # '25m:boss:sp2Temp:median',
-                #         # '25m:hartmann:sp2Residuals:steps'
-                #     ],
-                #         start=tstart,
-                #         end=tend,
-                #         interpolation='raw', scan_archives=False)
-
-                #     self.b_data['hHart'].append(hart)
-                #     self.b_data['hTime'].append(img.isot)
                 sos_files = []
                 # img_mjd = int(Time(img.isot).mjd)
                 # All boss exposures write as splog, but manga writes different
@@ -502,25 +481,18 @@ class Logging:
             else:
                 self.design_data['dBSummary'].append('No BOSS')
 
-    @staticmethod
-    def hartmann_parse(hart):
-        output = '{}\n'.format(str(hart[0].times[-1])[:19])
-        output += 'r1: {:>6.0f}, b1: {:>6.1f}\n'.format(
-            hart[0].values[-1], hart[1].values[-1])
-        # output += 'r2: {:>6.0f}, b2: {:>6.1f}\n'.format(
-        #  hart[1].values[-1], hart[3].values[-1])
-        output += 'Average Move: {:>6.0f}\n'.format(hart[2].values[-1])
-        # output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
-        # hart[4].values[-1], hart[5].values[-1])
-        output += 'R Residuals: {:>6.0f}\n'.format(hart[3].values[-1])
-        # output += 'SP1: {:>6.0f}, SP2: {:>6.0f}\n'.format(
-        # hart[10].values[-1], hart[11].values[-1])
-        output += 'B Residuals: {:>6.1f}\n'.format(hart[4].values[-1])
-        # output += 'SP1: {:>6.1f}, SP2: {:>6.1f}\n'.format(
-        # hart[6].values[-1], hart[7].values[-1])
-        output += 'SP1 Temperature: {:>6.1f}\n'.format(hart[5].values[-1])
-        # output += 'SP1: {:>6.1f}, SP2: {:>6.1f}'.format(
-        # hart[8].values[-1], hart[9].values[-1])
+    def hartmann_parse(self, time):
+        output = '{}\n'.format(time.isot[:19])
+        inputs = []
+        for key in ["r1PistonMove_steps", "b1RingMove", "sp1AverageMove_steps",
+                    "sp1Residuals_deg"]:
+            x = self.harts[key][(self.harts['t' + key] - time).sec < 60]
+            if len(x) == 0:
+                inputs.append(np.nan)
+            else:
+                inputs.append(x[0])
+        output += f"r1 Steps: {x[0]:>6.0f}, b1 Ring: {x[1]:>6.1f}\n"
+        output += f"Average Move:{x[2]:>6.0f}, Residuals: {x[3]:>6.0f}\n"
         return output
 
     def p_summary(self):
@@ -594,6 +566,14 @@ class Logging:
         return window
 
     def p_data(self):
+        start = Time(self.args.sjd - 0.3, format='mjd')
+        end = Time(self.args.sjd + 1, format='mjd') - 0.3
+        end = Time.now() if Time.now() < end else end
+        tel = log_support.LogSupport(start, end, self.args)
+        self.hart_text = {}
+        self.harts = {}
+        tel.get_hartmann(self.hart_text, self.harts)
+
         print('=' * 80)
         print('{:^80}'.format('Data Log'))
         print('=' * 80 + '\n')
@@ -673,22 +653,9 @@ class Logging:
                                     exp_type.strip(),
                                     dith.strip(), detectors, etime,
                                     hart))
-                # try:
-                #    window = ((self.b_data['hTime']
-                #               >= self.data['dTime'][i])
-                #              & (self.b_data['hTime']
-                #                 < self.data['dTime'][i + 1])
-                #              )
-                # except IndexError:
-                #    window = ((self.b_data['hTime']
-                #               >= self.data['dTime'][i])
-                #              & (self.b_data['hTime'] < Time.now()))
-                # if self.b_data['hTime'][window]:
-                #    print()
-                #    # print('Hartmanns')
-                # for t, hart in zip(self.b_data['hTime'][window],
-                #                   self.b_data['hHart'][window]):
-                #    print(self.hartmann_parse(hart))
+                hwindow = self.b_data["hField"] == field
+                for t in self.b_data["hTime"][hwindow]:
+                    print(self.hartmann_parse(t))
                 print()
 
     def p_boss(self):
@@ -817,6 +784,7 @@ class Logging:
         end = Time.now() if Time.now() < end else end
         tel = log_support.LogSupport(start, end, self.args)
         support = multiprocessing.Manager().dict()
+        self.harts = multiprocessing.Manager().dict()
         tel.set_callbacks()
         offsets = multiprocessing.Process(target=tel.get_offsets,
                                           args=(support,))
@@ -824,16 +792,20 @@ class Logging:
                                         args=(support,))
         weather = multiprocessing.Process(target=tel.get_weather,
                                           args=(support,))
-        hartmann = multiprocessing.Process(target=tel.get_hartmann,
-                                           args=(support,))
+        if not self.harts:
+            hartmann = multiprocessing.Process(target=tel.get_hartmann,
+                                               args=(support, self.harts))
+            hartmann.start()
+        else:
+            support["hartmann"] = self.hart_text["hartmann"]
         offsets.start()
         focus.start()
         weather.start()
-        hartmann.start()
         offsets.join(10)
         focus.join(10)
         weather.join(10)
-        hartmann.join(10)
+        if not self.harts:
+            hartmann.join(10)
         print(support["offsets"])
         print(support["focus"])
         print(support["weather"])
@@ -963,6 +935,7 @@ def main():
     if args.data:
         args.boss = True
         args.apogee = True
+        if not args.log_support:
 
     log = Logging(ap_images, b_images, args)
     log.parse_images()

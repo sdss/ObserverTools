@@ -269,12 +269,12 @@ class LogSupport:
                                  *line))
         out_dict["weather"] = self.weather
 
-    def get_hartmann(self, out_dict={}):
+    def get_hartmann(self, out_dict={}, out_harts={}):
         self.hartmann = (f"{'Time':8} {'Field':>6}-{'Design':<6} {'Temp':<6}"
                          f" {'R off':<6} {'B off':<6} {'Move':<6} {'Resid':<6}"
                          " \n")
         self.hartmann += '=' * 80 + '\n'
-        harts = {}
+        self.harts = {}
         boss_temps = []
         boss_times = []
         hartmanns_path = Path(__file__).parent.parent / "flux/hartmanns.flux"
@@ -293,20 +293,20 @@ class LogSupport:
                 # boss_temps.append(row.get_value())
         for table in hart_tables:
             for row in table.records:
-                if row.get_field() in harts.keys():
-                    harts[f"t{row.get_field()}"].append(row.get_time())
-                    harts[row.get_field()].append(row.get_value())
+                if row.get_field() in self.harts.keys():
+                    self.harts[f"t{row.get_field()}"].append(row.get_time())
+                    self.harts[row.get_field()].append(row.get_value())
                 else:
-                    harts[f"t{row.get_field()}"] = [row.get_time()]
-                    harts[row.get_field()] = [row.get_value()]
-        for key in harts.keys():
+                    self.harts[f"t{row.get_field()}"] = [row.get_time()]
+                    self.harts[row.get_field()] = [row.get_value()]
+        for key in self.harts.keys():
             if key[0] == 't':
-                harts[key] = Time(harts[key])
+                self.harts[key] = Time(self.harts[key])
             else:
-                harts[key] = np.array(harts[key])
+                self.harts[key] = np.array(self.harts[key])
         # boss_times = Time(boss_times)
         # boss_temps = np.array(boss_temps)
-        for t in harts["tsp1Residuals_deg"]:
+        for t in self.harts["tsp1Residuals_deg"]:
             line = [t.isot[11:19]]
             # last_temp_filt = boss_times < t
             # line.append(boss_temps[last_temp_filt][-1])
@@ -314,22 +314,23 @@ class LogSupport:
                         "sp1Temp_median",
                         "r1PistonMove_steps", "b1RingMove",
                         "sp1AverageMove_steps", "sp1Residuals_deg"]:
-                if 't' + key in harts.keys():
+                if 't' + key in self.harts.keys():
                     if ("configuration_loaded" in key) or ("sp1Temp" in key):
-                        before = harts['t' + key] < t
+                        before = self.harts['t' + key] < t
                         if before.sum() == 0:
                             line.append(np.nan)
                         else:
-                            line.append(harts[key][before][-1])
+                            line.append(self.harts[key][before][-1])
                     else:
-                        in_window = np.abs(harts['t' + key] - t) < 10 / 86400
-                        line.append(harts[key][in_window][0])
+                        in_window = np.abs(self.harts['t' + key] - t) < 10 / 86400
+                        line.append(self.harts[key][in_window][0])
                 else:
                     line.append(np.nan)
             self.hartmann += ("{:8} {:>6.0f}-{:<6.0f} {:>6.1f} {:>6.0f}"
                               " {:>6.1f} {:>6.0f}"
                               " {:>6.1f}\n".format(*line))
         out_dict["hartmann"] = self.hartmann
+        out_harts["data"] = self.harts
 
 def main():
     parser = argparse.ArgumentParser()
