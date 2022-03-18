@@ -114,7 +114,7 @@ def parse_args():
             args.start_time = Time(args.start_time, format="mjd")
         try:
             args.end_time = Time(args.end_time)
-        except ValueError:
+        except ValueError as e:
             args.end_time = Time(args.end_time, format="mjd")
     return args
 
