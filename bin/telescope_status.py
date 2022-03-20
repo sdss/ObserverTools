@@ -54,10 +54,10 @@ def get_chiller_state(t_start, t_end, out_dict):
             if row.get_field() not in chiller_vals.keys():
                 chiller_vals[row.get_field()] = row.get_value()
     # print(chiller_vals)
-    chiller_output = f"Chiller Flow: {chiller_vals['FLOW1']:.2f}L/min to FPS,"
-    chiller_output += f" {chiller_vals['FLOW2']:.2f}L/min to GFAs,"
-    chiller_output += f" {chiller_vals['STATUS_FLUID_FLOW']:.1f}gpm"
-    chiller_output += f"/{chiller_vals['FLOW_USER_SETPOINT']:.1f}gpm total\n"
+    chiller_output = f"Chiller Flow: {chiller_vals['FLOW1']:.2f} L/min to FPS,"
+    chiller_output += f" {chiller_vals['FLOW2']:.2f} L/min to GFAs,"
+    chiller_output += f" {chiller_vals['STATUS_FLUID_FLOW']:.1f}"
+    chiller_output += f"/{chiller_vals['FLOW_USER_SETPOINT']:.1f} gpm total\n"
     chiller_output += f"Chiller Temp: {chiller_vals['DISPLAY_VALUE']:.1f}C\n"
     
     alarms = []

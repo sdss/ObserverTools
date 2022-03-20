@@ -106,7 +106,7 @@ class Logging:
                        'iTime': [], 'iID': [],
                        'iDetector': [], 'iDither': [],
                        'iEType': [], 'idt': [], 'iField': [], 'iHart': [],
-                       'iDesign': [], "iConfig": [], 'hHart': [], 'hTime': [],
+                       'iDesign': [], "iConfig": [], 'hTime': [],
                        "hField": []}
         # These values are not known from the header and must be created
         # after self.sort. N for number, AP or B for APOGEE or BOSS, and NSE
@@ -126,6 +126,8 @@ class Logging:
         self.ap_master = np.median(master_data[:, 550:910], axis=1)
         self.morning_filter = None
         self.ap_image = None
+        
+        self.support = multiprocessing.Manager().dict()
 
     def ap_test(self, img):
         """Calls aptest on hub, this could certainly be replaced in the near
@@ -485,14 +487,17 @@ class Logging:
         output = '{}\n'.format(time.isot[:19])
         inputs = []
         for key in ["r1PistonMove_steps", "b1RingMove", "sp1AverageMove_steps",
-                    "sp1Residuals_deg"]:
-            x = self.harts[key][(self.harts['t' + key] - time).sec < 60]
+                    "sp1Residuals_deg", "sp1Temp_median"]:
+            time_delta =(self.support["harts"]['t' + key] - time).sec
+            x = self.support["harts"][key][(time_delta < 120)
+                                           & (time_delta > 0)]
             if len(x) == 0:
                 inputs.append(np.nan)
             else:
-                inputs.append(x[0])
-        output += f"r1 Steps: {x[0]:>6.0f}, b1 Ring: {x[1]:>6.1f}\n"
-        output += f"Average Move:{x[2]:>6.0f}, Residuals: {x[3]:>6.0f}\n"
+                inputs.append(x[-1])
+        output += f"r1 Steps: {inputs[0]:>5.0f}, b1 Ring: {inputs[1]:>4.1f}\n"
+        output += f"Average Move:{inputs[2]:>5.0f}, Residuals:"
+        output += f" {inputs[3]:>4.1f}, Temp: {inputs[4]:>4.1f}\n"
         return output
 
     def p_summary(self):
@@ -570,9 +575,7 @@ class Logging:
         end = Time(self.args.sjd + 1, format='mjd') - 0.3
         end = Time.now() if Time.now() < end else end
         tel = log_support.LogSupport(start, end, self.args)
-        self.hart_text = {}
-        self.harts = {}
-        tel.get_hartmann(self.hart_text, self.harts)
+        tel.get_hartmann(self.support)
 
         print('=' * 80)
         print('{:^80}'.format('Data Log'))
@@ -624,16 +627,16 @@ class Logging:
 
             if field in self.b_data['dField']:
                 print('# BOSS')
-                print('{:<5} {:<8} {:>6}-{:<6} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
+                print('{:<5} {:<8} {:>6}-{:<6} {:<8} {:<7} {:<5} {:<5} {:<5}'
                       ''.format('MJD', 'UTC', "Design", "Config", 'Exposure',
-                                'Type', 'Dith', 'SOS', 'ETime', 'Hart'))
+                                'Type', 'SOS', 'ETime', 'Hart'))
                 print('-' * 80)
                 # i is an index for data, but it will disagree with b_data
                 # if there is an apogee-onlydesign
                 b_field = np.where(field == self.b_data['dField'])[0][0]
                 # window = self.get_window(self.b_data, b_design, design)
                 window = self.b_data["iField"] == field
-                for (mjd, iso, design, conf, exp_id, exp_type, dith,
+                for (mjd, iso, design, conf, exp_id, exp_type,
                      detectors, etime, hart) in zip(
                     self.b_data['iTime'][window].mjd + 0.3,
                     self.b_data['iTime'][window].iso,
@@ -641,17 +644,15 @@ class Logging:
                     self.b_data["iConfig"][window],
                     self.b_data['iID'][window],
                     self.b_data['iEType'][window],
-                    self.b_data['iDither'][window],
                     self.b_data['iDetector'][window],
                     self.b_data['idt'][window],
                     self.b_data['iHart'][window],
                 ):
                     print('{:<5.0f} {:0>8} {:>6.0f}-{:<6.0f} {:0>8.0f} {:<7}'
-                          ' {:<4} {:<11}'
+                          ' {:<5}'
                           ' {:>5.0f} {:<5}'
                           ''.format(int(mjd), iso[11:19], design, conf, exp_id,
-                                    exp_type.strip(),
-                                    dith.strip(), detectors, etime,
+                                    exp_type.strip(), detectors, etime,
                                     hart))
                 hwindow = self.b_data["hField"] == field
                 for t in self.b_data["hTime"][hwindow]:
@@ -662,11 +663,12 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('BOSS Data Summary'))
         print('=' * 80 + '\n')
-        print('{:<5} {:<8} {:<13} {:<8} {:<7} {:<4} {:<11} {:<5} {:<5}'
-              ''.format('MJD', 'UTC', 'Design-Config', 'Exposure', 'Type', 'Dith',
+        print('{:<5} {:<8} {:<13} {:<8} {:<7} {:<5} {:<5} {:<5}'
+              ''.format('MJD', 'UTC', 'Design-Config', 'Exposure', 'Type',
                         'SOS', 'ETime', 'Hart'))
         print('-' * 80)
-        for (mjd, iso, design, design, config, exp_id, exp_type, dith, detectors, etime,
+        for (mjd, iso, design, design, config, exp_id, exp_type, 
+             detectors, etime,
              hart) in zip(self.b_data['iTime'].mjd + 0.3,
                           self.b_data['iTime'].iso,
                           self.b_data['iDesign'],
@@ -674,16 +676,14 @@ class Logging:
                           self.b_data['iConfig'],
                           self.b_data['iID'],
                           self.b_data['iEType'],
-                          self.b_data['iDither'],
                           self.b_data['iDetector'],
                           self.b_data['idt'],
                           self.b_data['iHart']):
-            print('{:<5.0f} {:>8} {:>6}-{:<6.0f} {:0>8.0f} {:<7} {:<4}'
-                  ' {:<11}'
+            print('{:<5.0f} {:>8} {:>6}-{:<6.0f} {:0>8.0f} {:<7} '
+                  ' {:<5}'
                   ' {:>5.0f} {:<5}'
                   ''.format(int(mjd), iso[11:19], design, config, exp_id,
-                            exp_type.strip(),
-                            dith.strip(), detectors, etime, hart))
+                            exp_type.strip(), detectors, etime, hart))
         print()
 
     def p_apogee(self):
@@ -782,34 +782,30 @@ class Logging:
         start = Time(self.args.sjd - 0.3, format='mjd')
         end = Time(self.args.sjd + 1, format='mjd') - 0.3
         end = Time.now() if Time.now() < end else end
-        tel = log_support.LogSupport(start, end, self.args)
-        support = multiprocessing.Manager().dict()
-        self.harts = multiprocessing.Manager().dict()
-        tel.set_callbacks()
-        offsets = multiprocessing.Process(target=tel.get_offsets,
-                                          args=(support,))
-        focus = multiprocessing.Process(target=tel.get_focus,
-                                        args=(support,))
-        weather = multiprocessing.Process(target=tel.get_weather,
-                                          args=(support,))
-        if not self.harts:
-            hartmann = multiprocessing.Process(target=tel.get_hartmann,
-                                               args=(support, self.harts))
+        sup = log_support.LogSupport(start, end, self.args)
+        sup.set_callbacks()
+        offsets = multiprocessing.Process(target=sup.get_offsets,
+                                          args=(self.support,))
+        focus = multiprocessing.Process(target=sup.get_focus,
+                                        args=(self.support,))
+        weather = multiprocessing.Process(target=sup.get_weather,
+                                          args=(self.support,))
+        if "harts" not in self.support.keys():
+            hartmann = multiprocessing.Process(target=sup.get_hartmann,
+                                               args=(self.support,))
             hartmann.start()
-        else:
-            support["hartmann"] = self.hart_text["hartmann"]
         offsets.start()
         focus.start()
         weather.start()
-        offsets.join(10)
+        offsets.join(15)
         focus.join(10)
         weather.join(10)
-        if not self.harts:
+        if "harts" not in self.support.keys():
             hartmann.join(10)
-        print(support["offsets"])
-        print(support["focus"])
-        print(support["weather"])
-        print(support["hartmann"])
+        print(self.support["offsets"])
+        print(self.support["focus"])
+        print(self.support["weather"])
+        print(self.support["hartmann"])
 
     @staticmethod
     def mirror_numbers():
@@ -935,7 +931,6 @@ def main():
     if args.data:
         args.boss = True
         args.apogee = True
-        if not args.log_support:
 
     log = Logging(ap_images, b_images, args)
     log.parse_images()

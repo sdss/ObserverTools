@@ -113,15 +113,15 @@ class LogSupport:
                 # 15 * 60 / 86400), format="mjd")
 
     def get_offsets(self, out_dict={}):
-        self.offsets = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'Az':<6}"
-            f" {'Alt':<4} {'Rot':<6} {'Az Off':<6} {'Alt Off':<7}"
-            f" {'Rot Off':<7} {'Guide RMS (um)':<14}\n")
+        self.offsets = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'Az':>6}"
+            f" {'Alt':>4} {'Rot':>6} {'Az Off':>6} {'Alt Off':>7}"
+            f" {'Rot Off':>7} {'Guide RMS (um)':>14}\n")
         self.offsets += '=' * 80 + '\n'
         offsets_tab = {}
         offsets_tab_path = Path(__file__).parent.parent / "flux/offsets.flux"
         with offsets_tab_path.open('r') as fil:
             off_tables = influx_fetch.query(fil.read(),
-                self.tstart, self.tend)
+                self.call_times[0], self.call_times[-1])
         for table in off_tables:
             for row in table.records:
                 field = row.get_field()
@@ -157,16 +157,16 @@ class LogSupport:
         out_dict["offsets"] = self.offsets        
 
     def get_focus(self, out_dict={}):
-        self.focus = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'M1':<7}"
-                      f" {'M2':<7} {'Focus':<5}"
-                      f" {'Az':<6} {'Alt':<5} {'Temp':<5} {'Wind':<4}"
-                      f" {'Dir':<3}\n")
+        self.focus = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'M1':>7}"
+                      f" {'M2':>7} {'Focus':>5}"
+                      f" {'Az':>6} {'Alt':>5} {'Temp':>5} {'Wind':>4}"
+                      f" {'Dir':>3}\n")
         self.focus += '=' * 80 + '\n'
         focus_tab = {}
         focus_tab_path = Path(__file__).parent.parent / "flux/focus.flux"
         with focus_tab_path.open('r') as fil:
             off_tables = influx_fetch.query(fil.read(),
-                self.tstart, self.tend)
+                self.call_times[0], self.call_times[-1])
         for table in off_tables:
             for row in table.records:
                 field = row.get_field()
@@ -207,15 +207,16 @@ class LogSupport:
         dust = "1\u03BCm Dust"
         irscs = "IRSC \u03C3"
         irscm = "IRSC \u03BC"
-        self.weather = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'Temp':<5} {'DP':<5} {'Diff':<5}"
-            f" {'Humid':<5} {'Wind':<5} {'Dir':<3} {dust:<8}"
-            f" {irscs:<6} {irscm:<6}\n")
+        self.weather = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'Temp':>5}"
+                        f" {'DP':>5} {'Diff':>5}"
+            f" {'Humid':>5} {'Wind':>5} {'Dir':>3} {dust:>8}"
+            f" {irscs:>6} {irscm:>6}\n")
         self.weather += '=' * 80 + '\n'
         weather_tab = {}
         weather_tab_path = Path(__file__).parent.parent / "flux/weather.flux"
         with weather_tab_path.open('r') as fil:
             off_tables = influx_fetch.query(fil.read(),
-                self.tstart, self.tend)
+                self.call_times[0], self.call_times[-1])
         for table in off_tables:
             for row in table.records:
                 field = row.get_field()
@@ -269,9 +270,9 @@ class LogSupport:
                                  *line))
         out_dict["weather"] = self.weather
 
-    def get_hartmann(self, out_dict={}, out_harts={}):
-        self.hartmann = (f"{'Time':8} {'Field':>6}-{'Design':<6} {'Temp':<6}"
-                         f" {'R off':<6} {'B off':<6} {'Move':<6} {'Resid':<6}"
+    def get_hartmann(self, out_dict={}):
+        self.hartmann = (f"{'Time':8} {'Field':>6}-{'Design':<6} {'Temp':>6}"
+                         f" {'R off':>6} {'B off':>6} {'Move':>6} {'Resid':>6}"
                          " \n")
         self.hartmann += '=' * 80 + '\n'
         self.harts = {}
@@ -330,7 +331,7 @@ class LogSupport:
                               " {:>6.1f} {:>6.0f}"
                               " {:>6.1f}\n".format(*line))
         out_dict["hartmann"] = self.hartmann
-        out_harts["data"] = self.harts
+        out_dict["harts"] = self.harts
 
 def main():
     parser = argparse.ArgumentParser()
