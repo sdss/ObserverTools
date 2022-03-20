@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import numpy as np
 from pathlib import Path
 from astropy.time import Time
 import multiprocessing
@@ -54,6 +54,10 @@ def get_chiller_state(t_start, t_end, out_dict):
             if row.get_field() not in chiller_vals.keys():
                 chiller_vals[row.get_field()] = row.get_value()
     # print(chiller_vals)
+    for k in ["FLOW1", "FLOW2", "STATUS_FLUID_FLOW", "FLOW_USER_SETPOINT",
+              "DISPLAY_VALUE"]:
+        if k not in chiller_vals.keys():
+            chiller_vals[k] = np.nan
     chiller_output = f"Chiller Flow: {chiller_vals['FLOW1']:.2f} L/min to FPS,"
     chiller_output += f" {chiller_vals['FLOW2']:.2f} L/min to GFAs,"
     chiller_output += f" {chiller_vals['STATUS_FLUID_FLOW']:.1f}"
@@ -85,8 +89,9 @@ def query():
     data = multiprocessing.Manager().dict()
     encl_thread = multiprocessing.Process(target=get_enclosure_state,
                                           args=(t_start, t_end, data))
+    print(t_end, t_end - 5 / 60 / 24)
     chiller_thread = multiprocessing.Process(target=get_chiller_state,
-                                             args=(t_end - 5 / 60 / 24, t_end,
+                                             args=(t_end - 15 / 60 / 24, t_end,
                                                    data))
     tpm_thread = multiprocessing.Process(target=get_tpm_packet, args=(data,))
     encl_thread.start()
@@ -94,7 +99,7 @@ def query():
     tpm_thread.start()
     
     tpm_thread.join(2)
-    chiller_thread.join(15)
+    chiller_thread.join(5)
     encl_thread.join(2)
     if tpm_thread.is_alive():
         tpm_thread.kill()
@@ -106,7 +111,7 @@ def query():
         encl_thread.kill()
         raise ConnectionError("Enclosure query timeout")
 
-    
+    # print(data.keys())    
     t = Time(data["ctime"], format="unix")
     output = data["enclosure_hist"] + '\n'
     output += f"Status at:  {t.isot[12:19]}Z\n"
