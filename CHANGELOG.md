@@ -509,3 +509,4 @@
 - dither centers adjusted in sloan_log.py
 - sloan_log.py uses a field-based pairing for the data section instead of a
   desgin-based pairing
+- telescope_status.py reports chiller values
