@@ -510,3 +510,5 @@
 - sloan_log.py uses a field-based pairing for the data section instead of a
   desgin-based pairing
 - telescope_status.py reports chiller values
+- gfa_fwhm.py -c default number of exposures reduced to 15
+  

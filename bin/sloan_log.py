@@ -128,6 +128,10 @@ class Logging:
         self.ap_image = None
         
         self.support = multiprocessing.Manager().dict()
+        self.support["offsets"] = ""
+        self.support["focus"] = ""
+        self.support["weather"] = ""
+        self.support["hartmann"] = ""
 
     def ap_test(self, img):
         """Calls aptest on hub, this could certainly be replaced in the near
@@ -175,8 +179,6 @@ class Logging:
             print('Reading APOGEE Data ({})'.format(len(self.ap_images)))
             img = None
             for image in tqdm(self.ap_images):
-                if self.args.verbose:
-                    print(image.name)
                 img = apogee_data.APOGEERaw(image, self.args, 1)
                 # img.parse_layer(1)
                 if img.lead is None:  # If the first exposure is still
@@ -797,11 +799,12 @@ class Logging:
         offsets.start()
         focus.start()
         weather.start()
-        offsets.join(15)
-        focus.join(10)
-        weather.join(10)
+        # If these queries are timing out, you have an issue in Influx
+        offsets.join(8)
+        focus.join(8)
+        weather.join(8)
         if "harts" not in self.support.keys():
-            hartmann.join(10)
+            hartmann.join(5)
         print(self.support["offsets"])
         print(self.support["focus"])
         print(self.support["weather"])

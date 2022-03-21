@@ -167,7 +167,7 @@ class LogSupport:
         if self.args.verbose:
             times = Time([start, pre_query, post_query, post_parse, post_sort,
                           post_print]) - start
-            print(np.diff(times.sec))
+            print(f"Offsets overheads: {np.diff(times.sec)}")
 
     def get_focus(self, out_dict={}):
         self.focus = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'M1':>7}"
