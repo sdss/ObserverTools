@@ -17,5 +17,5 @@ from(bucket: "actors")
         or r._field == "windd"
         ))
     )
-    |> aggregateWindow(every:1m, fn:last, createEmpty: false)
+    |> aggregateWindow(every:v.windowPeriod, fn:last, createEmpty: false)
     |> yield()

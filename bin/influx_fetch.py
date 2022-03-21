@@ -80,9 +80,12 @@ def query(flux_script, start, end, interval="1s", verbose=False):
     query = query.replace("v.timeRangeStart", f"{start.isot}Z")
     query = query.replace("v.timeRangeStop", f"{end.isot}Z")
     query = query.replace("v.windowPeriod", interval)
+    before = Time.now()
+    result = client.query(query=query, org=org)
+    after = Time.now()
     if verbose:
         print(query)
-    result = client.query(query=query, org=org)
+        print(f"Query time: {(after - before).sec}s")
     return result
 
 

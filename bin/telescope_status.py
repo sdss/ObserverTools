@@ -89,7 +89,6 @@ def query():
     data = multiprocessing.Manager().dict()
     encl_thread = multiprocessing.Process(target=get_enclosure_state,
                                           args=(t_start, t_end, data))
-    print(t_end, t_end - 5 / 60 / 24)
     chiller_thread = multiprocessing.Process(target=get_chiller_state,
                                              args=(t_end - 15 / 60 / 24, t_end,
                                                    data))

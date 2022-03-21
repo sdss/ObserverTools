@@ -7,6 +7,7 @@ TODO: Thread these queries
 """
 import argparse
 import multiprocessing
+from tkinter import W
 
 import numpy as np
 
@@ -58,7 +59,7 @@ class LogSupport:
         self.tend = Time(tend)
         self.args = args
         if args.verbose:
-            print(f"Log Support Window: {self.tstart}-{self.tend}")
+            print(f"Log Support Window: {self.tstart.iso}-{self.tend.iso}")
 
         self.call_times = []
         self.offsets = ""
@@ -86,7 +87,8 @@ class LogSupport:
         enclosure.join(5)
         try:
             all_times = Time(callback_dict["boss_calls"]
-                             + callback_dict["apogee_calls"])
+                             + callback_dict["apogee_calls"]
+                             + callback_dict["enclosure_times"])
         except ValueError:
             self.call_times = []
             return
@@ -113,6 +115,7 @@ class LogSupport:
                 # 15 * 60 / 86400), format="mjd")
 
     def get_offsets(self, out_dict={}):
+        start = Time.now()
         self.offsets = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'Az':>6}"
             f" {'Alt':>4} {'Rot':>6} {'Az Off':>6} {'Alt Off':>7}"
             f" {'Rot Off':>7} {'Guide RMS (um)':>14}\n")
@@ -120,8 +123,11 @@ class LogSupport:
         offsets_tab = {}
         offsets_tab_path = Path(__file__).parent.parent / "flux/offsets.flux"
         with offsets_tab_path.open('r') as fil:
+            pre_query = Time.now()
             off_tables = influx_fetch.query(fil.read(),
-                self.call_times[0], self.call_times[-1])
+                self.call_times[0], self.call_times[-1], interval="1m",
+                verbose=self.args.verbose)
+            post_query = Time.now()
         for table in off_tables:
             for row in table.records:
                 field = row.get_field()
@@ -131,6 +137,7 @@ class LogSupport:
                 else:
                     offsets_tab[f"t{field}"] = [row.get_time()]
                     offsets_tab[field] = [row.get_value()]
+        post_parse = Time.now()
         for key in offsets_tab.keys():
             if key[0] == 't':
                 offsets_tab[key] = Time(offsets_tab[key])
@@ -138,6 +145,7 @@ class LogSupport:
                 offsets_tab[key] = np.array(offsets_tab[key])
         if len(offsets_tab) == 0:
             return
+        post_sort = Time.now()
         for t in self.call_times:
             line = [t.isot[11:19]] 
             for key in ["configuration_loaded_2", "configuration_loaded_1",
@@ -154,7 +162,12 @@ class LogSupport:
             self.offsets += ("{:<8} {:>6.0f}-{:<6.0f} {:>6.1f} {:>4.1f}"
                              " {:>6.1f} {:>6.3f} {:>7.3f} {:>7.3f} {:>14.3f}"
                              "\n".format(*line))
+        post_print = Time.now()
         out_dict["offsets"] = self.offsets        
+        if self.args.verbose:
+            times = Time([start, pre_query, post_query, post_parse, post_sort,
+                          post_print]) - start
+            print(np.diff(times.sec))
 
     def get_focus(self, out_dict={}):
         self.focus = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'M1':>7}"
@@ -166,7 +179,8 @@ class LogSupport:
         focus_tab_path = Path(__file__).parent.parent / "flux/focus.flux"
         with focus_tab_path.open('r') as fil:
             off_tables = influx_fetch.query(fil.read(),
-                self.call_times[0], self.call_times[-1])
+                self.call_times[0], self.call_times[-1], interval="1m",
+                verbose=self.args.verbose)
         for table in off_tables:
             for row in table.records:
                 field = row.get_field()
@@ -215,9 +229,10 @@ class LogSupport:
         weather_tab = {}
         weather_tab_path = Path(__file__).parent.parent / "flux/weather.flux"
         with weather_tab_path.open('r') as fil:
-            off_tables = influx_fetch.query(fil.read(),
-                self.call_times[0], self.call_times[-1])
-        for table in off_tables:
+            weather_tables = influx_fetch.query(fil.read(),
+                self.call_times[0], self.call_times[-1], interval="1m",
+                verbose=self.args.verbose)
+        for table in weather_tables:
             for row in table.records:
                 field = row.get_field()
                 if field in weather_tab.keys():
@@ -282,7 +297,8 @@ class LogSupport:
         # boss_temps_path = Path(__file__).parent.parent / "flux/boss_temps.flux"
         with hartmanns_path.open('r') as fil:
             hart_tables = influx_fetch.query(fil.read(),
-                self.tstart, self.tend)
+                self.tstart, self.tend,
+                verbose=self.args.verbose)
         # with boss_temps_path.open('r') as fil:
             # boss_tables = influx_fetch.query(fil.read(),
                 # self.tstart, self.tend)
