@@ -7,7 +7,6 @@ TODO: Thread these queries
 """
 import argparse
 import multiprocessing
-from tkinter import W
 
 import numpy as np
 
