@@ -511,4 +511,8 @@
   desgin-based pairing
 - telescope_status.py reports chiller values
 - gfa_fwhm.py -c default number of exposures reduced to 15
-  
+
+## [3.7.12] - 2022-04-03
+
+- gfa_fwhm.py flexibly handles ignoring cameras
+- silly tkinter dependancy in previous version removed, just a typo

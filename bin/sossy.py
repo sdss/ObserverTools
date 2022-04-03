@@ -25,9 +25,9 @@ sys.setrecursionlimit(10000)  # This is a very dangerous operation that
 # number is too high, it could easily trigger a segmentation fault
 
 
-class Plate:
-    def __init__(self, plate_id, sjds, args):
-        self.plate_id = plate_id
+class Field:
+    def __init__(self, field_id, sjds, args):
+        self.field_id = field_id
         self.sjds = sjds
         self.args = args
         self.useful_sjds = []
@@ -45,9 +45,9 @@ class Plate:
             log_soup = BeautifulSoup(fil.read(), 'html.parser')
         exp_ids = []
         exp_snrs = []
-        for plate in log_soup.find_all('caption'):
-            if self.plate_id in plate.find('b').decode():
-                for line in plate.find('tr').decode().split('<tr>'):
+        for field in log_soup.find_all('caption'):
+            if self.field_id in field.find('b').decode():
+                for line in field.find('tr').decode().split('<tr>'):
                     if '>(S/N)^2' in line:
                         sci_images = line.split('<td align="RIGHT">')
                         exp_ids.append(
@@ -57,7 +57,7 @@ class Plate:
                         else:
                             exp_snrs.append([sci_images[2].split()[-1],
                                              sci_images[3].split()[-1]])
-                last_line = plate.find_all('tr')[-1].decode().split(
+                last_line = field.find_all('tr')[-1].decode().split(
                     '<td align="RIGHT">')
                 try:
                     last_line[1]
@@ -82,7 +82,7 @@ class Plate:
                         else:
                             self.snr_totals.append([0., 0.])
 
-    def parse_plate(self):
+    def parse_field(self):
         for mjd in self.sjds:
             self.parse_sjd(mjd)
         # print(self.useful_sjds)
@@ -106,7 +106,7 @@ class Plate:
                 *self.snr_totals.sum(axis=0)))
 
         else:
-            print("This plate hasn't been observed\n")
+            print("This field hasn't been observed\n")
 
 
 def parse_args():
@@ -114,10 +114,10 @@ def parse_args():
                                         ' reading SOS S/N^2 and summing the'
                                         ' S/N^2 across multiple days. Default'
                                         ' usage is to use the -p argument for'
-                                        ' each plate you want, which will check'
+                                        ' each field you want, which will check'
                                         ' the last 40 mjds.')
-    parser.add_argument('-p', '--plates', nargs='+',
-                        help='Plate numbers to create a summary for')
+    parser.add_argument('-f', '--fields', nargs='+',
+                        help='field numbers to create a summary for')
     parser.add_argument('-m', '--mjds', dest='sjds', nargs='+',
                         help='mjds (actually sjds) to search')
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -140,11 +140,11 @@ def parse_args():
 def main():
     args = parse_args()
 
-    for plate in args.plates:
-        print('Plate: {}'.format(plate))
-        pl = Plate(plate, args.sjds, args)
-        pl.parse_plate()
-        pl.print_summary()
+    for field in args.fields:
+        print('Field: {}'.format(field))
+        fld = Field(field, args.sjds, args)
+        fld.parse_field()
+        fld.print_summary()
 
 
 if __name__ == '__main__':

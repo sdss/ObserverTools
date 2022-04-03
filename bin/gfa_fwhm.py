@@ -87,7 +87,7 @@ def get_img_path(mjd: int, cam_num: int, exp_num: int):
 
 
 class GFASet:
-    def __init__(self, verbose: bool = False):
+    def __init__(self, verbose: bool = False, gfas=np.array([2, 3, 4, 5, 6])):
         self.paths = []
         self.filter = []
         self.isots = []
@@ -98,6 +98,7 @@ class GFASet:
         self.verbose = verbose
         self.ani_fig = None
         self.ani_ax = None
+        self.gfas = gfas
 
     def add_index(self, paths_iter, im_num: int):
         paths = []
@@ -211,7 +212,7 @@ class GFASet:
         return a * x**2 + x * b + c
 
     def plot(self, plot_file, fig=None, ax=None, dont_print=False):
-        flat_foc = (self.afocuses + camera_offsets).flatten()
+        flat_foc = (self.afocuses + camera_offsets[self.gfas - 1]).flatten()
         flat_fwhms = self.afwhms.flatten()
         flat_nstars = self.an_objs.flatten()
         nan_filt = ~np.isnan(flat_fwhms)
@@ -265,11 +266,12 @@ class GFASet:
             ax.axvline(-b / 2 / a, c="r", linestyle="--", alpha=0.6)
 
         not_old = 10 - (np.nanmax(self.aisots) - self.aisots) > 0
-        for i in range(6):
-            ax.scatter(self.afocuses[not_old[:, i], i] + camera_offsets[i],
+        for i, cam in enumerate(self.gfas):
+            ax.scatter(self.afocuses[not_old[:, i], i]
+                       + camera_offsets[self.gfas - 1][i],
                        self.afwhms[not_old[:, i], i], s=6,
                        alpha=0.7,
-                       label=f"{i+1}")
+                       label=f"{cam}")
         ax.scatter(flat_foc[nan_filt][chi_rejects],
                    flat_fwhms[nan_filt][chi_rejects], marker="x", alpha=0.7,
                    linewidth=0.5, c="k")
@@ -286,7 +288,7 @@ class GFASet:
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
         xs = np.linspace(np.nanmin(self.afocuses), np.nanmax(self.afocuses))
         mum = "\u03BCm"
-        for i in range(6):
+        for i, cam in enumerate(self.gfas):
             if np.all(np.isnan(self.afwhms[:, i])):
                 continue
             a, b, c = np.polyfit(self.afocuses[:, i], self.afwhms[:, i], deg=2)
@@ -294,7 +296,7 @@ class GFASet:
             print(f'GFA {i+1:<4.0f} {best:>6.2f}{mum}'
                   f' {self.quadratic(best, a, b, c):>6.2f}"')
             ax.scatter(self.afocuses[:, i], self.afwhms[:, i], alpha=0.6,
-                       label=f"GFA {i+1:.0f}")
+                       label=f"GFA {cam+1:.0f}")
             ax.plot(xs, self.quadratic(xs, a, b, c), alpha=0.8)
         ax.legend()
         ax.set_xlabel("Focus ($\mu m$)")
@@ -306,10 +308,10 @@ class GFASet:
 
     def exp_num_plot(self, plot_file=None):
         fig, ax = plt.subplots(1, 1, figsize=(6, 4))
-        for i in range(6):
+        for i, cam in enumerate(self.gfas):
             ax.plot(self.aim_nums, self.afwhms[:, i], linewidth=1,
                     alpha=0.8,
-                    label=f"GFA {i+1}")
+                    label=f"GFA {cam+1}")
             ax.scatter(self.aim_nums, self.afwhms[:, i], s=6,
                        alpha=0.8)
         ax.legend()
@@ -337,7 +339,7 @@ class GFASet:
             latest = max(latest, current_num)
         for im_num in tqdm.tqdm(range(latest - n_images, latest + 1)):
             im_ps = []
-            for n in range(1, 7):
+            for n in self.gfas:
                 p = get_img_path(today, n, im_num)
                 im_ps.append(p)
             self.add_index(im_ps, im_num)
@@ -357,7 +359,7 @@ class GFASet:
             print(current_range)
         while p.exists() and (im_num - im_num_0 < current_range):
             im_ps = []
-            for n in range(1, 7):
+            for n in self.gfas:
                 p = get_img_path(today, n, im_num)
                 im_ps.append(p)
             self.add_index(im_ps, im_num)
@@ -383,7 +385,8 @@ def parse_args():
                         help="Verbose debugging output")
     parser.add_argument("-f", "--file", nargs="+",
                         help="Specific files to process")
-    parser.add_argument("-n", "--gfas", nargs="+", type=int, default=[2, 5])
+    parser.add_argument("-n", "--gfas", nargs="+", type=int, default=[2, 3, 4,
+                                                                      5, 6])
     parser.add_argument("-w", "--window",
                         help="A dash separated beginning and end of the window."
                              " Always include a --master-field with your window."
@@ -411,15 +414,15 @@ def parse_args():
                         )
     args = parser.parse_args()
 
-    if args.continuous and args.window:
-        raise argparse.ArgumentError("Continuous does not require a window")
+    args.gfas = np.array(args.gfas)
+    
     return args
 
 
 def main(args=None):
     if args is None:
         args = parse_args()
-    gfas = GFASet(verbose=args.verbose)
+    gfas = GFASet(verbose=args.verbose, gfas=args.gfas)
     if args.file:
         print(f"{'File Name':<20} {'FWHM':<6} {'N Objects':<11} {'Mean Ecc':<6}")
         print('=' * 80)
@@ -486,7 +489,7 @@ def main(args=None):
             if im_num in args.ignore:
                 continue
             im_ps = []
-            for n in range(1, 7):
+            for n in args.args.gfas:
                 p = get_img_path(args.mjd, n, im_num)
                 im_ps.append(p)
 
