@@ -513,7 +513,7 @@ class Logging:
             plurald = 's' if len(self.data["dDesign"][i]) > 1 else ''
             pluralc = 's' if len(self.data["dConfig"][i]) > 1 else ''
             print('\n'.join(textwrap.wrap(
-                f"Field {field:.0f} Design{plurald} {designs},"
+                f"Field {field:.0f}, Design{plurald} {designs},"
                 f" Config{pluralc} {configs},"
                 f" {self.design_data['dAPSummary'][i]},"
                 f" {self.design_data['dBSummary'][i]}", 80)))

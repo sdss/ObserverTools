@@ -179,8 +179,8 @@ class APOGEERaw:
         missing = flux_ratio < 0.2
         faint = (flux_ratio < 0.7) & (0.2 <= flux_ratio)
         bright = ~missing & ~faint
-        i_missing = np.where(missing)[0].astype(int) + 1
-        i_faint = np.where(faint)[0].astype(int) + 1
+        i_missing = np.where(missing)[0].astype(int)
+        i_faint = np.where(faint)[0].astype(int)
         i_bright = np.where(bright)[0]
         missing_bundles = self.create_bundles(i_missing)
         faint_bundles = self.create_bundles(i_faint)
