@@ -517,13 +517,13 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('Observing Summary'))
         print('=' * 80)
-        print(f"{'Time':>8} {'Field':>6}-{'Design':>6} {'Cadence':<20}"
+        print(f"{'Time':>8} {'Field':>6}-{'Design':>6} {'Cadence':<24}"
               f" {'APOGEE':<9} {'BOSS':<7} {'Completion':<10}")
         for i, field in enumerate(self.data['dField']):
             for j, design in enumerate(self.data["dDesign"][i]):
                 try:
                     line = (f"{self.data['dTimes'][i][j].isot[11:19]:>8}"
-                            f" {field:>6}-{design:<6.0f} {'':>20}"
+                            f" {field:>6}-{design:<6.0f} {'':>24}"
                             f" {self.design_data['dAPSummary'][i]:<9}"
                             f" {self.design_data['dBSummary'][i]:<7}")
                     print(line)

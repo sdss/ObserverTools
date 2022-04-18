@@ -171,7 +171,7 @@ class APOGEERaw:
                     return [], [], np.nan
                 self.quickred_data = fitsio.read(self.quickred_file, 1)
         slc = np.median(self.quickred_data[:, ws[0]:ws[1]], axis=1)
-        flux_ratio = slc / master_col
+        flux_ratio = np.flipud(slc / master_col)
         bad_data = ((flux_ratio == np.inf)
                     | (flux_ratio == -np.inf)
                     | np.isnan(flux_ratio))

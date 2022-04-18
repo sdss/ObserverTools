@@ -516,3 +516,8 @@
 
 - gfa_fwhm.py flexibly handles ignoring cameras
 - silly tkinter dependancy in previous version removed, just a typo
+- sloan_log.py summary matches survey requested format
+- get_dust.py runs at higher time resolution
+- APOGEE fiber ID order flipped
+- Log Support timeouts increased
+- sossy.py support fot field-design
