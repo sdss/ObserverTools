@@ -91,7 +91,7 @@ class Logging:
         # added to self.sort. All of these dictionary items begin as lists,
         # and are converted to np.arrays or astropy.time.Times in self.sort.
         self.data = {'dField': [], 'dTime': [], 'dConfig': [], 'cLead': [],
-                     "dDesign": []}
+                     "dDesign": [], "dTimes": []}
         self.ap_data = {'dDesign': [], "dConfig": [], 'dTime': [],
                         'iTime': [], 'iID': [],
                         'iSeeing': [], 'iDetector': [], 'iDither': [],
@@ -218,6 +218,7 @@ class Logging:
                     self.data['dDesign'].append(set([img.design_id]))
                     self.data['dConfig'].append(set([img.config_id]))
                     self.data['dTime'].append(img.isot)
+                    self.data['dTimes'].append([img.isot])
                     try:
                         self.data['cLead'].append(img.lead)
                     except AttributeError:
@@ -230,6 +231,10 @@ class Logging:
                     if img.isot < self.data['dTime'][i]:
                         self.data['dTime'].pop(i)
                         self.data['dTime'].insert(i, img.isot)
+                    for i, d in enumerate(self.data["dDesign"]):
+                        if d == img.design_id:
+                            self.data["dTimes"][i] = min(self.data["dTimes"][i],
+                                                         img.isot)
                 if img.field_id not in self.ap_data['dField']:
                     self.ap_data['dField'].append(img.field_id)
                     self.ap_data['dDesign'].append(set([img.design_id]))
@@ -289,6 +294,7 @@ class Logging:
                     self.data['dField'].append(img.field_id)
                     self.data['dDesign'].append(set([img.design_id]))
                     self.data['dConfig'].append(set([img.config_id]))
+                    self.data['dTimes'].append([img.isot])
                     try:
                         self.data['cLead'].append(img.lead)
                     except AttributeError:
@@ -301,6 +307,11 @@ class Logging:
                     if img.isot < self.data['dTime'][i]:
                         self.data['dTime'].pop(i)
                         self.data['dTime'].insert(i, img.isot)
+                    for i, d in enumerate(self.data["dDesign"]):
+                        if d == img.design_id:
+                            self.data["dTimes"][i] = min(self.data["dTimes"][i],
+                                                         img.isot)
+                            
                 if img.field_id not in self.b_data['dField']:
                     self.b_data['dField'].append(img.field_id)
                     self.b_data["dDesign"].append(set([img.design_id]))
@@ -359,7 +370,7 @@ class Logging:
         arrays"""
         # Data
         for key, item in self.data.items():
-            if 'Time' in key:
+            if 'Time' in key and "Times" not in key:
                 try:
                     self.data[key] = Time(item)
                 except ValueError:
@@ -506,17 +517,18 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('Observing Summary'))
         print('=' * 80)
+        print(f"{'Time':>8} {'Field':>6}-{'Design':>6} {'Cadence':<20}"
+              f" {'APOGEE':<9} {'BOSS':<7} {'Completion':<10}")
         for i, field in enumerate(self.data['dField']):
-            print('')
-            designs = ', '.join([f"{x:.0f}" for x in self.data['dDesign'][i]])
-            configs = ', '.join([f"{x:.0f}" for x in self.data['dConfig'][i]])
-            plurald = 's' if len(self.data["dDesign"][i]) > 1 else ''
-            pluralc = 's' if len(self.data["dConfig"][i]) > 1 else ''
-            print('\n'.join(textwrap.wrap(
-                f"Field {field:.0f}, Design{plurald} {designs},"
-                f" Config{pluralc} {configs},"
-                f" {self.design_data['dAPSummary'][i]},"
-                f" {self.design_data['dBSummary'][i]}", 80)))
+            for j, design in enumerate(self.data["dDesign"][i]):
+                try:
+                    line = (f"{self.data['dTimes'][i][j].isot[11:19]:>8}"
+                            f" {field:>6}-{design:<6.0f} {'':>20}"
+                            f" {self.design_data['dAPSummary'][i]:<9}"
+                            f" {self.design_data['dBSummary'][i]:<7}")
+                    print(line)
+                except IndexError:
+                    continue
         print()
         if len(self.ap_data["fRatio"]) > 0:
             flux_ratio = np.nanmean(np.array(self.ap_data["fRatio"]), axis=0)
