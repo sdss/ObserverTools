@@ -521,3 +521,7 @@
 - APOGEE fiber ID order flipped
 - Log Support timeouts increased
 - sossy.py support fot field-design
+
+## [3.7.13] - 2022-04-19
+
+- Addressed empty log support windows

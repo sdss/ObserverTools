@@ -87,7 +87,8 @@ class LogSupport:
         try:
             all_times = Time(callback_dict["boss_calls"]
                              + callback_dict["apogee_calls"]
-                             + callback_dict["enclosure_times"])
+                             + callback_dict["enclosure_times"]
+                             + [self.tstart, self.tend])
         except ValueError:
             self.call_times = []
             return
