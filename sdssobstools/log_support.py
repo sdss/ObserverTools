@@ -90,7 +90,7 @@ class LogSupport:
                              + callback_dict["enclosure_times"]
                              + [self.tstart, self.tend])
         except ValueError:
-            self.call_times = []
+            self.call_times = Time([self.tstart, self.tend])
             return
         all_times = all_times[all_times.argsort()]
         encl_times = Time(callback_dict["enclosure_times"])
@@ -152,11 +152,14 @@ class LogSupport:
                         "axePos_az", "axePos_alt", "axePos_rot",
                         "objArcOff_0_P", "objArcOff_1_P", "guideOff_2_P",
                         "guide_rms_3"]:
-                before = offsets_tab['t' + key] < t
-                if before.sum() == 0:
-                    line.append(np.nan)
+                if 't' + key in offsets_tab.keys():
+                    before = offsets_tab['t' + key] < t
+                    if before.sum() == 0:
+                        line.append(np.nan)
+                    else:
+                        line.append(offsets_tab[key][before][-1])
                 else:
-                    line.append(offsets_tab[key][before][-1])
+                    line.append(np.nan)
             if np.all(np.isnan(np.array(line[1:]))):
                 continue
             self.offsets += ("{:<8} {:>6.0f}-{:<6.0f} {:>6.1f} {:>4.1f}"

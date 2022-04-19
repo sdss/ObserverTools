@@ -525,3 +525,7 @@
 ## [3.7.13] - 2022-04-19
 
 - Addressed empty log support windows
+
+## [3.7.14] - 2022-04-19
+
+- Whoops
