@@ -1,0 +1,8 @@
+dust = from(bucket: "actors")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r._measurement == "apo" and r._field == "dustb")
+    |> map(fn: (r) => ({r with _value: float(v: r._value) / 6.0}))
+    |> aggregateWindow(every:10m, fn: mean, createEmpty: false)
+    |> cumulativeSum()
+    |> map(fn: (r) => ({r with _value: int(v: r._value)}))
+    |> yield()

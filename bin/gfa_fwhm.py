@@ -466,8 +466,9 @@ def main(args=None):
         low = 1000
         high = 0
         for file in path_stem.glob("gimg-gfa5n-*.fits*"):
-            ind = int(file.name.split("-")[-1].rstrip(
-                ".fits.gz"))
+            print(file.name)
+            ind = int(file.name.split("n-")[-1].rstrip(
+                "-snap.fits.gz"))
             if ind < low:
                 low = ind
             if ind > high:
@@ -489,7 +490,7 @@ def main(args=None):
             if im_num in args.ignore:
                 continue
             im_ps = []
-            for n in args.args.gfas:
+            for n in args.gfas:
                 p = get_img_path(args.mjd, n, im_num)
                 im_ps.append(p)
 

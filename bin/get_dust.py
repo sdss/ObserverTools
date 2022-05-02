@@ -22,6 +22,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-m', '--mjd', help='enter mjd, default is current mjd',
                         default=today, type=int)
+    parser.add_argument("--no-enclosure", help="Bypass enclosure",
+                        action="store_true")
     parser.add_argument('-v', '--verbose', action="store_true",
                         help='print incremental dust data')
     args = parser.parse_args()
@@ -35,8 +37,13 @@ def parse_args():
     return args
 
 
-def get_dust(start_time, end_time, verbose):
-    q_path = Path(sdss_paths.__file__).parent.parent / "flux/dust.flux"
+def get_dust(start_time, end_time, verbose, enclosure=True):
+    if enclosure:
+        q_path = Path(sdss_paths.__file__).parent.parent / "flux/dust.flux"
+    else:
+        q_path = Path(sdss_paths.__file__
+                      ).parent.parent / "flux/dust_no_enc.flux"
+        
     if not q_path.exists():
         raise FileNotFoundError(
             f"Couldn't find Flux query {q_path.absolute()}")
@@ -71,7 +78,8 @@ def get_dust(start_time, end_time, verbose):
 def main(args=None):
     if args is None:
         args = parse_args()
-    dust_sum = get_dust(args.start_time, args.end_time, args.verbose)
+    dust_sum = get_dust(args.start_time, args.end_time, args.verbose,
+                        not args.no_enclosure)
     print("Integrated Dust Counts: ~{:<.0f} dust-hrs".format(
           dust_sum - dust_sum % 100))
 
