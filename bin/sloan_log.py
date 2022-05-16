@@ -677,15 +677,15 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('BOSS Data Summary'))
         print('=' * 80 + '\n')
-        print('{:<5} {:<8} {:<13} {:<8} {:<7} {:<5} {:<5} {:<5}'
-              ''.format('MJD', 'UTC', 'Design-Config', 'Exposure', 'Type',
+        print('{:<5} {:<8} {:<20} {:<8} {:<7} {:<5} {:<5} {:<5}'
+              ''.format('MJD', 'UTC', 'Field-Design-Config', 'Exposure', 'Type',
                         'SOS', 'ETime', 'Hart'))
         print('-' * 80)
-        for (mjd, iso, design, design, config, exp_id, exp_type, 
+        for (mjd, iso, field, design, config, exp_id, exp_type, 
              detectors, etime,
              hart) in zip(self.b_data['iTime'].mjd + 0.3,
                           self.b_data['iTime'].iso,
-                          self.b_data['iDesign'],
+                          self.b_data['iField'],
                           self.b_data["iDesign"],
                           self.b_data['iConfig'],
                           self.b_data['iID'],
@@ -693,10 +693,10 @@ class Logging:
                           self.b_data['iDetector'],
                           self.b_data['idt'],
                           self.b_data['iHart']):
-            print('{:<5.0f} {:>8} {:>6}-{:<6.0f} {:0>8.0f} {:<7} '
+            print('{:<5.0f} {:>8} {:>6.0f}-{:>6}-{:<6.0f} {:0>8.0f} {:<7}'
                   ' {:<5}'
                   ' {:>5.0f} {:<5}'
-                  ''.format(int(mjd), iso[11:19], design, config, exp_id,
+                  ''.format(int(mjd), iso[11:19], field, design, config, exp_id,
                             exp_type.strip(), detectors, etime, hart))
         print()
 
@@ -704,15 +704,16 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('APOGEE Data Summary'))
         print('=' * 80 + '\n')
-        print('{:<5} {:<8} {:<13} {:<8} {:<12} {:<4} {:<5} {:<5}'
-              ''.format('MJD', 'UTC', 'Design-Config', 'Exposure', 'Type',
+        print('{:<5} {:<8} {:<20} {:<8} {:<12} {:<4} {:<5} {:<5}'
+              ''.format('MJD', 'UTC', 'Field-Design-Config', 'Exposure', 'Type',
                         'Dith', 'Reads', 'Arch'))
         print('-' * 80)
         if self.args.morning:
-            for (mjd, iso, design, config, exp_id, exp_type, dith, nread,
+            for (mjd, iso, field, design, config, exp_id, exp_type, dith, nread,
                  detectors) in zip(
                 self.ap_data['iTime'].mjd[self.morning_filter] + 0.3,
                 self.ap_data['iTime'].iso[self.morning_filter],
+                self.ap_data["iField"][self.morning_filter],
                 self.ap_data["iDesign"][self.morning_filter],
                 self.ap_data["iConfig"][self.morning_filter],
                 self.ap_data['iID'][self.morning_filter],
@@ -721,18 +722,19 @@ class Logging:
                 self.ap_data['iNRead'][self.morning_filter],
                 self.ap_data['iDetector'][self.morning_filter],
             ):
-                print('{:<5.0f} {:>8} {:>6.0f}-{:<6.0f} {:<8.0f} {:<12} {:<4}'
+                print('{:<5.0f} {:>8} {:>6.0f}-{:>6.0f}-{:<6.0f} {:<8.0f} {:<12} {:<4}'
                       ' {:>5}'
                       ' {:<5}'
-                      ''.format(int(mjd), iso[11:19], design, config,
+                      ''.format(int(mjd), iso[11:19], field, design, config,
                                 exp_id, exp_type,
                                 dith, nread, detectors))
 
         else:
-            for (mjd, iso, design, config, exp_id, exp_type, dith, nread,
+            for (mjd, iso, field, design, config, exp_id, exp_type, dith, nread,
                  detectors) in zip(
                 self.ap_data['iTime'].mjd,
                 self.ap_data['iTime'].iso,
+                self.ap_data["iField"],
                 self.ap_data["iDesign"],
                 self.ap_data["iConfig"],
                 self.ap_data['iID'], self.ap_data['iEType'],
@@ -745,10 +747,10 @@ class Logging:
                 #       ' {:>6.1f}'.format(int(mjd), iso[11:19], design, plate,
                 #                          exp_id, exp_type,
                 #                          dith, nread, detectors, see))
-                print('{:<5.0f} {:>8} {:>6.0f}-{:<6.0f} {:<8.0f} {:<12} {:<4}'
+                print('{:<5.0f} {:>8} {:>6.0f}-{:>6.0f}-{:<6.0f} {:<8.0f} {:<12} {:<4}'
                       ' {:>5}'
                       ' {:<5}'
-                      ''.format(int(mjd), iso[11:19], design, config,
+                      ''.format(int(mjd), iso[11:19], field, design, config,
                                 exp_id, exp_type,
                                 dith, nread, detectors))
 
