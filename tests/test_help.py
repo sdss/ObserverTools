@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-import unittest
+import pytest
 import subprocess as sub
 from pathlib import Path
 
 
-class TestHelp(unittest.TestCase):
+class TestHelp():
 
     def test_noargs(self):
         """Runs the help like a user normally would"""
@@ -13,4 +13,4 @@ class TestHelp(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main()

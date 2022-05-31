@@ -1,40 +1,37 @@
 #!/usr/bin/env python3
-import unittest
+import pytest
 from pathlib import Path
 from bin import ap_test
 import numpy as np
 from sdssobstools import sdss_paths
 
 
-class TestAPTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.project = Path(__file__).absolute().parent.parent
+class Args(object):
+    pass
 
-        class Dummy(object):
-            pass
+args = Args()
+args.sjds = [59730]
+args.exps = [[41680010, 41680011, 41680012, 41680013, 41680014, 41680015,
+              41680016, 41680017, 41680018]]
+args.plot = False
+args.verbose = True
 
-        self.args = Dummy()
-        self.args.sjds = [59593]
-        self.args.exps = [[40310015, 40310016, 40310017, 40310018, 40310019]]
-        self.args.plot = False
-        self.args.verbose = True
-
+class TestAPTest:
     def test_known_date(self):
-
-        self.atest = ap_test.ApogeeFlat(self.args)
+        self.atest = ap_test.ApogeeFlat(args)
         self.atest.run_inputs()
 
     def test_directory(self):
         """Checks to see if the directory for new data is available to this
         computer"""
-        self.assertTrue(sdss_paths.ap_utr.exists())
+        assert sdss_paths.ap_utr.exists()
 
     def test_plotting(self):
         """Tests the plotting routine"""
-        self.args.plot = True
-        self.atest = ap_test.ApogeeFlat(self.args)
+        args.plot = True
+        self.atest = ap_test.ApogeeFlat(args)
         self.atest.run_inputs()
 
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main()

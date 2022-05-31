@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-import unittest
+import pytest
 import subprocess as sub
 from bin import boss_sha1sum
 from pathlib import Path
 
 
-class TestBOSSSHA1Sum(unittest.TestCase):
+class TestBOSSSHA1Sum:
 
     def test_find_sha1sum(self):
         """Checks to see if sha1sum is installed"""
         x = sub.check_output('which sha1sum', shell=True)
-        self.assertTrue(x)
+        assert x, "sha1sum must exist"
 
     def test_here(self):
         """Runs it on 3 boss images that are in this directory"""
@@ -40,5 +40,5 @@ class TestBOSSSHA1Sum(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main()
 

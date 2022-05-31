@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
-import unittest
+import pytest
 from pathlib import Path
 from bin import telescope_status
 import signal
 
 
-class TestTelStatus(unittest.TestCase):
-    def setUp(self):
-        self.file = (Path(__file__).absolute().parent.parent
-                     / 'bin/telescope_status.py')
+class TestTelStatus():
 
     @staticmethod
     def handler(signum, frame):
         print('Exiting call')
         raise TimeoutError('The function reached timeout without other errors')
 
-    # Problematic test that hangs, should investigate further
+    # This is problematic, it needs to be switched to a multiprocessing style
     # def test_print(self):
     #     signal.signal(signal.SIGALRM, self.handler)
     #     signal.alarm(10)
@@ -23,4 +20,4 @@ class TestTelStatus(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main()

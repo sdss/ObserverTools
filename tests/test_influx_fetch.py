@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-import unittest
+import pytest
 from pathlib import Path
 import subprocess as sub
 from astropy.time import Time
 from bin import influx_fetch
     
-class TestInfluxFetch(unittest.TestCase):
+class TestInfluxFetch():
     def test_known_date(self):
         dust = Path(__file__).parent.parent / "flux/dust.flux"
         with dust.open('r') as fil:
@@ -25,4 +25,4 @@ class TestInfluxFetch(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main()

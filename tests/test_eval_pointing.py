@@ -1,21 +1,25 @@
-import unittest
+import pytest
 from bin import eval_pointing
 
-class TestEvalPointing(unittest.TestCase):
-    def setUp(self) -> None:
-        class Args:
-            pass
-        self.args = Args()
-        self.args.mjd = 59464
-        self.args.verbose = False
-        self.args.window = "285-364"
-        self.args.master_field = 285
-        self.args.plot = True
-        self.args.plot_file = ""
-        self.args.json = ""
-        self.args.file = ""
-        self.args.threshold = 0
-        self.args.json = False
-    
+
+class Args:
+    pass
+
+
+args = Args()
+args.mjd = 59464
+args.verbose = False
+args.window = "285-364"
+args.master_field = 285
+args.plot = True
+args.plot_file = ""
+args.json = ""
+args.file = ""
+args.threshold = 0
+args.json = False
+
+
+class TestEvalPointing():
     def test_default_night(self):
-        eval_pointing.main(self.args)
+        eval_pointing.main(args)
+        

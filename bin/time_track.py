@@ -185,6 +185,8 @@ def main(args=None):
             except AttributeError:
                 print(f'Failed to parse SOS on {mjd} with plate {plate_id}')
                 continue
+            except KeyError:
+                continue
     if args.verbose:
         print('Plates Data')
         for plate in plates.values():

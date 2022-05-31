@@ -1,34 +1,33 @@
 #!/usr/bin/env python3
-import unittest
+import pytest
 import pyds9
 from pathlib import Path
 from sdssobstools import sdss_paths
 from bin import ds9_live
 
 
-class TestDS9(unittest.TestCase):
+class Args:
+    def __init__(self):
+        pass
+args = Args()
+args.name = "Scanner"
+args.fits_dir = ds9_live.default_dir
+args.regex = "apRaw*"
+args.scale = "histequ"
+args.zoom = "1.0"
+args.verbose = False
+args.info = False
+args.vertical = False
+
+class TestDS9():
     """ These tests don't work very well because they interfere with each other,
     I'm not sure why or how to fix it
     """
-    def setUp(self):
-        class Args:
-            def __init__(self):
-                pass
-        self.args = Args()
-        self.args.name = "Scanner"
-        self.args.fits_dir = ds9_live.default_dir
-        self.args.regex = "apRaw*"
-        self.args.scale = "histequ"
-        self.args.zoom = "1.0"
-        self.args.verbose = False
-        self.args.info = False
-        self.args.vertical = False
     def test_pyds9(self):
         # print('pyds9.test is disabled because it is quite slow')
         pyds9.test()
 
     def test_no_args(self):
-        args = self.args
         window = ds9_live.DS9Window(args.name, args.fits_dir, args.regex,
                                     args.scale, args.zoom, args.verbose, False,
                                     True)
@@ -47,9 +46,8 @@ class TestDS9(unittest.TestCase):
     def test_apogee_summary_dir(self):
         """Checks to see if the directory for new data is available to this
         computer"""
-        args = self.args
-        self.assertTrue(Path(args.fits_dir).exists())
+        assert Path(args.fits_dir).exists()
 
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main()

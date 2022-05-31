@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
-import unittest
+import pytest
 import signal
 from pathlib import Path
 from bin import tpm_feed
 
 
-class TestTPMFeed(unittest.TestCase):
-    def setUp(self):
-        self.file = Path(__file__).absolute().parent.parent / 'bin/tpm_feed.py'
+class DummyArgs(object):
+    pass
 
-        class DummyArgs(object):
-            pass
 
-        self.args = DummyArgs()
-        self.args.channels = ['dewar_sp1_lb']
-        self.args.plot = True
-        self.args.verbose = True
-        self.args.version = False
-        self.args.dt = 5
-        self.args.list_channels = False
+args = DummyArgs()
+args.channels = ['dewar_sp1_lb']
+args.plot = True
+args.verbose = True
+args.version = False
+args.dt = 5
+args.list_channels = False
 
+
+class TestTPMFeed():
     @staticmethod
     def handler(signum, frame):
         print('Exiting call')
@@ -28,7 +27,7 @@ class TestTPMFeed(unittest.TestCase):
     def test_print(self):
         signal.signal(signal.SIGALRM, self.handler)
         signal.alarm(10)
-        self.args.version = True
+        args.version = True
         try:
             pass
             # TODO These tests fail if tpmdata.packet(1, 1) cannot close. This
@@ -39,8 +38,8 @@ class TestTPMFeed(unittest.TestCase):
             print(t)
 
     def test_list_channels(self):
-        self.args.plot = False
-        self.args.list_channels = True
+        args.plot = False
+        args.list_channels = True
         signal.signal(signal.SIGALRM, self.handler)
         signal.alarm(10)
         try:
@@ -51,4 +50,4 @@ class TestTPMFeed(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main()

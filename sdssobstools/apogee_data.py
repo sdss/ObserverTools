@@ -43,7 +43,10 @@ class APOGEERaw:
             self.dither = '{:.1f}'.format(header['DITHPIX'])
         self.exp_time = header['EXPTIME']
         self.isot = Time(header['DATE-OBS'])  # Local
-        self.field_id = int(header["FIELDID"])
+        if "FIELDID" in header.keys():
+            self.field_id = int(header["FIELDID"])
+        else:
+            self.field_id = 0
         self.plate_id = header['PLATEID']
         if "CONFIGID" in header.keys():
             if isinstance(header["CONFIGID"], int):
@@ -179,9 +182,9 @@ class APOGEERaw:
         missing = flux_ratio < 0.2
         faint = (flux_ratio < 0.7) & (0.2 <= flux_ratio)
         bright = ~missing & ~faint
-        i_missing = np.where(missing)[0].astype(int)
-        i_faint = np.where(faint)[0].astype(int)
-        i_bright = np.where(bright)[0]
+        i_missing = np.where(missing)[0].astype(int) + 1
+        i_faint = np.where(faint)[0].astype(int) + 1
+        i_bright = np.where(bright)[0].astype(int) + 1
         missing_bundles = self.create_bundles(i_missing)
         faint_bundles = self.create_bundles(i_faint)
         if print_it:
@@ -195,9 +198,11 @@ class APOGEERaw:
             fig = plt.figure(figsize=(9, 4))
             ax = fig.gca()
             x = np.arange(len(flux_ratio)) + 1
-            ax.plot(x[i_bright], flux_ratio[i_bright], 'o', c=(0, 0.6, 0.533))
-            ax.plot(x[i_faint], flux_ratio[i_faint], 'o', c=(0.933, 0.466, 0.2))
-            ax.plot(x[i_missing], flux_ratio[i_missing], 'o',
+            ax.plot(x[i_bright - 1], flux_ratio[i_bright - 1], 'o',
+                    c=(0, 0.6, 0.533))
+            ax.plot(x[i_faint - 1], flux_ratio[i_faint - 1], 'o',
+                    c=(0.933, 0.466, 0.2))
+            ax.plot(x[i_missing - 1], flux_ratio[i_missing - 1], 'o',
                     c=(0.8, 0.2, 0.066))
             ax.set_xlabel('Fiber ID')
             ax.set_ylabel('Throughput Efficiency')

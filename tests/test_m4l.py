@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-import unittest
+import pytest
 from bin import m4l
 
 
-class TestM4L(unittest.TestCase):
+class TestM4L():
 
     def test_noargs(self):
         """Run m4l like normal"""
@@ -11,4 +11,4 @@ class TestM4L(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main()
