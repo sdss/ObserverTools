@@ -535,3 +535,7 @@
 - Switched to pytest
 - Fixed to log support on problematic nights
 - moved dust.flux to actors bucket
+
+## [3.8.1] - 2022-05-31
+
+- Finally caught a bug that was giving empty log support sections

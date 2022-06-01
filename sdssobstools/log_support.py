@@ -47,8 +47,9 @@ def get_enclosure_history(tstart, tend, call_dict):
         tables = influx_fetch.query(fil.read(), tstart, tend)
     for table in tables:
         for row in table.records:
-            out_times.append(row.get_time())
-            out_states.append(row.get_value())
+            if row.get_value():
+                out_times.append(row.get_time())
+                out_states.append(row.get_value())
     call_dict["enclosure_times"] = out_times
     call_dict["enclosure_states"] = out_states
  
@@ -84,12 +85,16 @@ class LogSupport:
         boss.join(5)
         apogee.join(5)
         enclosure.join(5)
+        if self.args.verbose:
+            print(f"BOSS Calls: {len(callback_dict['boss_calls'])}, "
+                  f"APOGEE Calls: {len(callback_dict['apogee_calls'])}, "
+                  f"Enclosure calls: {len(callback_dict['enclosure_times'])}")
         try:
             all_times = Time(callback_dict["boss_calls"]
                              + callback_dict["apogee_calls"]
-                             + callback_dict["enclosure_times"]
-                             + [self.tstart, self.tend])
-        except ValueError:
+                             + callback_dict["enclosure_times"])
+        except ValueError as e:
+            print("ValueError setting call times:", e)
             self.call_times = Time([self.tstart, self.tend])
             return
         all_times = all_times[all_times.argsort()]
@@ -111,6 +116,10 @@ class LogSupport:
             self.call_times = Time(new_times)
         except ValueError:
             self.call_times = Time(new_times, format="mjd")
+        # self.tstart = self.call_times[0]  # This messes with hartmanns
+        # self.tend = self.call_times[-1]
+        if self.args.verbose:
+            print("Call times: ", self.call_times)
         # self.call_times = Time(np.arange((self.tstart + 0.3).mjd, self.tend.mjd,
                 # 15 * 60 / 86400), format="mjd")
 
