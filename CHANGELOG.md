@@ -539,3 +539,7 @@
 ## [3.8.1] - 2022-05-31
 
 - Finally caught a bug that was giving empty log support sections
+
+## [3.8.2] - 2022-06-02
+
+- Fixed an enclosure-closed bug in log_support.py

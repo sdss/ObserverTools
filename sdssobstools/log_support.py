@@ -91,17 +91,20 @@ class LogSupport:
                   f"Enclosure calls: {len(callback_dict['enclosure_times'])}")
         try:
             all_times = Time(callback_dict["boss_calls"]
-                             + callback_dict["apogee_calls"]
-                             + callback_dict["enclosure_times"])
+                             + callback_dict["apogee_calls"])
         except ValueError as e:
             print("ValueError setting call times:", e)
             self.call_times = Time([self.tstart, self.tend])
             return
         all_times = all_times[all_times.argsort()]
-        encl_times = Time(callback_dict["enclosure_times"])
-        encl_vals = np.array(callback_dict["enclosure_states"])
-        encl_vals = encl_vals[encl_times.argsort()]
-        encl_times = encl_times[encl_times.argsort()]
+        if len(callback_dict["enclosure_times"]) == 0:
+            encl_times = Time([self.tstart, self.tend])
+            encl_vals = np.array([1, 0])
+        else:
+            encl_times = Time(callback_dict["enclosure_times"])
+            encl_vals = np.array(callback_dict["enclosure_states"])
+            encl_vals = encl_vals[encl_times.argsort()]
+            encl_times = encl_times[encl_times.argsort()]
         new_times = []
         for time in all_times:
             before = encl_times < time
@@ -111,7 +114,8 @@ class LogSupport:
                 continue
             if np.all([time - (15 / 24 / 60) > t for t in new_times]):
                 new_times.append(time)
-        
+        if len(new_times) < 2:
+            new_times.append(self.tend)
         try:
             self.call_times = Time(new_times)
         except ValueError:

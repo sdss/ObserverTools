@@ -796,7 +796,7 @@ class Logging:
         print(f"{'Log Support':^80}")
         print('=' * 80)
         start = Time(self.args.sjd - 0.3, format='mjd')
-        end = Time(self.args.sjd + 1, format='mjd') - 0.3
+        end = Time(self.args.sjd + 0.7, format='mjd')
         end = Time.now() if Time.now() < end else end
         sup = log_support.LogSupport(start, end, self.args)
         sup.set_callbacks()
