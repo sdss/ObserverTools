@@ -543,3 +543,7 @@
 ## [3.8.2] - 2022-06-02
 
 - Fixed an enclosure-closed bug in log_support.py
+
+## [3.8.3] - 2022-07-22
+
+- Changes gfa_fwhm.py offsets
