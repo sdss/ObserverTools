@@ -21,8 +21,11 @@ sns.set(style="darkgrid")
 
 __author__ = "Dylan Gatlin"
 
-camera_offsets = np.array([0.0, -50.2985, -41.05837499999998,
-                           11.466562500000009, 52.425531914893625, 0.0])
+# camera_offsets = np.array([0.0, -50.2985, -41.05837499999998,
+                        #    11.466562500000009, 52.425531914893625, 0.0])
+camera_offsets = np.array([-14.375714285714285, -55.81857142857143,
+                           -106.17142857142855, 0.0,
+                            25.782857142857146, 46.994285714285716])
 camera_shifts = np.array([0., 0., +0.05, 0., -0.02])
 
 def build_filt(obj_arr: np.ndarray):
@@ -296,9 +299,10 @@ class GFASet:
             print(f'GFA {i+1:<4.0f} {best:>6.2f}{mum}'
                   f' {self.quadratic(best, a, b, c):>6.2f}"')
             ax.scatter(self.afocuses[:, i], self.afwhms[:, i], alpha=0.6,
-                       label=f"GFA {cam+1:.0f}")
+                       label=f"GFA {cam:.0f}")
             ax.plot(xs, self.quadratic(xs, a, b, c), alpha=0.8)
         ax.legend()
+        ax.set_title(f"{np.min(self.im_nums)}-{np.max(self.im_nums)}")
         ax.set_xlabel("Focus ($\mu m$)")
         ax.set_ylabel("FWHM (arcseconds)")
         plt.show()
@@ -311,7 +315,7 @@ class GFASet:
         for i, cam in enumerate(self.gfas):
             ax.plot(self.aim_nums, self.afwhms[:, i], linewidth=1,
                     alpha=0.8,
-                    label=f"GFA {cam+1}")
+                    label=f"GFA {cam}")
             ax.scatter(self.aim_nums, self.afwhms[:, i], s=6,
                        alpha=0.8)
         ax.legend()
@@ -385,8 +389,8 @@ def parse_args():
                         help="Verbose debugging output")
     parser.add_argument("-f", "--file", nargs="+",
                         help="Specific files to process")
-    parser.add_argument("-n", "--gfas", nargs="+", type=int, default=[2, 3, 4,
-                                                                      5, 6])
+    parser.add_argument("-n", "--gfas", nargs="+", type=int, default=[1, 2, 3,
+                                                                      4, 5, 6])
     parser.add_argument("-w", "--window",
                         help="A dash separated beginning and end of the window."
                              " Always include a --master-field with your window."
