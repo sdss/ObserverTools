@@ -12,8 +12,15 @@ from sdssobstools import sdss_paths
 @click.option("-2", "--t2", "time_2", default=Time.now())
 @click.option("-v", "--verbose", count=True)
 def main(time_1, time_2, verbose: int):
-    time_1 = Time(time_1)
-    time_2 = Time(time_2)
+    try:
+        time_1 = Time(time_1)
+    except ValueError:
+        time_1 = Time(time_1, format="mjd")
+    try:    
+        time_2 = Time(time_2)
+    except ValueError:
+        time_2 = Time(time_2, format="mjd")
+        
     collisions = []
     collision_times = []
     re_fiber = re.compile("(?<=positioner )\d+")
@@ -39,7 +46,7 @@ def main(time_1, time_2, verbose: int):
     print(f"{'Time':<20} {'Fiber':>5}")
     print('=' * 80)
     for t, c in zip(Time(collision_times), collisions):
-        print(f"{t.isot[:19]:<20} {c:>5.0f}")
+        print(f"{t.iso[:19]:<20} {c:>5.0f}")
     
     print(f"\n{'Fiber':>5} {'Collisions':>10}")
     print('=' * 80)
