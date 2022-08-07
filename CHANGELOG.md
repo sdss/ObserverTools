@@ -547,3 +547,7 @@
 ## [3.8.3] - 2022-07-22
 
 - Changes gfa_fwhm.py offsets
+
+## [3.9.0] - 2022-08-07
+
+- Added get_collisions.py, a tool to identify robot collisions
