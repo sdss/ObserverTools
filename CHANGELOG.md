@@ -551,3 +551,5 @@
 ## [3.9.0] - 2022-08-07
 
 - Added get_collisions.py, a tool to identify robot collisions
+- Changed gfa_fwhm.py offsets again a little bit
+- Fixed a bug in sloan_log.py with a new apogeeql change affecting FIELDID

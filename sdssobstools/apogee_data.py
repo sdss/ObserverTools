@@ -44,7 +44,10 @@ class APOGEERaw:
         self.exp_time = header['EXPTIME']
         self.isot = Time(header['DATE-OBS'])  # Local
         if "FIELDID" in header.keys():
-            self.field_id = int(header["FIELDID"])
+            if header["FIELDID"] == "":
+                self.field_id = 0
+            else:
+                self.field_id = int(header["FIELDID"])
         else:
             self.field_id = 0
         self.plate_id = header['PLATEID']

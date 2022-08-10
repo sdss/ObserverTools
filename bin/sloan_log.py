@@ -705,7 +705,7 @@ class Logging:
         print('{:^80}'.format('APOGEE Data Summary'))
         print('=' * 80 + '\n')
         print('{:<5} {:<8} {:<20} {:<8} {:<12} {:<4} {:<5} {:<5}'
-              ''.format('MJD', 'UTC', 'Field-Design-Config', 'Exposure', 'Type',
+              ''.format('MJD', 'UTC', ' Field-Design-Config', 'Exposure', 'Type',
                         'Dith', 'Reads', 'Arch'))
         print('-' * 80)
         if self.args.morning:
