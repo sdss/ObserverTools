@@ -53,6 +53,7 @@ def main(time_1, time_2, collisions, outofrange, verbose: int):
         targets.append(collisions)
     if run_outofrange:
         targets.append(oor_errors)
+    paths = []
     for sjd in range(int(time_1.mjd), int(time_2.mjd) + 1):
         sjd = Time(sjd, format="mjd")
         log_path = (sdss_paths.logs
@@ -61,6 +62,9 @@ def main(time_1, time_2, collisions, outofrange, verbose: int):
             log_path = log_path.with_suffix(".gz")
         if verbose >= 1:
             print(log_path)
+        paths.append(log_path)
+    paths.append(sdss_paths.logs / "jaeger/jaeger.log")
+    for log_path in paths:
         if log_path.suffix == ".gz":
             with gzip.open(log_path, "rb") as fil:
                 text = fil.read().decode('utf-8')
