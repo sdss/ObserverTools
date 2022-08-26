@@ -22,11 +22,12 @@ sns.set(style="darkgrid")
 __author__ = "Dylan Gatlin"
 
 # camera_offsets = np.array([0.0, -50.2985, -41.05837499999998,
-                        #    11.466562500000009, 52.425531914893625, 0.0])
+#    11.466562500000009, 52.425531914893625, 0.0])
 camera_offsets = np.array([-1.8474999999999977, -52.08291666666667,
                            -111.43416666666663, 0.0,
                            35.64791666666667, 54.41166666666667])
 camera_shifts = np.array([0., 0., +0.05, 0., -0.02])
+
 
 def build_filt(obj_arr: np.ndarray):
     ecc = np.sqrt(obj_arr['a']**2 - obj_arr['b']**2) / obj_arr['a']
@@ -419,7 +420,7 @@ def parse_args():
     args = parser.parse_args()
 
     args.gfas = np.array(args.gfas)
-    
+
     return args
 
 

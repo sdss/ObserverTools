@@ -248,6 +248,7 @@ class LogSupport:
             weather_tables = influx_fetch.query(fil.read(),
                 self.call_times[0], self.call_times[-1], interval="1m",
                 verbose=self.args.verbose)
+        
         for table in weather_tables:
             for row in table.records:
                 field = row.get_field()

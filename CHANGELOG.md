@@ -553,3 +553,8 @@
 - Added get_collisions.py, a tool to identify robot collisions
 - Changed gfa_fwhm.py offsets again a little bit
 - Fixed a bug in sloan_log.py with a new apogeeql change affecting FIELDID
+
+## [3.9.1] - 2022-08-26
+
+- Added time_summary.py to generate a time loss summary
+- Improved various influx-dependant scripts for performance

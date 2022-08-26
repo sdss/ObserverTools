@@ -33,7 +33,8 @@ def ping(host):
     param = '-n' if platform.system().lower() == 'windows' else '-c'
 
     # Building the command. Ex: "ping -c 1 google.com"
-    command = ['ping', param, '1', "-i", "0.2", host]
+    command = ['ping', param, '1', "-W", "0.5", host]
+    tstart = Time.now()
     x = sub.run(command, stdout=sub.PIPE)
     return x.returncode == 0
 

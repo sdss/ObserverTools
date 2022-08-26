@@ -53,7 +53,7 @@ def get_dust(start_time, end_time, verbose, enclosure=True):
         print(f"Start: {start_time.isot}, End: {end_time.isot}")
     result = influx_fetch.query(query, start_time, end_time)
     if len(result) == 0:
-        dust_sum = 0
+        return 0
     else:
         # If I ever stop trusting cumulateiveSum() to do the summation for me,
         # this routine is a decent substitute.
@@ -67,8 +67,6 @@ def get_dust(start_time, end_time, verbose, enclosure=True):
         # dust_sum = np.sum(np.gradient(times) * 24 * vals )
         dust_sum = result[0].records[-1].get_value()
 
-    if len(result) == 0:
-        return dust_sum
     if verbose:
         for row in result[0].records:
             print(row.get_time(), row.get_value())

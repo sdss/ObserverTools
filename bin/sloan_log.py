@@ -814,11 +814,11 @@ class Logging:
         focus.start()
         weather.start()
         # If these queries are timing out, you have an issue in Influx
-        offsets.join(15)
-        focus.join(15)
-        weather.join(15)
+        offsets.join()
+        focus.join()
+        weather.join()
         if "harts" not in self.support.keys():
-            hartmann.join(10)
+            hartmann.join()
         print(self.support["offsets"])
         print(self.support["focus"])
         print(self.support["weather"])
