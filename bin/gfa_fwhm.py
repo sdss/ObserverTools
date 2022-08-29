@@ -327,7 +327,7 @@ class GFASet:
             fig.savefig(plot_file, dpi=100)
         return fig
 
-    def init_continuous_plot(self, window="0-15"):
+    def init_continuous_plot(self, window="0-15", ignore=[]):
         low, high = window.split("-")
         n_images = int(high) - int(low)
         today = sjd.sjd()
@@ -343,6 +343,8 @@ class GFASet:
             current_num = int(fil.name.split("gfa4n-")[-1].split(".fits")[0])
             latest = max(latest, current_num)
         for im_num in tqdm.tqdm(range(latest - n_images, latest + 1)):
+            if im_num in ignore:
+                continue
             im_ps = []
             for n in self.gfas:
                 p = get_img_path(today, n, im_num)
@@ -455,7 +457,7 @@ def main(args=None):
         anis = []
         print("Plotting continuously")
         if args.window is None:
-            gfas.init_continuous_plot()
+            gfas.init_continuous_plot(ignore=args.ignore)
         else:
             gfas.init_continuous_plot(args.window)
         # I cannot explain why I must create a list I will never use to get an
