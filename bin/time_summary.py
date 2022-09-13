@@ -56,8 +56,12 @@ def get_from_influx(name: str, query_name: str, influx_times,
 #               help="If used, will ignore the enclosure state")
 # @click.option("-v", "--verbose", count=True,
 #               help="Verbose debugging, can be used multiple times")
-def gen_summary(times, no_enclosure, verbose):
-    k_times = times  # The times Kronos outputs
+def gen_summary(times, bright_first, no_enclosure, verbose):
+    times = list(times)
+    if bright_first:
+        k_times = times[2:] + times[0:2]
+    else:
+        k_times = times
     now = Time.now()
     k_times = list(k_times)
     for i, time in enumerate(k_times):
@@ -202,10 +206,12 @@ def gen_summary(times, no_enclosure, verbose):
 @click.argument("times", nargs=4)
 @click.option("-e", "--no-enclosure", is_flag=True,
               help="If used, will ignore the enclosure state")
+@click.option("-b", "--bright-first", is_flag=True,
+              help="Include if bright time is listed first")
 @click.option("-v", "--verbose", count=True,
               help="Verbose debugging, can be used multiple times")
-def print_summary(times, no_enclosure, verbose):
-    print(gen_summary(times, no_enclosure, verbose))
+def print_summary(times, bright_first, no_enclosure, verbose):
+    print(gen_summary(times, bright_first, no_enclosure, verbose))
 
 
 if __name__ == "__main__":

@@ -1,12 +1,12 @@
 wheel>=0.37.0
-pathlib~=1.0.1
+pathlib>=1.0.1
 matplotlib~=3.3.2
-numpy~=1.21.2
-astropy~=4.1
+numpy~=1.23.3
+astropy~=5.1
 pyds9~=1.8.1
 tqdm~=4.50.2
-seaborn~=0.10.1
-scipy~=1.7.1
+seaborn~=0.12.0
+scipy~=1.9.1
 setuptools>=47.1.1
 pytest-astropy
 datetime~=4.3

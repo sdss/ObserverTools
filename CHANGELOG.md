@@ -558,3 +558,6 @@
 
 - Added time_summary.py to generate a time loss summary
 - Improved various influx-dependant scripts for performance
+- Renamed get_collisions.py to list_collisions.py
+- list_collisions.py uses Influx to get designs
+- 

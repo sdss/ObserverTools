@@ -84,7 +84,7 @@ def query(flux_script, start, end, interval="1s", verbose=False):
     before = Time.now()
     result = client.query(query=query, org=org)
     after = Time.now()
-    if verbose:
+    if verbose >= 1:
         print(query)
         print(f"Query time: {(after - before).sec}s")
     return result
