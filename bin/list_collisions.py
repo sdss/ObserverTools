@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import re
-import time
 import gzip
+import time
 import click
 import tqdm
 
@@ -73,13 +73,14 @@ def main(time_1, time_2, collisions, do_designs, outofrange, individuals,
         time_2 = Time(time_2)
     except ValueError:
         time_2 = Time(time_2, format="mjd")
-        
-    designs_dict = mp.Manager().dict()
-    design_p = mp.Process(target=get_designs,
-                          args=(time_1, time_2, designs_dict))
-    design_p.start()
-
+    
     tstart = Time.now()
+    if do_designs:
+        designs_dict = mp.Manager().dict()
+        design_p = mp.Process(target=get_designs,
+                              args=(time_1, time_2, designs_dict))
+        design_p.start()
+
     re_iso = re.compile("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
     targets = []
     collisions = {"Name": "Collisions",
@@ -114,7 +115,8 @@ def main(time_1, time_2, collisions, do_designs, outofrange, individuals,
             print(log_path)
         if log_path.exists():
             paths.append(log_path)
-    paths.append(sdss_paths.logs / "jaeger/jaeger.log")
+    if (sdss_paths.logs / "jaeger/jaeger.log").exists():
+        paths.append(sdss_paths.logs / "jaeger/jaeger.log")
     for log_path in tqdm.tqdm(paths):
         if log_path.suffix == ".gz":
             with gzip.open(log_path, "rb") as fil:
@@ -129,37 +131,62 @@ def main(time_1, time_2, collisions, do_designs, outofrange, individuals,
                     continue
                 d["Times"].append(time_str)
                 d["Robots"].append(int(d["RERobot"].search(match).group(0)))
-    tend = Time.now()
-    design_p.join((tend - tstart).sec * 2)
-    if not designs_dict["Success"]:
-        raise TimeoutError("Couldn't complete InfluxDB query")
+    if do_designs:
+        tend = Time.now()
+        dt = (tstart - tend).sec
+        while design_p.is_alive() and dt < 6:
+            tend = Time.now()
+            dt = (tstart - tend).sec
+            time.sleep(1)
+        design_p.join(6)
+        dt = (tend - tstart).sec
+        if verbose:
+            print(f"Influx query took {dt}s")
+ 
+        if not designs_dict["Success"]:
+            raise TimeoutError("Couldn't complete InfluxDB query")
     
     for d in targets:
         d["Times"] = Time(d["Times"], format="iso")
         d["Robots"] = np.array(d["Robots"])
-        for t, robot in zip(d["Times"], d["Robots"]):
-            before_filt = designs_dict["Times"] < t
-            d["Designs"].append(designs_dict["Designs"][before_filt][-1])
-        d["Designs"] = np.array(d["Designs"])
+        if do_designs:
+            for t, robot in zip(d["Times"], d["Robots"]):
+                before_filt = designs_dict["Times"] < t
+                d["Designs"].append(designs_dict["Designs"][before_filt][-1])
+            d["Designs"] = np.array(d["Designs"])
 
     for d in targets:
         if individuals:
             print(f"{d['Name']} Events")
-            print(f"{'Time':<20} {'SJD':>6} {'Robot':>5} {'Design':>6}")
+            if do_designs:
+                print(f"{'Time':<20} {'SJD':>6} {'Robot':>5} {'Design':>6}")
+            else:
+                print(f"{'Time':<20} {'SJD':>6} {'Robot':>5}")
             print('=' * 80)
-            for t, c, de in zip(d['Times'], d['Robots'], d["Designs"]):
-                print(f"{t.iso[:19]:<20} {t.mjd:>6.0f} {c:>5.0f}, {de:>6.0f}")
+            if do_designs:
+                for t, c, de in zip(d['Times'], d['Robots'], d["Designs"]):
+                    print(f"{t.iso[:19]:<20} {t.mjd:>6.0f} {c:>5.0f},"
+                          f" {de:>6.0f}")
+            else:
+                for t, c, de in zip(d['Times'], d['Robots']):
+                    print(f"{t.iso[:19]:<20} {t.mjd:>6.0f} {c:>5.0f}")
             print()
 
         print(f"{d['Name']} Summary")
-        print(f"{'Robot':>5}  {'Count':>10}  {'Unique-design Count':>19}")
+        if do_designs:
+            print(f"{'Robot':>5}  {'Count':>10}  {'Unique-design Count':>19}")
+        else:
+            print(f"{'Robot':>5}  {'Count':>10}")
         print('=' * 80)
         for robot in sorted(set(d["Robots"])):
             this_robot = d["Robots"] == robot
-            design_events = d["Designs"][this_robot]
-            designs = set(design_events)
-            print(f"{robot:>5.0f}  {np.sum(d['Robots']== robot):>10.0f}"
-                  f"  {len(designs):>19.0f}")
+            if do_designs:
+                design_events = d["Designs"][this_robot]
+                designs = set(design_events)
+                print(f"{robot:>5.0f}  {np.sum(d['Robots']== robot):>10.0f}"
+                      f"  {len(designs):>19.0f}")
+            else:
+                print(f"{robot:>5.0f}  {np.sum(d['Robots']== robot):>10.0f}")
         print()
 
     return 0
