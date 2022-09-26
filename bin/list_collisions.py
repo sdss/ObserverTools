@@ -168,7 +168,7 @@ def main(time_1, time_2, collisions, do_designs, outofrange, individuals,
                     print(f"{t.iso[:19]:<20} {t.mjd:>6.0f} {c:>5.0f},"
                           f" {de:>6.0f}")
             else:
-                for t, c, de in zip(d['Times'], d['Robots']):
+                for t, c in zip(d['Times'], d['Robots']):
                     print(f"{t.iso[:19]:<20} {t.mjd:>6.0f} {c:>5.0f}")
             print()
 
