@@ -560,4 +560,9 @@
 - Improved various influx-dependant scripts for performance
 - Renamed get_collisions.py to list_collisions.py
 - list_collisions.py uses Influx to get designs
-- 
+
+## [3.9.2] - 2022-10-28
+
+- Created a new file, get_tel_positions.py, that is helpful for pointing models,
+  mostly by pulling variables from InfluxDB.
+- Added timeout function to influx_fetch.py query
