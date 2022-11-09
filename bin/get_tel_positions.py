@@ -3,6 +3,7 @@
 import click
 import numpy as np
 import matplotlib.pyplot as plt
+from collections.abc import Iterable
 from astropy.time import Time
 from pathlib import Path
 from bin import influx_fetch, sjd
@@ -115,14 +116,19 @@ def main(mjd: int, plot):
             dts = np.abs((offs['t' + k] - time).sec)
             lhs = offs[k][dts.min() == dts]
             lhs = offs[k][offs['t' + k] <= time][-1]
-            errors.append((offs['t' + k][dts.min() == dts] - time).sec)
+            err = (offs['t' + k][dts.min() == dts] - time).sec
+            if isinstance(err, Iterable):
+                errors.append(err[0])
+            else:
+                errors.append(err)
 
             # rhs = offs[k][offs['t' + k] >= time][0]
             # line.append(np.mean((lhs, rhs)))
             line.append(lhs)
         print(f"{time.isot[11:19]:<8} {mjd:>6.0f} {line[0]:>9.4f} {line[1]:>8.4f}"
               f" {line[2]:>9.4f} {line[3]:>9.4f} {line[4]:>9.4f}"
-              f" {line[5]:>9.4f} {line[6]:>9.4f} {line[7]:>9.4f} {np.min(errors):>9.1f}")
+              f" {line[5]:>9.4f} {line[6]:>9.4f} {line[7]:>9.4f}"
+              f" {np.min(errors) if errors else np.nan:>9.1f}")
 
 
 if __name__ == "__main__":
