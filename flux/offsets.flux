@@ -7,9 +7,9 @@ from(bucket: "actors")
                 v: r._field)
         )
         or (r._measurement == "tcc"
-            and (regexp.matchRegexpString(r: /axePos/, v: r._field)
-                or regexp.matchRegexpString(r: /objArcOff_[01]_P/, v: r._field)
-                or r._field == "guideOff_2_P"
+            and (regexp.matchRegexpString(r: /[Aa]xePos/, v: r._field)
+                or regexp.matchRegexpString(r: /[Oo]bjArcOff_[01]_P/, v: r._field)
+                or r._field =~ /[Gg]uideOff_2_P/
                 )
         )
         or (r._measurement == "cherno" and r._field == "guide_rms_3")

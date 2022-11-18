@@ -20,14 +20,16 @@ __version__ = '3.3.0'
 
 def get_boss_callbacks(tstart, tend, call_dict):
     out = []
-    boss_exp_path = Path(__file__).parent.parent / "flux/science_exposures.flux"
+    boss_exp_path = Path(__file__).parent.parent / \
+        "flux/science_exposures.flux"
     with boss_exp_path.open('r') as fil:
         tables = influx_fetch.query(fil.read(), tstart, tend)
     for table in tables:
         for row in table.records:
             out.append(row.get_time())
-    
+
     call_dict["boss_calls"] = out
+
 
 def get_apogee_callbacks(tstart, tend, call_dict):
     out = []
@@ -38,7 +40,8 @@ def get_apogee_callbacks(tstart, tend, call_dict):
         for row in table.records:
             out.append(row.get_time())
     call_dict["apogee_calls"] = out
-    
+
+
 def get_enclosure_history(tstart, tend, call_dict):
     out_times = []
     out_states = []
@@ -52,7 +55,8 @@ def get_enclosure_history(tstart, tend, call_dict):
                 out_states.append(row.get_value())
     call_dict["enclosure_times"] = out_times
     call_dict["enclosure_states"] = out_states
- 
+
+
 class LogSupport:
     def __init__(self, tstart, tend, args):
         self.tstart = Time(tstart)
@@ -67,18 +71,17 @@ class LogSupport:
         self.weather = ""
         self.hartmann = ""
 
-       
     def set_callbacks(self):
         callback_dict = multiprocessing.Manager().dict()
         boss = multiprocessing.Process(target=get_boss_callbacks,
                                        args=(self.tstart, self.tend,
                                              callback_dict,))
         apogee = multiprocessing.Process(target=get_apogee_callbacks,
-                                       args=(self.tstart, self.tend,
-                                             callback_dict,))
+                                         args=(self.tstart, self.tend,
+                                               callback_dict,))
         enclosure = multiprocessing.Process(target=get_enclosure_history,
-                                       args=(self.tstart, self.tend,
-                                             callback_dict,))
+                                            args=(self.tstart, self.tend,
+                                                  callback_dict,))
         boss.start()
         apogee.start()
         enclosure.start()
@@ -125,25 +128,25 @@ class LogSupport:
         if self.args.verbose:
             print("Call times: ", self.call_times)
         # self.call_times = Time(np.arange((self.tstart + 0.3).mjd, self.tend.mjd,
-                # 15 * 60 / 86400), format="mjd")
+            # 15 * 60 / 86400), format="mjd")
 
     def get_offsets(self, out_dict={}):
         start = Time.now()
         self.offsets = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'Az':>6}"
-            f" {'Alt':>4} {'Rot':>6} {'Az Off':>6} {'Alt Off':>7}"
-            f" {'Rot Off':>7} {'Guide RMS (um)':>14}\n")
+                        f" {'Alt':>4} {'Rot':>6} {'RA Off':>6} {'Dec Off':>7}"
+                        f" {'Rot Off':>7} {'Guide RMS (um)':>14}\n")
         self.offsets += '=' * 80 + '\n'
         offsets_tab = {}
         offsets_tab_path = Path(__file__).parent.parent / "flux/offsets.flux"
         with offsets_tab_path.open('r') as fil:
             pre_query = Time.now()
             off_tables = influx_fetch.query(fil.read(),
-                self.call_times[0], self.call_times[-1], interval="1m",
-                verbose=self.args.verbose)
+                                            self.call_times[0], self.call_times[-1], interval="1m",
+                                            verbose=self.args.verbose)
             post_query = Time.now()
         for table in off_tables:
             for row in table.records:
-                field = row.get_field()
+                field = row.get_field().lower()
                 if field in offsets_tab.keys():
                     offsets_tab[f"t{field}"].append(row.get_time())
                     offsets_tab[field].append(row.get_value())
@@ -160,10 +163,10 @@ class LogSupport:
             return
         post_sort = Time.now()
         for t in self.call_times:
-            line = [t.isot[11:19]] 
+            line = [t.isot[11:19]]
             for key in ["configuration_loaded_2", "configuration_loaded_1",
-                        "axePos_az", "axePos_alt", "axePos_rot",
-                        "objArcOff_0_P", "objArcOff_1_P", "guideOff_2_P",
+                        "axepos_az", "axepos_alt", "axepos_rot",
+                        "objarcoff_0_p", "objarcoff_1_p", "guideoff_2_p",
                         "guide_rms_3"]:
                 if 't' + key in offsets_tab.keys():
                     before = offsets_tab['t' + key] < t
@@ -179,7 +182,7 @@ class LogSupport:
                              " {:>6.1f} {:>6.3f} {:>7.3f} {:>7.3f} {:>14.3f}"
                              "\n".format(*line))
         post_print = Time.now()
-        out_dict["offsets"] = self.offsets        
+        out_dict["offsets"] = self.offsets
         if self.args.verbose:
             times = Time([start, pre_query, post_query, post_parse, post_sort,
                           post_print]) - start
@@ -195,11 +198,11 @@ class LogSupport:
         focus_tab_path = Path(__file__).parent.parent / "flux/focus.flux"
         with focus_tab_path.open('r') as fil:
             off_tables = influx_fetch.query(fil.read(),
-                self.call_times[0], self.call_times[-1], interval="1m",
-                verbose=self.args.verbose)
+                                            self.call_times[0], self.call_times[-1], interval="1m",
+                                            verbose=self.args.verbose)
         for table in off_tables:
             for row in table.records:
-                field = row.get_field()
+                field = row.get_field().lower()
                 if field in focus_tab.keys():
                     focus_tab[f"t{field}"].append(row.get_time())
                     focus_tab[field].append(row.get_value())
@@ -212,11 +215,11 @@ class LogSupport:
             else:
                 focus_tab[key] = np.array(focus_tab[key])
         for t in self.call_times:
-            line = [t.isot[11:19]] 
+            line = [t.isot[11:19]]
             for key in ["configuration_loaded_2", "configuration_loaded_1",
-                        "primOrient_pos", "secOrient_piston", "secFocus",
-                        "axePos_az",
-                        "axePos_alt", "airTempPT", "winds", "windd"]:
+                        "primorient_pos", "secorient_piston", "secfocus",
+                        "axepos_az",
+                        "axepos_alt", "airtemppt", "winds", "windd"]:
                 if 't' + key in focus_tab.keys():
                     before = focus_tab['t' + key] < t
                     if before.sum() == 0:
@@ -230,7 +233,7 @@ class LogSupport:
             self.focus += ("{:<8} {:>6.0f}-{:<6.0f} {:>7.2f} {:>7.2f} {:>5.0f}"
                            " {:>6.1f} {:>5.1f}"
                            " {:>5.1f} {:>4.0f} {:>3.0f}\n".format(
-                                 *line))
+                               *line))
         out_dict["focus"] = self.focus
 
     def get_weather(self, out_dict={}):
@@ -239,32 +242,32 @@ class LogSupport:
         irscm = "IRSC \u03BC"
         self.weather = (f"{'Time':<8} {'Field':>6}-{'Design':<6} {'Temp':>5}"
                         f" {'DP':>5} {'Diff':>5}"
-            f" {'Humid':>5} {'Wind':>5} {'Dir':>3} {dust:>8}"
-            f" {irscs:>6} {irscm:>6}\n")
+                        f" {'Humid':>5} {'Wind':>5} {'Dir':>3} {dust:>8}"
+                        f" {irscs:>6} {irscm:>6}\n")
         self.weather += '=' * 80 + '\n'
         weather_tab = {}
         weather_tab_path = Path(__file__).parent.parent / "flux/weather.flux"
         with weather_tab_path.open('r') as fil:
             weather_tables = influx_fetch.query(fil.read(),
-                self.call_times[0], self.call_times[-1], interval="1m",
-                verbose=self.args.verbose)
-        
+                                                self.call_times[0], self.call_times[-1], interval="1m",
+                                                verbose=self.args.verbose)
+
         for table in weather_tables:
             for row in table.records:
-                field = row.get_field()
+                field = row.get_field().lower()
                 if field in weather_tab.keys():
                     weather_tab[f"t{field}"].append(row.get_time())
                     weather_tab[field].append(row.get_value())
                 else:
                     weather_tab[f"t{field}"] = [row.get_time()]
                     weather_tab[field] = [row.get_value()]
-                    
+
         # Filter out dpDep values by adding a fake value every time the humidity
         # is above 90
-        for i, h in enumerate(weather_tab["humidPT"]):
+        for i, h in enumerate(weather_tab["humidpt"]):
             if h > 90:
                 weather_tab["dustb"].append(np.nan)
-                weather_tab["tdustb"].append(weather_tab["thumidPT"][i])
+                weather_tab["tdustb"].append(weather_tab["thumidpt"][i])
         for key in weather_tab.keys():
             if key[0] == 't':
                 weather_tab[key] = Time(weather_tab[key])
@@ -278,9 +281,9 @@ class LogSupport:
         weather_tab["tdustb"] = weather_tab["tdustb"][
             weather_tab["tdustb"].argsort()]
         for t in self.call_times:
-            line = [t.isot[11:19]] 
+            line = [t.isot[11:19]]
             for key in ["configuration_loaded_2", "configuration_loaded_1",
-                        "airTempPT", "airTempPT", "dpTempPT", "humidPT",
+                        "airtemppt", "airtemppt", "dptemppt", "humidpt",
                         "winds", "windd", "dustb", "irscsd", "irscmean"]:
                 if 't' + key in weather_tab.keys():
                     before = weather_tab['t' + key] < t
@@ -293,7 +296,7 @@ class LogSupport:
                         line.append(np.nan)
                 else:
                     line.append(np.nan)
-                
+
             if np.all(np.isnan(np.array(line[1:]))):
                 continue
             self.weather += ("{:<8} {:>6.0f}-{:<6.0f} {:>5.1f} {:>5.1f}"
@@ -314,17 +317,17 @@ class LogSupport:
         # boss_temps_path = Path(__file__).parent.parent / "flux/boss_temps.flux"
         with hartmanns_path.open('r') as fil:
             hart_tables = influx_fetch.query(fil.read(),
-                self.tstart, self.tend,
-                verbose=self.args.verbose)
+                                             self.tstart, self.tend,
+                                             verbose=self.args.verbose)
         # with boss_temps_path.open('r') as fil:
             # boss_tables = influx_fetch.query(fil.read(),
-                # self.tstart, self.tend)
+            # self.tstart, self.tend)
         if len(hart_tables) == 0:
             return
         # for table in boss_tables:
             # for row in table.records:
-                # boss_times.append(row.get_time()) 
-                # boss_temps.append(row.get_value())
+            # boss_times.append(row.get_time())
+            # boss_temps.append(row.get_value())
         for table in hart_tables:
             for row in table.records:
                 if row.get_field() in self.harts.keys():
@@ -356,7 +359,8 @@ class LogSupport:
                         else:
                             line.append(self.harts[key][before][-1])
                     else:
-                        in_window = np.abs(self.harts['t' + key] - t) < 10 / 86400
+                        in_window = np.abs(
+                            self.harts['t' + key] - t) < 10 / 86400
                         line.append(self.harts[key][in_window][0])
                 else:
                     line.append(np.nan)
@@ -365,6 +369,7 @@ class LogSupport:
                               " {:>6.1f}\n".format(*line))
         out_dict["hartmann"] = self.hartmann
         out_dict["harts"] = self.harts
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -414,7 +419,8 @@ def main():
         print('End: {}'.format(end))
 
     if args.key:
-        raise NotImplementedError("This feature stopped working when EPICS died")
+        raise NotImplementedError(
+            "This feature stopped working when EPICS died")
 
     tel = LogSupport(start, end, args)
     tel.set_callbacks()

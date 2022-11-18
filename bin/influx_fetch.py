@@ -64,18 +64,20 @@ def get_key():
 
 
 def get_client(org_id, token, timeout=20000):
-    if ping("10.25.1.221"):
-        client = InfluxDBClient(url="http://10.25.1.221:8086", token=token,
-                                org=org_id, timeout=timeout)
+    if ping("sdss5-webapp.apo.nmsu.edu"):
+        client = InfluxDBClient(url="http://sdss5-webapp.apo.nmsu.edu:9999",
+                                token=token, org=org_id, timeout=timeout)
     else:
         # print("Did not reach 10.25.1.221")
-        client = InfluxDBClient(url="http://localhost:8086", token=token,
+        client = InfluxDBClient(url="http://localhost:9999", token=token,
                                 org=org_id, timeout=timeout)
     return client.query_api()
 
 
 def query(flux_script, start, end, interval="1s", timeout=20000, verbose=False):
     user, org, token = get_key()
+    if verbose:
+        print(f"org: {org}, key: {token}")
     client = get_client(org_id=org, token=token, timeout=timeout)
     query = flux_script
     query = query.replace("v.timeRangeStart", f"{start.isot}Z")

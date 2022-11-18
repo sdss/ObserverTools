@@ -9,12 +9,13 @@ from sdssobstools import sdss_paths
 class Args(object):
     pass
 
+
 args = Args()
-args.sjds = [59801]
-args.exps = [[42390012, 42390013, 42390014, 42390033, 42390034, 42390035,
-              42390036]]
+args.sjds = [59900]
+args.exps = [[43380010, 43380011, 43380012, 43380021, 43380022, 43380023]]
 args.plot = False
 args.verbose = True
+
 
 class TestAPTest:
     def test_known_date(self):

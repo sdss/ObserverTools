@@ -566,3 +566,7 @@
 - Created a new file, get_tel_positions.py, that is helpful for pointing models,
   mostly by pulling variables from InfluxDB.
 - Added timeout function to influx_fetch.py query
+- Switched influxdb to the new server location
+- Removed apo-medium-retention from all queries
+- Updated ap_test date
+- Updated log support to fix weird capitalization errors in tcc

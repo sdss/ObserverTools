@@ -1,9 +1,8 @@
-from(bucket: "apo-medium-retention")
+from(bucket: "actors")
     |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
     |> filter(fn: (r) => (
-        r.actor == "apogee"
-        and r._measurement == "exposureState"
-        and r._field == "expType"
+        r._measurement == "apogee"
+        and r._field == "exposureState_expType"
         and r._value == "Object"
         )
     )
