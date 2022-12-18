@@ -517,18 +517,17 @@ class Logging:
         print('=' * 80)
         print('{:^80}'.format('Observing Summary'))
         print('=' * 80)
-        print(f"{'Time':>8} {'Field':>6}-{'Design':>6} {'Cadence':<24}"
+        print(f"{'Time':>8} {'Field':>6} {'Cadence':<24}"
               f" {'APOGEE':<9} {'BOSS':<7} {'Completion':<10}")
         for i, field in enumerate(self.data['dField']):
-            for j, design in enumerate(self.data["dDesign"][i]):
-                try:
-                    line = (f"{self.data['dTimes'][i][j].isot[11:19]:>8}"
-                            f" {field:>6}-{design:<6.0f} {'':>24}"
-                            f" {self.design_data['dAPSummary'][i]:<9}"
-                            f" {self.design_data['dBSummary'][i]:<7}")
-                    print(line)
-                except IndexError:
-                    continue
+            try:
+                line = (f"{self.data['dTimes'][i][0].isot[11:19]:>8}"
+                        f" {field:>6} {'':>24}"
+                        f" {self.design_data['dAPSummary'][i]:<9}"
+                        f" {self.design_data['dBSummary'][i]:<7}")
+                print(line)
+            except (IndexError, TypeError) as e:
+                continue
         print()
         if len(self.ap_data["fRatio"]) > 0:
             flux_ratio = np.nanmean(np.array(self.ap_data["fRatio"]), axis=0)
@@ -662,12 +661,15 @@ class Logging:
                     self.b_data['idt'][window],
                     self.b_data['iHart'][window],
                 ):
-                    print('{:<5.0f} {:0>8} {:>6.0f}-{:<6.0f} {:0>8.0f} {:<7}'
+                    try:
+                        print('{:<5.0f} {:0>8} {:>6.0f}-{:<6.0f} {:0>8.0f} {:<7}'
                           ' {:<5}'
                           ' {:>5.0f} {:<5}'
                           ''.format(int(mjd), iso[11:19], design, conf, exp_id,
                                     exp_type.strip(), detectors, etime,
                                     hart))
+                    except Exception as e:
+                        print(int(mjd), iso[11:19])
                 hwindow = self.b_data["hField"] == field
                 for t in self.b_data["hTime"][hwindow]:
                     print(self.hartmann_parse(t))
@@ -693,11 +695,14 @@ class Logging:
                           self.b_data['iDetector'],
                           self.b_data['idt'],
                           self.b_data['iHart']):
-            print('{:<5.0f} {:>8} {:>6.0f}-{:>6}-{:<6.0f} {:0>8.0f} {:<7}'
+            try:
+                print('{:<5.0f} {:>8} {:>6.0f}-{:>6}-{:<6.0f} {:0>8.0f} {:<7}'
                   ' {:<5}'
                   ' {:>5.0f} {:<5}'
                   ''.format(int(mjd), iso[11:19], field, design, config, exp_id,
                             exp_type.strip(), detectors, etime, hart))
+            except TypeError:
+                 continue
         print()
 
     def p_apogee(self):

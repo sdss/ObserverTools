@@ -570,3 +570,8 @@
 - Removed apo-medium-retention from all queries
 - Updated ap_test date
 - Updated log support to fix weird capitalization errors in tcc
+
+## [3.9.3] - 2022-12-18
+
+- Switched sloan_log.py summaries to use fields only
+
